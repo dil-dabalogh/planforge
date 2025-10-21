@@ -182,6 +182,54 @@ window.PlanForgeUI = (function() {
         });
         
         addDepWrap.appendChild(depSelect); addDepWrap.appendChild(addDepBtn); depWrap.appendChild(addDepWrap); panel.appendChild(depWrap);
+        
+        // JIRA Integration Section
+        const jiraWrap = document.createElement('div'); jiraWrap.className = 'details-field';
+        const jiraLabel = document.createElement('label'); jiraLabel.textContent = 'JIRA Integration'; jiraWrap.appendChild(jiraLabel);
+        
+        if (item.jiraKey) {
+          // Show JIRA link status
+          const jiraStatus = document.createElement('div'); jiraStatus.className = 'jira-link-status';
+          jiraStatus.innerHTML = `
+            <span class="material-icons">link</span>
+            <span>Linked to JIRA: ${item.jiraKey}</span>
+          `;
+          jiraWrap.appendChild(jiraStatus);
+          
+          // Unlink button
+          const unlinkBtn = document.createElement('button'); 
+          unlinkBtn.textContent = 'Unlink from JIRA'; 
+          unlinkBtn.className = 'jira-link-button';
+          unlinkBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to unlink this element from JIRA?')) {
+              delete item.jiraKey;
+              delete item.jiraId;
+              delete item.lastSynced;
+              renderDetails();
+              window.dispatchEvent(new Event('pf-refresh'));
+            }
+          });
+          jiraWrap.appendChild(unlinkBtn);
+        } else {
+          // Link to JIRA button
+          const linkBtn = document.createElement('button'); 
+          linkBtn.textContent = 'Link to JIRA'; 
+          linkBtn.className = 'jira-link-button';
+          linkBtn.addEventListener('click', () => {
+            // Check if JIRA is configured
+            const settings = window.PlanForgeSettings.getSettings();
+            if (!settings.jiraDomain || !settings.email || !settings.apiToken) {
+              alert('Please configure JIRA settings first by clicking the JIRA Settings button in the header.');
+              return;
+            }
+            
+            // Show search dialog
+            showJiraSearchDialog(item.level, item.id);
+          });
+          jiraWrap.appendChild(linkBtn);
+        }
+        
+        panel.appendChild(jiraWrap);
       }
       if (sel.type === 'scenario'){
         const s = state.scenarios.find(x => x.id === sel.id); if (!s) return;
@@ -350,6 +398,186 @@ window.PlanForgeUI = (function() {
       statusDiv.style.display = 'block';
     }
 
+    function showJiraSearchDialog(elementType, elementId) {
+      const dialog = el('jira-search-dialog');
+      const searchInput = el('jira-search-input');
+      const resultsContainer = el('jira-search-results');
+      const loadingDiv = el('jira-search-loading');
+      
+      // Clear previous results
+      resultsContainer.innerHTML = '';
+      searchInput.value = '';
+      
+      dialog.style.display = 'flex';
+      
+      // Close dialog handlers
+      el('close-jira-search-dialog').addEventListener('click', () => {
+        dialog.style.display = 'none';
+      });
+      
+      el('cancel-jira-search').addEventListener('click', () => {
+        dialog.style.display = 'none';
+      });
+      
+      // Close on overlay click
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) {
+          dialog.style.display = 'none';
+        }
+      });
+      
+      // Search functionality with debouncing
+      let searchTimeout;
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+        
+        // Clear previous timeout
+        if (searchTimeout) {
+          clearTimeout(searchTimeout);
+        }
+        
+        if (query.length < 2) {
+          resultsContainer.innerHTML = '';
+          return;
+        }
+        
+        // Debounce search by 300ms
+        searchTimeout = setTimeout(async () => {
+          await performJiraSearch(query, elementType, resultsContainer, loadingDiv);
+        }, 300);
+      });
+      
+      // Focus on search input
+      setTimeout(() => {
+        searchInput.focus();
+      }, 100);
+    }
+    
+    async function performJiraSearch(query, elementType, resultsContainer, loadingDiv) {
+      try {
+        loadingDiv.style.display = 'flex';
+        resultsContainer.innerHTML = '';
+        
+        // Map PlanForge element types to JIRA issue types
+        let jiraIssueType = null;
+        if (elementType === 'Initiative') {
+          jiraIssueType = 'Epic'; // or 'Initiative' if available
+        } else if (elementType === 'Epic') {
+          jiraIssueType = 'Epic';
+        } else if (elementType === 'Story') {
+          jiraIssueType = 'Story';
+        }
+        
+        const result = await window.PlanForgeJIRA.searchIssues(query, jiraIssueType, 20);
+        
+        loadingDiv.style.display = 'none';
+        
+        if (!result.success) {
+          resultsContainer.innerHTML = `<div style="padding: 16px; color: #ef4444; text-align: center;">Error: ${result.error}</div>`;
+          return;
+        }
+        
+        if (result.issues.length === 0) {
+          resultsContainer.innerHTML = `<div style="padding: 16px; color: #9aa4c3; text-align: center;">No issues found matching "${query}"</div>`;
+          return;
+        }
+        
+        // Display search results
+        result.issues.forEach(issue => {
+          const resultItem = createSearchResultItem(issue);
+          resultsContainer.appendChild(resultItem);
+        });
+        
+      } catch (error) {
+        loadingDiv.style.display = 'none';
+        resultsContainer.innerHTML = `<div style="padding: 16px; color: #ef4444; text-align: center;">Search failed: ${error.message}</div>`;
+      }
+    }
+    
+    function createSearchResultItem(issue) {
+      const item = document.createElement('div');
+      item.className = 'search-result-item';
+      
+      const info = document.createElement('div');
+      info.className = 'search-result-info';
+      
+      const key = document.createElement('div');
+      key.className = 'search-result-key';
+      key.textContent = issue.key;
+      
+      const summary = document.createElement('div');
+      summary.className = 'search-result-summary';
+      summary.textContent = issue.summary;
+      
+      const meta = document.createElement('div');
+      meta.className = 'search-result-meta';
+      meta.innerHTML = `
+        <span>${issue.assignee}</span>
+        <span>${issue.issueType}</span>
+        <span>Updated: ${new Date(issue.updated).toLocaleDateString()}</span>
+      `;
+      
+      info.appendChild(key);
+      info.appendChild(summary);
+      info.appendChild(meta);
+      
+      const status = document.createElement('div');
+      status.className = 'search-result-status';
+      status.textContent = issue.status;
+      
+      item.appendChild(info);
+      item.appendChild(status);
+      
+      // Add click handler to select this issue
+      item.addEventListener('click', async () => {
+        await selectJiraIssue(issue);
+      });
+      
+      return item;
+    }
+    
+    async function selectJiraIssue(issue) {
+      try {
+        // Get full issue details
+        const result = await window.PlanForgeJIRA.getIssue(issue.key);
+        
+        if (!result.success) {
+          alert('Failed to get issue details: ' + result.error);
+          return;
+        }
+        
+        // Close the search dialog
+        el('jira-search-dialog').style.display = 'none';
+        
+        // Map JIRA issue to PlanForge element
+        const mappedData = window.PlanForgeJIRA.mapJiraToPlanForge(result.issue);
+        
+        // Find the current element and update it
+        const data = window.PlanForgeModel.getActiveData(state);
+        const element = data.initiatives.find(i => i.id === state.selection.id);
+        
+        if (element) {
+          // Update element with JIRA data
+          element.name = mappedData.name;
+          element.description = mappedData.description;
+          element.jiraKey = mappedData.jiraKey;
+          element.jiraId = mappedData.jiraId;
+          element.lastSynced = mappedData.lastSynced;
+          
+          // Re-render UI to show updated data
+          renderDetails();
+          renderHierarchy();
+          window.dispatchEvent(new Event('pf-refresh'));
+          
+          // Show success message
+          alert(`Successfully linked to JIRA issue ${issue.key}: ${issue.summary}`);
+        }
+        
+      } catch (error) {
+        alert('Failed to link JIRA issue: ' + error.message);
+      }
+    }
+
     function generateMermaidGantt(state) {
       const data = window.PlanForgeModel.getActiveData(state);
       const activeScenario = state.scenarios.find(s => s.id === state.activeScenarioId);
@@ -406,7 +634,7 @@ window.PlanForgeUI = (function() {
 
     return {
       renderHierarchy, renderDetails, renderScenarios,
-      showMermaidDialog, generateMermaidGantt, showJiraSettingsDialog,
+      showMermaidDialog, generateMermaidGantt, showJiraSettingsDialog, showJiraSearchDialog,
       onScenarioClone: (cb)=>bindings.scenarioClone.push(cb),
       onScenarioChange: (cb)=>bindings.scenarioChange.push(cb),
       onScenarioRename: (cb)=>bindings.scenarioRename.push(cb),
