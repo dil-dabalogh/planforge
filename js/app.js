@@ -86,7 +86,16 @@
       alert('Error generating MermaidJS: ' + error.message);
     }
   });
-  // YAML removed per requirements
+
+  ui.onJiraSettings(() => {
+    ui.showJiraSettingsDialog();
+  });
+
+  // Initialize JIRA service with saved settings
+  const jiraSettings = window.PlanForgeSettings.getSettings();
+  if (jiraSettings.jiraDomain && jiraSettings.email && jiraSettings.apiToken) {
+    window.PlanForgeJIRA.initialize(jiraSettings);
+  }
 
   // Initial render without demo data
   renderAll();

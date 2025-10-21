@@ -32,6 +32,10 @@
           <span class="material-icons">timeline</span>
           Export MermaidJS
         </button>
+        <button id="btn-settings" title="JIRA Settings">
+          <span class="material-icons">settings</span>
+          JIRA Settings
+        </button>
         
       </div>
     </header>
@@ -110,8 +114,92 @@
       </div>
     </div>
 
+    <!-- JIRA Settings Dialog -->
+    <div id="jira-settings-dialog" class="dialog-overlay" style="display: none;">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3>JIRA Integration Settings</h3>
+          <button id="close-jira-settings-dialog" class="dialog-close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="dialog-body">
+          <div class="settings-form">
+            <div class="settings-field">
+              <label for="jira-domain">JIRA Domain</label>
+              <input type="text" id="jira-domain" placeholder="yourcompany.atlassian.net" />
+              <small>Enter your JIRA domain (e.g., yourcompany.atlassian.net)</small>
+            </div>
+            
+            <div class="settings-field">
+              <label for="jira-email">Email Address</label>
+              <input type="email" id="jira-email" placeholder="your.email@company.com" />
+              <small>Your Atlassian account email address</small>
+            </div>
+            
+            <div class="settings-field">
+              <label for="jira-token">API Token</label>
+              <input type="password" id="jira-token" placeholder="Enter your API token" />
+              <small>
+                <a href="https://id.atlassian.com/manage-profile/security/api-tokens" target="_blank">
+                  Generate API token
+                </a>
+              </small>
+            </div>
+            
+            <div class="settings-actions">
+              <button id="test-jira-connection" class="btn-secondary">
+                <span class="material-icons">wifi</span>
+                Test Connection
+              </button>
+              <button id="save-jira-settings" class="btn-primary">
+                <span class="material-icons">save</span>
+                Save Settings
+              </button>
+            </div>
+            
+            <div id="jira-connection-status" class="connection-status" style="display: none;">
+              <div class="status-message"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JIRA Search Dialog -->
+    <div id="jira-search-dialog" class="dialog-overlay" style="display: none;">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3>Link to JIRA Issue</h3>
+          <button id="close-jira-search-dialog" class="dialog-close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="dialog-body">
+          <div class="search-form">
+            <div class="search-field">
+              <input type="text" id="jira-search-input" placeholder="Search by issue ID or title..." />
+              <div class="search-loading" id="jira-search-loading" style="display: none;">
+                <span class="material-icons">refresh</span> Searching...
+              </div>
+            </div>
+            
+            <div id="jira-search-results" class="search-results">
+              <!-- Search results will be populated here -->
+            </div>
+            
+            <div class="search-actions">
+              <button id="cancel-jira-search" class="btn-secondary">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="./js/model.js"></script>
     <script src="./js/storage.js"></script>
+    <script src="./js/settings.js"></script>
+    <script src="./js/jira.js"></script>
     <script src="./js/timeline.js"></script>
     <script src="./js/ui.js"></script>
     <script src="./js/app.js"></script>

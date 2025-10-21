@@ -1,7 +1,7 @@
 window.PlanForgeUI = (function() {
   function el(id){ return document.getElementById(id); }
   function createUI(state){
-    const bindings = { scenarioClone: [], scenarioChange: [], scenarioRename: [], exportJSON: [], importJSON: [], exportScenario: [], exportMermaid: [] };
+    const bindings = { scenarioClone: [], scenarioChange: [], scenarioRename: [], exportJSON: [], importJSON: [], exportScenario: [], exportMermaid: [], jiraSettings: [] };
     el('btn-scenario-clone').addEventListener('click', () => bindings.scenarioClone.forEach(cb => cb()));
     el('scenario-select').addEventListener('change', (e) => bindings.scenarioChange.forEach(cb => cb(e.target.value)));
     el('btn-scenario-rename').addEventListener('click', () => bindings.scenarioRename.forEach(cb => cb()));
@@ -9,6 +9,7 @@ window.PlanForgeUI = (function() {
     el('btn-import-json').addEventListener('click', () => bindings.importJSON.forEach(cb => cb()));
     el('btn-export-scenario').addEventListener('click', () => bindings.exportScenario.forEach(cb => cb()));
     el('btn-export-mermaid').addEventListener('click', () => bindings.exportMermaid.forEach(cb => cb()));
+    el('btn-settings').addEventListener('click', () => bindings.jiraSettings.forEach(cb => cb()));
 
     function renderScenarios(){
       const sel = el('scenario-select');
@@ -245,6 +246,110 @@ window.PlanForgeUI = (function() {
       });
     }
 
+    function showJiraSettingsDialog() {
+      const dialog = el('jira-settings-dialog');
+      const settings = window.PlanForgeSettings.getSettings();
+      
+      // Populate form with current settings
+      el('jira-domain').value = settings.jiraDomain || '';
+      el('jira-email').value = settings.email || '';
+      el('jira-token').value = ''; // Don't show stored token for security
+      
+      dialog.style.display = 'flex';
+      
+      // Close dialog handlers
+      el('close-jira-settings-dialog').addEventListener('click', () => {
+        dialog.style.display = 'none';
+      });
+      
+      // Close on overlay click
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) {
+          dialog.style.display = 'none';
+        }
+      });
+      
+      // Test connection handler
+      el('test-jira-connection').addEventListener('click', async () => {
+        const domain = el('jira-domain').value.trim();
+        const email = el('jira-email').value.trim();
+        const token = el('jira-token').value.trim();
+        
+        if (!domain || !email || !token) {
+          showConnectionStatus('error', 'Please fill in all fields before testing connection.');
+          return;
+        }
+        
+        const testSettings = { jiraDomain: domain, email: email, apiToken: token };
+        const validation = window.PlanForgeSettings.validateSettings(testSettings);
+        
+        if (!validation.isValid) {
+          showConnectionStatus('error', validation.errors.join(', '));
+          return;
+        }
+        
+        showConnectionStatus('info', 'Testing connection...');
+        
+        // Initialize JIRA service with test settings
+        window.PlanForgeJIRA.initialize(testSettings);
+        
+        try {
+          const result = await window.PlanForgeJIRA.testConnection();
+          if (result.success) {
+            showConnectionStatus('success', result.message);
+          } else {
+            showConnectionStatus('error', result.error);
+          }
+        } catch (error) {
+          showConnectionStatus('error', 'Connection test failed: ' + error.message);
+        }
+      });
+      
+      // Save settings handler
+      el('save-jira-settings').addEventListener('click', () => {
+        const domain = el('jira-domain').value.trim();
+        const email = el('jira-email').value.trim();
+        const token = el('jira-token').value.trim();
+        
+        const newSettings = { 
+          jiraDomain: domain, 
+          email: email, 
+          apiToken: token,
+          lastTested: new Date().toISOString(),
+          isValid: false
+        };
+        
+        const validation = window.PlanForgeSettings.validateSettings(newSettings);
+        
+        if (!validation.isValid) {
+          showConnectionStatus('error', validation.errors.join(', '));
+          return;
+        }
+        
+        if (window.PlanForgeSettings.saveSettings(newSettings)) {
+          // Initialize JIRA service with saved settings
+          window.PlanForgeJIRA.initialize(newSettings);
+          showConnectionStatus('success', 'Settings saved successfully!');
+          
+          // Close dialog after a short delay
+          setTimeout(() => {
+            dialog.style.display = 'none';
+          }, 1500);
+        } else {
+          showConnectionStatus('error', 'Failed to save settings.');
+        }
+      });
+    }
+    
+    function showConnectionStatus(type, message) {
+      const statusDiv = el('jira-connection-status');
+      const messageDiv = statusDiv.querySelector('.status-message');
+      
+      statusDiv.className = `connection-status ${type}`;
+      messageDiv.textContent = message;
+      statusDiv.style.display = 'block';
+    }
+
     function generateMermaidGantt(state) {
       const data = window.PlanForgeModel.getActiveData(state);
       const activeScenario = state.scenarios.find(s => s.id === state.activeScenarioId);
@@ -301,14 +406,15 @@ window.PlanForgeUI = (function() {
 
     return {
       renderHierarchy, renderDetails, renderScenarios,
-      showMermaidDialog, generateMermaidGantt,
+      showMermaidDialog, generateMermaidGantt, showJiraSettingsDialog,
       onScenarioClone: (cb)=>bindings.scenarioClone.push(cb),
       onScenarioChange: (cb)=>bindings.scenarioChange.push(cb),
       onScenarioRename: (cb)=>bindings.scenarioRename.push(cb),
       onExportJSON: (cb)=>bindings.exportJSON.push(cb),
       onImportJSON: (cb)=>bindings.importJSON.push(cb),
       onExportScenario: (cb)=>bindings.exportScenario.push(cb),
-      onExportMermaid: (cb)=>bindings.exportMermaid.push(cb)
+      onExportMermaid: (cb)=>bindings.exportMermaid.push(cb),
+      onJiraSettings: (cb)=>bindings.jiraSettings.push(cb)
     };
   }
 

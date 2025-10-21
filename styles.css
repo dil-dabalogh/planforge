@@ -353,4 +353,268 @@ button {
   background: #5a8fff;
 }
 
+/* JIRA Integration Styles */
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-field label {
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.settings-field input {
+  background: #0f1429;
+  border: 1px solid #2a3154;
+  border-radius: 4px;
+  color: #ffffff;
+  padding: 10px 12px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.settings-field input:focus {
+  outline: none;
+  border-color: #6aa4ff;
+}
+
+.settings-field input::placeholder {
+  color: #6b7280;
+}
+
+.settings-field small {
+  color: #9aa4c3;
+  font-size: 12px;
+}
+
+.settings-field small a {
+  color: #6aa4ff;
+  text-decoration: none;
+}
+
+.settings-field small a:hover {
+  text-decoration: underline;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.btn-secondary {
+  background: #2a3154;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: #3a4154;
+  transform: translateY(-1px);
+}
+
+.btn-secondary:active {
+  transform: translateY(0);
+}
+
+.connection-status {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 4px;
+  border: 1px solid;
+}
+
+.connection-status.success {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.connection-status.error {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.status-message {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* JIRA Search Dialog Styles */
+.search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.search-field {
+  position: relative;
+}
+
+.search-field input {
+  width: 100%;
+  background: #0f1429;
+  border: 1px solid #2a3154;
+  border-radius: 4px;
+  color: #ffffff;
+  padding: 12px 16px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.search-field input:focus {
+  outline: none;
+  border-color: #6aa4ff;
+}
+
+.search-loading {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6aa4ff;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.search-loading .material-icons {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.search-results {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #2a3154;
+  border-radius: 4px;
+  background: #0f1429;
+}
+
+.search-result-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #2a3154;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-result-item:hover {
+  background: #252b4a;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-info {
+  flex: 1;
+}
+
+.search-result-key {
+  font-weight: 600;
+  color: #6aa4ff;
+  font-size: 14px;
+}
+
+.search-result-summary {
+  color: #ffffff;
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.search-result-meta {
+  color: #9aa4c3;
+  font-size: 12px;
+  margin-top: 4px;
+  display: flex;
+  gap: 12px;
+}
+
+.search-result-status {
+  background: #2a3154;
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.search-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* JIRA Link Button Styles */
+.jira-link-button {
+  background: #6aa4ff;
+  color: #ffffff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+}
+
+.jira-link-button:hover {
+  background: #5a94ef;
+}
+
+.jira-link-button.linked {
+  background: #22c55e;
+}
+
+.jira-link-button.linked:hover {
+  background: #16a34a;
+}
+
+.jira-link-status {
+  margin-top: 8px;
+  padding: 6px 8px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid #22c55e;
+  border-radius: 4px;
+  color: #22c55e;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.jira-link-status .material-icons {
+  font-size: 16px;
+}
