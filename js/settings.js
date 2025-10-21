@@ -23,10 +23,11 @@ window.PlanForgeSettings = (function() {
 
   function saveSettings(settings) {
     try {
-      // Don't store the API token in plain text for security
+      // Store all settings including API token (for MVP - in production, use encryption)
       const settingsToStore = {
         jiraDomain: settings.jiraDomain,
         email: settings.email,
+        apiToken: settings.apiToken, // Store API token for MVP
         lastTested: settings.lastTested,
         isValid: settings.isValid
       };
@@ -77,9 +78,13 @@ window.PlanForgeSettings = (function() {
   }
 
   function getApiToken() {
-    // In a real implementation, this would be retrieved securely
-    // For now, we'll prompt the user to re-enter it when needed
-    return null;
+    try {
+      const settings = getSettings();
+      return settings.apiToken || null;
+    } catch (error) {
+      console.error('Error getting API token:', error);
+      return null;
+    }
   }
 
   function clearSettings() {
@@ -101,6 +106,11 @@ window.PlanForgeSettings = (function() {
     return `https://${cleanDomain}`;
   }
 
+  function isJiraConfigured() {
+    const settings = getSettings();
+    return !!(settings.jiraDomain && settings.email && settings.apiToken);
+  }
+
   return {
     getSettings,
     saveSettings,
@@ -108,6 +118,7 @@ window.PlanForgeSettings = (function() {
     getApiToken,
     clearSettings,
     getJiraBaseUrl,
+    isJiraConfigured,
     DEFAULT_SETTINGS
   };
 })();

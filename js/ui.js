@@ -302,8 +302,7 @@ window.PlanForgeUI = (function() {
           linkBtn.className = 'jira-link-button';
           linkBtn.addEventListener('click', () => {
             // Check if JIRA is configured
-            const settings = window.PlanForgeSettings.getSettings();
-            if (!settings.jiraDomain || !settings.email || !settings.apiToken) {
+            if (!window.PlanForgeSettings.isJiraConfigured()) {
               alert('Please configure JIRA settings first by clicking the JIRA Settings button in the header.');
               return;
             }
@@ -489,6 +488,12 @@ window.PlanForgeUI = (function() {
     }
 
     function showBulkSyncDialog() {
+      // Check if JIRA is configured first
+      if (!window.PlanForgeSettings.isJiraConfigured()) {
+        alert('Please configure JIRA settings first by clicking the JIRA Settings button in the header.');
+        return;
+      }
+      
       const dialog = el('bulk-sync-dialog');
       const targetsList = el('sync-targets-list');
       const progressDiv = el('bulk-sync-progress');
