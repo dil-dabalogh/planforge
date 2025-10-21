@@ -31,6 +31,13 @@ window.PlanForgeSettings = (function() {
         lastTested: settings.lastTested,
         isValid: settings.isValid
       };
+      console.log('💾 Saving JIRA Settings:', {
+        jiraDomain: settingsToStore.jiraDomain,
+        email: settingsToStore.email,
+        apiToken: settingsToStore.apiToken ? '***' + settingsToStore.apiToken.slice(-4) : 'MISSING',
+        lastTested: settingsToStore.lastTested,
+        isValid: settingsToStore.isValid
+      });
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settingsToStore));
       return true;
     } catch (error) {
@@ -108,6 +115,12 @@ window.PlanForgeSettings = (function() {
 
   function isJiraConfigured() {
     const settings = getSettings();
+    console.log('🔍 JIRA Configuration Check:', {
+      jiraDomain: settings.jiraDomain,
+      email: settings.email,
+      apiToken: settings.apiToken ? '***' + settings.apiToken.slice(-4) : 'MISSING',
+      configured: !!(settings.jiraDomain && settings.email && settings.apiToken)
+    });
     return !!(settings.jiraDomain && settings.email && settings.apiToken);
   }
 
