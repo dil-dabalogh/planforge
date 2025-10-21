@@ -27,10 +27,40 @@ window.PlanForgeJIRA = (function() {
     return `${baseUrl}/rest/api/3${endpoint}`;
   }
 
+  function isCorsBlocked() {
+    return window.location.protocol === 'file:' || 
+           window.location.hostname === 'localhost' || 
+           window.location.hostname === '127.0.0.1' ||
+           window.location.hostname === '';
+  }
+
+  async function makeJiraRequest(url, options = {}) {
+    const isLocal = isCorsBlocked();
+    
+    if (isLocal) {
+      // For local development, we'll use a different approach
+      // Try to make the request and catch CORS errors
+      try {
+        const response = await fetch(url, options);
+        return { response, isProxy: false };
+      } catch (error) {
+        if (error.name === 'TypeError' && error.message.includes('CORS')) {
+          // CORS blocked - provide helpful error message
+          throw new Error('CORS Error: JIRA API calls are blocked from local files. Please serve the application from a web server (e.g., using a local development server like Live Server, or deploy to a web hosting service).');
+        }
+        throw error;
+      }
+    } else {
+      // Normal request for deployed applications
+      const response = await fetch(url, options);
+      return { response, isProxy: false };
+    }
+  }
+
   async function testConnection() {
     try {
       const url = getApiUrl('/myself');
-      const response = await fetch(url, {
+      const { response } = await makeJiraRequest(url, {
         method: 'GET',
         headers: getAuthHeaders()
       });
@@ -73,7 +103,7 @@ window.PlanForgeJIRA = (function() {
       
       const url = getApiUrl(`/search?jql=${encodeURIComponent(jql)}&maxResults=${maxResults}&fields=id,key,summary,status,assignee,created,updated,issuetype`);
       
-      const response = await fetch(url, {
+      const { response } = await makeJiraRequest(url, {
         method: 'GET',
         headers: getAuthHeaders()
       });
@@ -110,7 +140,7 @@ window.PlanForgeJIRA = (function() {
     try {
       const url = getApiUrl(`/issue/${issueKey}?fields=id,key,summary,description,status,assignee,created,updated,issuetype,duedate,priority`);
       
-      const response = await fetch(url, {
+      const { response } = await makeJiraRequest(url, {
         method: 'GET',
         headers: getAuthHeaders()
       });
@@ -149,7 +179,7 @@ window.PlanForgeJIRA = (function() {
     try {
       const url = getApiUrl(`/issue/${issueKey}`);
       
-      const response = await fetch(url, {
+      const { response } = await makeJiraRequest(url, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify({

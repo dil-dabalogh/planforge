@@ -431,7 +431,12 @@ window.PlanForgeUI = (function() {
           if (result.success) {
             showConnectionStatus('success', result.message);
           } else {
-            showConnectionStatus('error', result.error);
+            // Check if it's a CORS error and provide helpful guidance
+            if (result.error.includes('CORS Error')) {
+              showConnectionStatus('error', result.error + '\n\nTo resolve this:\n1. Use a local development server (e.g., Live Server extension in VS Code)\n2. Or deploy the application to a web hosting service\n3. Or use a browser with disabled CORS (not recommended for production)');
+            } else {
+              showConnectionStatus('error', result.error);
+            }
           }
         } catch (error) {
           showConnectionStatus('error', 'Connection test failed: ' + error.message);
