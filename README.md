@@ -1,10 +1,27 @@
 # PlanForge MVP
 
-A lightweight project planning tool for visualizing initiatives, dependencies, and resource allocation with interactive timeline management.
+A lightweight project planning tool for visualizing initiatives, dependencies, and resource allocation with interactive timeline management and JIRA integration.
 
 ## Quick Start
 
-**Run:** Open `index.html` in a modern browser. No build or server required.
+### Option 1: Local Development Server (Recommended for JIRA Integration)
+**Run:** Use the provided start scripts to serve the application locally:
+
+```bash
+# Unix/Linux/macOS
+./start-server.sh
+
+# Windows
+start-server.bat
+
+# Or using npm
+npm start
+```
+
+This resolves CORS issues and enables full JIRA integration functionality.
+
+### Option 2: Direct File Access
+**Run:** Open `index.html` in a modern browser. Note: JIRA integration will not work due to CORS restrictions.
 
 ## Features
 
@@ -13,6 +30,14 @@ A lightweight project planning tool for visualizing initiatives, dependencies, a
 - **Interactive Timeline**: Drag, resize, and move work items with visual feedback
 - **Scenario Management**: Clone, switch, and compare different planning scenarios
 - **Resource Assignment**: Assign team members to work items with role-based filtering
+
+### **JIRA Integration** 🆕
+- **Direct JIRA Connection**: Connect using Atlassian API token
+- **Fuzzy Search**: Find JIRA issues by ID and title
+- **Automatic Population**: Populate PlanForge elements from JIRA data
+- **Bidirectional Sync**: Sync changes between PlanForge and JIRA
+- **Bulk Operations**: Sync multiple elements at once
+- **Visual Indicators**: Link status and sync timestamps
 
 ### **Dependency Management**
 - **Visual Dependencies**: Green dashed lines with arrows showing task relationships
@@ -86,6 +111,23 @@ A lightweight project planning tool for visualizing initiatives, dependencies, a
 ```
 
 ## Usage Guide
+
+### JIRA Integration Setup
+1. **Start Local Server**: Use `./start-server.sh` or `npm start` to serve the application
+2. **Configure JIRA**: Click "JIRA Settings" button in the toolbar
+3. **Enter Credentials**:
+   - JIRA Domain: Your Atlassian domain (e.g., `yourcompany.atlassian.net`)
+   - Email: Your Atlassian account email
+   - API Token: Generate from [Atlassian Account Settings](https://id.atlassian.com/manage-profile/security/api-tokens)
+4. **Test Connection**: Click "Test Connection" to verify settings
+5. **Save Settings**: Click "Save Settings" to store configuration
+
+### Linking PlanForge Elements to JIRA
+1. **Select Element**: Click any Initiative, Epic, or Story in the hierarchy
+2. **Link to JIRA**: Click "Link to JIRA" button in the Details panel
+3. **Search Issues**: Use the fuzzy search to find JIRA issues by ID or title
+4. **Select Issue**: Click on a search result to link and populate the element
+5. **Sync Changes**: Use "Sync to JIRA" or "Sync from JIRA" buttons as needed
 
 ### Creating Dependencies
 1. Select any initiative in the hierarchy tree or timeline
