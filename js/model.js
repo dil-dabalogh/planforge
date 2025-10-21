@@ -96,7 +96,7 @@ window.PlanForgeModel = (function() {
     console.log('New active scenario ID:', state.activeScenarioId);
     console.log('Total scenarios:', state.scenarios.length);
   }
-  function addInitiative(state, { name, start, end, parentId = null, level = 'Initiative', size = 'M', description = '' }) {
+  function addInitiative(state, { name, start, end, parentId = null, level = 'Initiative', size = 'M', description = '', jiraKey = null, jiraId = null, lastSynced = null }) {
     const data = getActiveData(state);
     const id = 'itm_' + Math.random().toString(36).slice(2,8);
     // prevent children under Story level
@@ -111,7 +111,11 @@ window.PlanForgeModel = (function() {
       }
     }
     const length = Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000));
-    data.initiatives.push({ id, name, start, end, parentId, level, size, description, scenarioId: state.activeScenarioId, length });
+    data.initiatives.push({ 
+      id, name, start, end, parentId, level, size, description, 
+      scenarioId: state.activeScenarioId, length,
+      jiraKey, jiraId, lastSynced
+    });
     return id;
   }
   function linkDependency(state, fromId, toId) {
@@ -233,6 +237,39 @@ window.PlanForgeModel = (function() {
     state.selection = null;
   }
 
+  function updateJiraLinkedElement(state, elementId, jiraData) {
+    const data = getActiveData(state);
+    const element = data.initiatives.find(i => i.id === elementId);
+    if (!element) return false;
+    
+    // Update element with JIRA data
+    element.name = jiraData.name || element.name;
+    element.description = jiraData.description || element.description;
+    element.jiraKey = jiraData.jiraKey;
+    element.jiraId = jiraData.jiraId;
+    element.lastSynced = new Date().toISOString();
+    
+    return true;
+  }
+
+  function unlinkJiraElement(state, elementId) {
+    const data = getActiveData(state);
+    const element = data.initiatives.find(i => i.id === elementId);
+    if (!element) return false;
+    
+    // Remove JIRA fields
+    delete element.jiraKey;
+    delete element.jiraId;
+    delete element.lastSynced;
+    
+    return true;
+  }
+
+  function getJiraLinkedElements(state) {
+    const data = getActiveData(state);
+    return data.initiatives.filter(i => i.jiraKey);
+  }
+
   function seedDemo(state) {
     const now = today();
     const d = getActiveData(state);
@@ -247,7 +284,8 @@ window.PlanForgeModel = (function() {
     createInitialState, emptyData, getActiveData,
     setActiveScenario, cloneActiveScenario, renameActiveScenario,
     addInitiative, linkDependency, unlinkDependency, moveItem, moveSubtree, deleteInitiative,
-    loadState, seedDemo
+    loadState, seedDemo,
+    updateJiraLinkedElement, unlinkJiraElement, getJiraLinkedElements
   };
 })();
 

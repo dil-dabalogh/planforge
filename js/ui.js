@@ -202,11 +202,13 @@ window.PlanForgeUI = (function() {
           unlinkBtn.className = 'jira-link-button';
           unlinkBtn.addEventListener('click', () => {
             if (confirm('Are you sure you want to unlink this element from JIRA?')) {
-              delete item.jiraKey;
-              delete item.jiraId;
-              delete item.lastSynced;
-              renderDetails();
-              window.dispatchEvent(new Event('pf-refresh'));
+              const success = window.PlanForgeModel.unlinkJiraElement(state, item.id);
+              if (success) {
+                renderDetails();
+                window.dispatchEvent(new Event('pf-refresh'));
+              } else {
+                alert('Failed to unlink element from JIRA');
+              }
             }
           });
           jiraWrap.appendChild(unlinkBtn);
@@ -557,20 +559,20 @@ window.PlanForgeUI = (function() {
         const element = data.initiatives.find(i => i.id === state.selection.id);
         
         if (element) {
-          // Update element with JIRA data
-          element.name = mappedData.name;
-          element.description = mappedData.description;
-          element.jiraKey = mappedData.jiraKey;
-          element.jiraId = mappedData.jiraId;
-          element.lastSynced = mappedData.lastSynced;
+          // Update element with JIRA data using model function
+          const success = window.PlanForgeModel.updateJiraLinkedElement(state, element.id, mappedData);
           
-          // Re-render UI to show updated data
-          renderDetails();
-          renderHierarchy();
-          window.dispatchEvent(new Event('pf-refresh'));
-          
-          // Show success message
-          alert(`Successfully linked to JIRA issue ${issue.key}: ${issue.summary}`);
+          if (success) {
+            // Re-render UI to show updated data
+            renderDetails();
+            renderHierarchy();
+            window.dispatchEvent(new Event('pf-refresh'));
+            
+            // Show success message
+            alert(`Successfully linked to JIRA issue ${issue.key}: ${issue.summary}`);
+          } else {
+            alert('Failed to update element with JIRA data');
+          }
         }
         
       } catch (error) {
