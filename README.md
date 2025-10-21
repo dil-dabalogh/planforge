@@ -4,21 +4,21 @@ A lightweight project planning tool for visualizing initiatives, dependencies, a
 
 ## Quick Start
 
-### Option 1: Local Development Server (Recommended for JIRA Integration)
-**Run:** Use the provided start scripts to serve the application locally:
+### Option 1: Local Development Server with CORS Proxy (Recommended for JIRA Integration)
+**Run:** Use the provided start scripts to serve the application with a local CORS proxy:
 
 ```bash
-# Unix/Linux/macOS
+# Unix/Linux/macOS (starts both app server and CORS proxy)
 ./start-server.sh
 
-# Windows
+# Windows (starts both app server and CORS proxy)
 start-server.bat
 
-# Or using npm
-npm start
+# Or using npm (starts both servers)
+npm run start-with-proxy
 ```
 
-This resolves CORS issues and enables full JIRA integration functionality.
+This resolves CORS issues while keeping all data local and secure - no external services are used.
 
 ### Option 2: Direct File Access
 **Run:** Open `index.html` in a modern browser. Note: JIRA integration will not work due to CORS restrictions.
@@ -113,7 +113,7 @@ This resolves CORS issues and enables full JIRA integration functionality.
 ## Usage Guide
 
 ### JIRA Integration Setup
-1. **Start Local Server**: Use `./start-server.sh` or `npm start` to serve the application
+1. **Start Local Server with Proxy**: Use `./start-server.sh` or `npm run start-with-proxy` to serve the application with CORS proxy
 2. **Configure JIRA**: Click "JIRA Settings" button in the toolbar
 3. **Enter Credentials**:
    - JIRA Domain: Your Atlassian domain (e.g., `yourcompany.atlassian.net`)
@@ -121,6 +121,8 @@ This resolves CORS issues and enables full JIRA integration functionality.
    - API Token: Generate from [Atlassian Account Settings](https://id.atlassian.com/manage-profile/security/api-tokens)
 4. **Test Connection**: Click "Test Connection" to verify settings
 5. **Save Settings**: Click "Save Settings" to store configuration
+
+**Security Note**: All JIRA API calls are proxied through a local server (localhost:3001) - no data is sent to external services.
 
 ### Linking PlanForge Elements to JIRA
 1. **Select Element**: Click any Initiative, Epic, or Story in the hierarchy

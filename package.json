@@ -6,7 +6,10 @@
   "scripts": {
     "start": "npx http-server . -p 8080 -o",
     "dev": "npx http-server . -p 8080 -o -c-1",
-    "serve": "python3 -m http.server 8080"
+    "serve": "python3 -m http.server 8080",
+    "proxy": "node proxy-server.js",
+    "start-with-proxy": "concurrently \"npm run proxy\" \"npm start\"",
+    "dev-with-proxy": "concurrently \"npm run proxy\" \"npm run dev\""
   },
   "keywords": [
     "project-management",
@@ -17,6 +20,12 @@
   ],
   "author": "PlanForge Team",
   "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "http-proxy-middleware": "^2.0.6",
+    "cors": "^2.8.5",
+    "concurrently": "^8.2.2"
+  },
   "devDependencies": {
     "http-server": "^14.1.1"
   },

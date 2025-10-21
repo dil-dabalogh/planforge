@@ -1,60 +1,39 @@
 #!/bin/bash
 
-# PlanForge Local Development Server
-# This script starts a local HTTP server to serve the PlanForge application
-# This resolves CORS issues when making JIRA API calls
+# PlanForge Local Development Server with CORS Proxy
+# This script starts both the PlanForge application and a local CORS proxy server
+# This resolves CORS issues when making JIRA API calls while keeping all data local
 
-echo "🚀 Starting PlanForge Local Development Server..."
+echo "🚀 Starting PlanForge with Local CORS Proxy..."
 echo ""
 
 # Check if Node.js is available
 if command -v node &> /dev/null; then
-    echo "✅ Node.js detected - using http-server"
-    echo "📡 Server will start at: http://localhost:8080"
+    echo "✅ Node.js detected"
+    echo "📡 Application server: http://localhost:8080"
+    echo "🔒 CORS Proxy server: http://localhost:3001"
     echo "🌐 Browser will open automatically"
     echo ""
-    echo "Press Ctrl+C to stop the server"
+    echo "Press Ctrl+C to stop both servers"
     echo "----------------------------------------"
     
-    # Install http-server if not already installed
-    if ! command -v http-server &> /dev/null; then
-        echo "📦 Installing http-server..."
-        npm install -g http-server
+    # Install dependencies if needed
+    if [ ! -d "node_modules" ]; then
+        echo "📦 Installing dependencies..."
+        npm install
     fi
     
-    # Start the server
-    http-server . -p 8080 -o -c-1
-    
-elif command -v python3 &> /dev/null; then
-    echo "✅ Python 3 detected - using built-in HTTP server"
-    echo "📡 Server will start at: http://localhost:8080"
-    echo ""
-    echo "Press Ctrl+C to stop the server"
-    echo "----------------------------------------"
-    
-    # Start Python HTTP server
-    python3 -m http.server 8080
-    
-elif command -v python &> /dev/null; then
-    echo "✅ Python 2 detected - using built-in HTTP server"
-    echo "📡 Server will start at: http://localhost:8080"
-    echo ""
-    echo "Press Ctrl+C to stop the server"
-    echo "----------------------------------------"
-    
-    # Start Python HTTP server
-    python -m SimpleHTTPServer 8080
+    # Start both servers concurrently
+    echo "🔄 Starting servers..."
+    npm run start-with-proxy
     
 else
-    echo "❌ Error: Neither Node.js nor Python found!"
+    echo "❌ Error: Node.js not found!"
     echo ""
-    echo "Please install one of the following:"
-    echo "  • Node.js (recommended): https://nodejs.org/"
-    echo "  • Python 3: https://python.org/"
+    echo "Please install Node.js from: https://nodejs.org/"
     echo ""
     echo "Alternatively, you can:"
-    echo "  • Use VS Code Live Server extension"
-    echo "  • Use any other local development server"
+    echo "  • Use VS Code Live Server extension (JIRA integration won't work)"
     echo "  • Deploy to a web hosting service"
     exit 1
 fi

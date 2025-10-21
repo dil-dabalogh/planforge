@@ -24,7 +24,11 @@ window.PlanForgeJIRA = (function() {
     }
     
     const baseUrl = window.PlanForgeSettings.getJiraBaseUrl(currentSettings.jiraDomain);
-    return `${baseUrl}/rest/api/3${endpoint}`;
+    const fullUrl = `${baseUrl}/rest/api/3${endpoint}`;
+    
+    // Use local CORS proxy server (runs on localhost:3001)
+    // This keeps all data local and secure - no external services
+    return `http://localhost:3001/proxy?url=${encodeURIComponent(fullUrl)}`;
   }
 
   function isCorsBlocked() {
@@ -35,25 +39,19 @@ window.PlanForgeJIRA = (function() {
   }
 
   async function makeJiraRequest(url, options = {}) {
-    const isLocal = isCorsBlocked();
-    
-    if (isLocal) {
-      // For local development, we'll use a different approach
-      // Try to make the request and catch CORS errors
-      try {
-        const response = await fetch(url, options);
-        return { response, isProxy: false };
-      } catch (error) {
-        if (error.name === 'TypeError' && error.message.includes('CORS')) {
-          // CORS blocked - provide helpful error message
-          throw new Error('CORS Error: JIRA API calls are blocked from local files. Please serve the application from a web server (e.g., using a local development server like Live Server, or deploy to a web hosting service).');
-        }
-        throw error;
-      }
-    } else {
-      // Normal request for deployed applications
+    try {
       const response = await fetch(url, options);
+      
+      if (!response.ok) {
+        throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+      }
+      
       return { response, isProxy: false };
+    } catch (error) {
+      if (error.name === 'TypeError' && error.message.includes('CORS')) {
+        throw new Error('CORS Error: Unable to connect to JIRA API. Please ensure the local proxy server is running (npm run proxy).');
+      }
+      throw error;
     }
   }
 
