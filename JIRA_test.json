@@ -1,0 +1,51 @@
+{
+  "scenario": {
+    "id": "scn_6esptl",
+    "name": "Baseline Copy",
+    "description": "",
+    "initiatives": [
+      {
+        "id": "itm_h0bpbf",
+        "name": "Initiative A",
+        "description": "",
+        "level": "Initiative",
+        "size": "L",
+        "start": "2025-10-22",
+        "end": "2025-11-01",
+        "length": 10,
+        "parentId": null,
+        "resourceIds": []
+      },
+      {
+        "id": "itm_rq4ung",
+        "name": "Epic A1",
+        "description": "",
+        "level": "Epic",
+        "size": "M",
+        "start": "2025-10-26",
+        "end": "2025-11-01",
+        "length": 6,
+        "parentId": "itm_h0bpbf",
+        "resourceIds": [
+          "res_idrbjo"
+        ]
+      },
+      {
+        "id": "itm_jszzca",
+        "name": "Story A1-2",
+        "description": "",
+        "level": "Story",
+        "size": "M",
+        "start": "2025-10-30",
+        "end": "2025-11-01",
+        "length": 2,
+        "parentId": "itm_rq4ung",
+        "resourceIds": []
+      }
+    ],
+    "dependencies": [],
+    "resources": []
+  },
+  "exportDate": "2025-10-21T06:10:54.522Z",
+  "version": "1.0"
+}

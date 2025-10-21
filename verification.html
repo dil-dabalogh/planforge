@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dependency Cloning Verification</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1a1a1a; color: #fff; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #444; border-radius: 8px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #1e4d2b; color: #4ade80; }
+        .error { background: #4d1e1e; color: #f87171; }
+        .info { background: #1e3a4d; color: #60a5fa; }
+        button { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2563eb; }
+        .timeline-container { border: 1px solid #444; border-radius: 8px; margin: 20px 0; overflow: auto; }
+        canvas { display: block; }
+        pre { background: #000; color: #0f0; padding: 10px; border-radius: 4px; overflow-x: auto; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dependency Cloning Verification</h1>
+        
+        <div class="test-section">
+            <h3>Test Steps</h3>
+            <button onclick="step1()">1. Create Test Data</button>
+            <button onclick="step2()">2. Clone Scenario</button>
+            <button onclick="step3()">3. Verify Dependencies</button>
+            <button onclick="step4()">4. Show Timeline</button>
+        </div>
+
+        <div class="test-section">
+            <h3>Test Results</h3>
+            <div id="results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Timeline View</h3>
+            <div class="timeline-container">
+                <canvas id="timeline-canvas" width="1000" height="400"></canvas>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Console Output</h3>
+            <div id="console-output" class="console-output"></div>
+        </div>
+    </div>
+
+    <script src="js/model.js"></script>
+    <script src="js/timeline.js"></script>
+    <script>
+        let state = null;
+        let timeline = null;
+        let originalScenarioId = null;
+        let clonedScenarioId = null;
+
+        // Override console.log to capture output
+        const originalConsoleLog = console.log;
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            const output = document.getElementById('console-output');
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            output.appendChild(logEntry);
+            output.scrollTop = output.scrollHeight;
+        };
+
+        function addResult(title, passed, details) {
+            const results = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'test-result ' + (passed ? 'success' : 'error');
+            resultDiv.innerHTML = `<strong>${title}:</strong> ${passed ? 'PASS' : 'FAIL'}<br><small>${details}</small>`;
+            results.appendChild(resultDiv);
+        }
+
+        function step1() {
+            console.log('=== STEP 1: Creating Test Data ===');
+            state = window.PlanForgeModel.createInitialState();
+            
+            const now = window.PlanForgeModel.today();
+            
+            // Create multiple initiatives
+            const i1 = window.PlanForgeModel.addInitiative(state, { 
+                name: 'Task A', 
+                start: now, 
+                end: window.PlanForgeModel.addDays(now, 3),
+                level: 'Initiative'
+            });
+            const i2 = window.PlanForgeModel.addInitiative(state, { 
+                name: 'Task B', 
+                start: window.PlanForgeModel.addDays(now, 4), 
+                end: window.PlanForgeModel.addDays(now, 7),
+                level: 'Initiative'
+            });
+            const i3 = window.PlanForgeModel.addInitiative(state, { 
+                name: 'Task C', 
+                start: window.PlanForgeModel.addDays(now, 8), 
+                end: window.PlanForgeModel.addDays(now, 10),
+                level: 'Initiative'
+            });
+            
+            // Create dependencies
+            window.PlanForgeModel.linkDependency(state, i1, i2);
+            window.PlanForgeModel.linkDependency(state, i2, i3);
+            
+            originalScenarioId = state.activeScenarioId;
+            
+            const originalData = state.scenarios[0].data;
+            
+            addResult('Step 1: Test Data Created', 
+                originalData.dependencies.length === 2, 
+                `Created 3 initiatives with 2 dependencies: ${i1} → ${i2} → ${i3}`);
+            
+            console.log('Original scenario data:', originalData);
+        }
+
+        function step2() {
+            if (!state) {
+                addResult('Step 2: Clone Scenario', false, 'No test data created yet');
+                return;
+            }
+            
+            console.log('=== STEP 2: Cloning Scenario ===');
+            window.PlanForgeModel.cloneActiveScenario(state);
+            clonedScenarioId = state.activeScenarioId;
+            
+            const clonedData = state.scenarios[1].data;
+            
+            addResult('Step 2: Scenario Cloned', 
+                clonedData.dependencies.length === 2, 
+                `Cloned scenario has ${clonedData.dependencies.length} dependencies`);
+            
+            console.log('Cloned scenario data:', clonedData);
+        }
+
+        function step3() {
+            if (!state || !clonedScenarioId) {
+                addResult('Step 3: Verify Dependencies', false, 'No cloned scenario available');
+                return;
+            }
+            
+            console.log('=== STEP 3: Verifying Dependencies ===');
+            
+            const originalScenario = state.scenarios[0];
+            const clonedScenario = state.scenarios[1];
+            
+            const originalData = originalScenario.data;
+            const clonedData = clonedScenario.data;
+            
+            // Check if dependencies were properly mapped
+            let allDependenciesValid = true;
+            let dependencyDetails = '';
+            
+            if (clonedData.dependencies.length === originalData.dependencies.length) {
+                for (let i = 0; i < originalData.dependencies.length; i++) {
+                    const originalDep = originalData.dependencies[i];
+                    const clonedDep = clonedData.dependencies[i];
+                    
+                    const originalFromItem = originalData.initiatives.find(item => item.id === originalDep.fromId);
+                    const originalToItem = originalData.initiatives.find(item => item.id === originalDep.toId);
+                    const clonedFromItem = clonedData.initiatives.find(item => item.id === clonedDep.fromId);
+                    const clonedToItem = clonedData.initiatives.find(item => item.id === clonedDep.toId);
+                    
+                    const isValid = originalFromItem && originalToItem && clonedFromItem && clonedToItem &&
+                                  originalFromItem.name === clonedFromItem.name && 
+                                  originalToItem.name === clonedToItem.name &&
+                                  originalDep.fromId !== clonedDep.fromId && 
+                                  originalDep.toId !== clonedDep.toId;
+                    
+                    if (!isValid) allDependenciesValid = false;
+                    
+                    dependencyDetails += `<br>${originalFromItem?.name} → ${originalToItem?.name} | ${clonedFromItem?.name} → ${clonedToItem?.name}`;
+                }
+            } else {
+                allDependenciesValid = false;
+            }
+            
+            addResult('Step 3: Dependencies Verified', 
+                allDependenciesValid, 
+                `Dependencies properly mapped: ${dependencyDetails}`);
+            
+            // Check scenario scoping
+            const allScopedCorrectly = clonedData.initiatives.every(item => item.scenarioId === clonedScenarioId);
+            addResult('Step 3: Scenario Scoping', 
+                allScopedCorrectly, 
+                `All initiatives have correct scenarioId: ${clonedScenarioId}`);
+        }
+
+        function step4() {
+            if (!state) {
+                addResult('Step 4: Show Timeline', false, 'No test data created yet');
+                return;
+            }
+            
+            console.log('=== STEP 4: Rendering Timeline ===');
+            
+            // Initialize timeline
+            const canvas = document.getElementById('timeline-canvas');
+            timeline = window.PlanForgeTimeline.create(state, canvas);
+            
+            addResult('Step 4: Timeline Rendered', true, 'Timeline should show dependencies for both scenarios');
+            
+            // Switch to cloned scenario to verify dependencies are visible
+            window.PlanForgeModel.setActiveScenario(state, clonedScenarioId);
+            timeline.render();
+            
+            addResult('Step 4: Cloned Scenario Active', true, `Active scenario: ${state.activeScenarioId}`);
+        }
+
+        // Initialize
+        console.log('Dependency cloning verification ready. Click "1. Create Test Data" to start.');
+    </script>
+</body>
+</html>
