@@ -1,7 +1,7 @@
 window.PlanForgeUI = (function() {
   function el(id){ return document.getElementById(id); }
   function createUI(state){
-    const bindings = { scenarioClone: [], scenarioChange: [], scenarioRename: [], exportJSON: [], importJSON: [], exportScenario: [], exportMermaid: [], jiraSettings: [] };
+    const bindings = { scenarioClone: [], scenarioChange: [], scenarioRename: [], exportJSON: [], importJSON: [], exportScenario: [], exportMermaid: [], jiraSettings: [], bulkSync: [] };
     el('btn-scenario-clone').addEventListener('click', () => bindings.scenarioClone.forEach(cb => cb()));
     el('scenario-select').addEventListener('change', (e) => bindings.scenarioChange.forEach(cb => cb(e.target.value)));
     el('btn-scenario-rename').addEventListener('click', () => bindings.scenarioRename.forEach(cb => cb()));
@@ -10,6 +10,7 @@ window.PlanForgeUI = (function() {
     el('btn-export-scenario').addEventListener('click', () => bindings.exportScenario.forEach(cb => cb()));
     el('btn-export-mermaid').addEventListener('click', () => bindings.exportMermaid.forEach(cb => cb()));
     el('btn-settings').addEventListener('click', () => bindings.jiraSettings.forEach(cb => cb()));
+    el('btn-bulk-sync').addEventListener('click', () => bindings.bulkSync.forEach(cb => cb()));
 
     function renderScenarios(){
       const sel = el('scenario-select');
@@ -196,10 +197,92 @@ window.PlanForgeUI = (function() {
           `;
           jiraWrap.appendChild(jiraStatus);
           
+          // Sync status and last synced time
+          if (item.lastSynced) {
+            const syncStatus = document.createElement('div');
+            syncStatus.style.marginTop = '8px';
+            syncStatus.style.fontSize = '12px';
+            syncStatus.style.color = '#9aa4c3';
+            syncStatus.innerHTML = `
+              <span class="material-icons" style="font-size: 14px;">sync</span>
+              Last synced: ${new Date(item.lastSynced).toLocaleString()}
+            `;
+            jiraWrap.appendChild(syncStatus);
+          }
+          
+          // Sync buttons container
+          const syncButtons = document.createElement('div');
+          syncButtons.style.display = 'flex';
+          syncButtons.style.gap = '8px';
+          syncButtons.style.marginTop = '8px';
+          
+          // Sync to JIRA button
+          const syncToJiraBtn = document.createElement('button');
+          syncToJiraBtn.textContent = 'Sync to JIRA';
+          syncToJiraBtn.className = 'jira-link-button';
+          syncToJiraBtn.addEventListener('click', async () => {
+            syncToJiraBtn.disabled = true;
+            syncToJiraBtn.textContent = 'Syncing...';
+            
+            try {
+              const result = await window.PlanForgeJIRA.syncPlanForgeToJira(item);
+              if (result.success) {
+                // Update last synced time
+                item.lastSynced = result.lastSynced;
+                renderDetails();
+                alert(result.message);
+              } else {
+                alert('Sync failed: ' + result.error);
+              }
+            } catch (error) {
+              alert('Sync failed: ' + error.message);
+            } finally {
+              syncToJiraBtn.disabled = false;
+              syncToJiraBtn.textContent = 'Sync to JIRA';
+            }
+          });
+          
+          // Sync from JIRA button
+          const syncFromJiraBtn = document.createElement('button');
+          syncFromJiraBtn.textContent = 'Sync from JIRA';
+          syncFromJiraBtn.className = 'jira-link-button';
+          syncFromJiraBtn.addEventListener('click', async () => {
+            syncFromJiraBtn.disabled = true;
+            syncFromJiraBtn.textContent = 'Syncing...';
+            
+            try {
+              const result = await window.PlanForgeJIRA.syncJiraToPlanForge(item.jiraKey);
+              if (result.success) {
+                // Update element with JIRA data
+                const success = window.PlanForgeModel.updateJiraLinkedElement(state, item.id, result.data);
+                if (success) {
+                  renderDetails();
+                  renderHierarchy();
+                  window.dispatchEvent(new Event('pf-refresh'));
+                  alert(result.message);
+                } else {
+                  alert('Failed to update element with JIRA data');
+                }
+              } else {
+                alert('Sync failed: ' + result.error);
+              }
+            } catch (error) {
+              alert('Sync failed: ' + error.message);
+            } finally {
+              syncFromJiraBtn.disabled = false;
+              syncFromJiraBtn.textContent = 'Sync from JIRA';
+            }
+          });
+          
+          syncButtons.appendChild(syncToJiraBtn);
+          syncButtons.appendChild(syncFromJiraBtn);
+          jiraWrap.appendChild(syncButtons);
+          
           // Unlink button
           const unlinkBtn = document.createElement('button'); 
           unlinkBtn.textContent = 'Unlink from JIRA'; 
           unlinkBtn.className = 'jira-link-button';
+          unlinkBtn.style.marginTop = '8px';
           unlinkBtn.addEventListener('click', () => {
             if (confirm('Are you sure you want to unlink this element from JIRA?')) {
               const success = window.PlanForgeModel.unlinkJiraElement(state, item.id);
@@ -398,6 +481,157 @@ window.PlanForgeUI = (function() {
       statusDiv.className = `connection-status ${type}`;
       messageDiv.textContent = message;
       statusDiv.style.display = 'block';
+    }
+
+    function showBulkSyncDialog() {
+      const dialog = el('bulk-sync-dialog');
+      const targetsList = el('sync-targets-list');
+      const progressDiv = el('bulk-sync-progress');
+      const resultsDiv = el('sync-results');
+      
+      // Clear previous state
+      targetsList.innerHTML = '';
+      progressDiv.style.display = 'none';
+      resultsDiv.innerHTML = '';
+      
+      // Get all JIRA-linked elements
+      const linkedElements = window.PlanForgeModel.getJiraLinkedElements(state);
+      
+      if (linkedElements.length === 0) {
+        targetsList.innerHTML = '<div style="padding: 16px; color: #9aa4c3; text-align: center;">No JIRA-linked elements found</div>';
+        return;
+      }
+      
+      // Populate targets list
+      linkedElements.forEach(element => {
+        const targetItem = document.createElement('div');
+        targetItem.className = 'sync-target-item';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = true;
+        checkbox.id = `target-${element.id}`;
+        
+        const info = document.createElement('div');
+        info.className = 'sync-target-info';
+        
+        const name = document.createElement('div');
+        name.className = 'sync-target-name';
+        name.textContent = element.name;
+        
+        const meta = document.createElement('div');
+        meta.className = 'sync-target-meta';
+        meta.textContent = `${element.level} • ${element.jiraKey} • Last synced: ${element.lastSynced ? new Date(element.lastSynced).toLocaleString() : 'Never'}`;
+        
+        info.appendChild(name);
+        info.appendChild(meta);
+        
+        targetItem.appendChild(checkbox);
+        targetItem.appendChild(info);
+        targetsList.appendChild(targetItem);
+      });
+      
+      dialog.style.display = 'flex';
+      
+      // Close dialog handlers
+      el('close-bulk-sync-dialog').addEventListener('click', () => {
+        dialog.style.display = 'none';
+      });
+      
+      el('cancel-bulk-sync').addEventListener('click', () => {
+        dialog.style.display = 'none';
+      });
+      
+      // Close on overlay click
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) {
+          dialog.style.display = 'none';
+        }
+      });
+      
+      // Start sync handler
+      el('start-bulk-sync').addEventListener('click', async () => {
+        const syncDirection = document.querySelector('input[name="sync-direction"]:checked').value;
+        const selectedTargets = Array.from(document.querySelectorAll('#sync-targets-list input[type="checkbox"]:checked'))
+          .map(cb => cb.id.replace('target-', ''))
+          .map(id => linkedElements.find(el => el.id === id))
+          .filter(el => el);
+        
+        if (selectedTargets.length === 0) {
+          alert('Please select at least one element to sync');
+          return;
+        }
+        
+        await performBulkSync(syncDirection, selectedTargets, progressDiv, resultsDiv);
+      });
+    }
+    
+    async function performBulkSync(direction, targets, progressDiv, resultsDiv) {
+      progressDiv.style.display = 'block';
+      resultsDiv.innerHTML = '';
+      
+      const progressFill = progressDiv.querySelector('.progress-fill');
+      const progressText = progressDiv.querySelector('.progress-text');
+      
+      let results = [];
+      
+      try {
+        if (direction === 'to-jira') {
+          // Sync PlanForge → JIRA
+          progressText.textContent = 'Syncing PlanForge data to JIRA...';
+          results = await window.PlanForgeJIRA.bulkSyncToJira(targets);
+        } else {
+          // Sync JIRA → PlanForge
+          progressText.textContent = 'Syncing JIRA data to PlanForge...';
+          const jiraKeys = targets.map(t => t.jiraKey);
+          results = await window.PlanForgeJIRA.bulkSyncFromJira(jiraKeys);
+          
+          // Update PlanForge elements with JIRA data
+          for (let i = 0; i < results.length; i++) {
+            const result = results[i];
+            if (result.success) {
+              const target = targets.find(t => t.jiraKey === result.jiraKey);
+              if (target) {
+                window.PlanForgeModel.updateJiraLinkedElement(state, target.id, result.data);
+              }
+            }
+            
+            // Update progress
+            const progress = ((i + 1) / results.length) * 100;
+            progressFill.style.width = `${progress}%`;
+            progressText.textContent = `Syncing ${i + 1}/${results.length}...`;
+          }
+        }
+        
+        // Display results
+        results.forEach(result => {
+          const resultItem = document.createElement('div');
+          resultItem.className = `sync-result-item ${result.success ? 'success' : 'error'}`;
+          
+          if (direction === 'to-jira') {
+            resultItem.textContent = `${result.elementName} (${result.jiraKey}): ${result.message}`;
+          } else {
+            resultItem.textContent = `${result.jiraKey}: ${result.message}`;
+          }
+          
+          resultsDiv.appendChild(resultItem);
+        });
+        
+        // Update UI
+        renderDetails();
+        renderHierarchy();
+        window.dispatchEvent(new Event('pf-refresh'));
+        
+        progressText.textContent = 'Sync completed';
+        
+      } catch (error) {
+        const errorItem = document.createElement('div');
+        errorItem.className = 'sync-result-item error';
+        errorItem.textContent = `Sync failed: ${error.message}`;
+        resultsDiv.appendChild(errorItem);
+        
+        progressText.textContent = 'Sync failed';
+      }
     }
 
     function showJiraSearchDialog(elementType, elementId) {
@@ -636,7 +870,7 @@ window.PlanForgeUI = (function() {
 
     return {
       renderHierarchy, renderDetails, renderScenarios,
-      showMermaidDialog, generateMermaidGantt, showJiraSettingsDialog, showJiraSearchDialog,
+      showMermaidDialog, generateMermaidGantt, showJiraSettingsDialog, showJiraSearchDialog, showBulkSyncDialog,
       onScenarioClone: (cb)=>bindings.scenarioClone.push(cb),
       onScenarioChange: (cb)=>bindings.scenarioChange.push(cb),
       onScenarioRename: (cb)=>bindings.scenarioRename.push(cb),
@@ -644,7 +878,8 @@ window.PlanForgeUI = (function() {
       onImportJSON: (cb)=>bindings.importJSON.push(cb),
       onExportScenario: (cb)=>bindings.exportScenario.push(cb),
       onExportMermaid: (cb)=>bindings.exportMermaid.push(cb),
-      onJiraSettings: (cb)=>bindings.jiraSettings.push(cb)
+      onJiraSettings: (cb)=>bindings.jiraSettings.push(cb),
+      onBulkSync: (cb)=>bindings.bulkSync.push(cb)
     };
   }
 

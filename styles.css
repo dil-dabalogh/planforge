@@ -618,3 +618,163 @@ button {
 .jira-link-status .material-icons {
   font-size: 16px;
 }
+
+/* Bulk Sync Dialog Styles */
+.bulk-sync-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sync-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sync-options h4 {
+  margin: 0 0 8px 0;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.sync-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background: #0f1429;
+  border: 1px solid #2a3154;
+  border-radius: 4px;
+}
+
+.sync-option input[type="radio"] {
+  margin-right: 8px;
+}
+
+.sync-option label {
+  color: #ffffff;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.sync-option small {
+  color: #9aa4c3;
+  font-size: 12px;
+  margin-left: 24px;
+}
+
+.sync-targets {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sync-targets h4 {
+  margin: 0 0 8px 0;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+#sync-targets-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #2a3154;
+  border-radius: 4px;
+  background: #0f1429;
+}
+
+.sync-target-item {
+  padding: 8px 12px;
+  border-bottom: 1px solid #2a3154;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sync-target-item:last-child {
+  border-bottom: none;
+}
+
+.sync-target-item input[type="checkbox"] {
+  margin: 0;
+}
+
+.sync-target-info {
+  flex: 1;
+}
+
+.sync-target-name {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.sync-target-meta {
+  color: #9aa4c3;
+  font-size: 12px;
+}
+
+.sync-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.sync-progress {
+  margin-top: 20px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #2a3154;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #6aa4ff;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  color: #ffffff;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.sync-results {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #2a3154;
+  border-radius: 4px;
+  background: #0f1429;
+}
+
+.sync-result-item {
+  padding: 8px 12px;
+  border-bottom: 1px solid #2a3154;
+  font-size: 12px;
+}
+
+.sync-result-item:last-child {
+  border-bottom: none;
+}
+
+.sync-result-item.success {
+  color: #22c55e;
+}
+
+.sync-result-item.error {
+  color: #ef4444;
+}
+
+.sync-result-item.info {
+  color: #6aa4ff;
+}

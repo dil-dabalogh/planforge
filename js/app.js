@@ -91,6 +91,10 @@
     ui.showJiraSettingsDialog();
   });
 
+  ui.onBulkSync(() => {
+    ui.showBulkSyncDialog();
+  });
+
   // Initialize JIRA service with saved settings
   const jiraSettings = window.PlanForgeSettings.getSettings();
   if (jiraSettings.jiraDomain && jiraSettings.email && jiraSettings.apiToken) {

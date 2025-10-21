@@ -36,6 +36,10 @@
           <span class="material-icons">settings</span>
           JIRA Settings
         </button>
+        <button id="btn-bulk-sync" title="Bulk Sync JIRA">
+          <span class="material-icons">sync</span>
+          Bulk Sync
+        </button>
         
       </div>
     </header>
@@ -190,6 +194,58 @@
             
             <div class="search-actions">
               <button id="cancel-jira-search" class="btn-secondary">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk Sync Dialog -->
+    <div id="bulk-sync-dialog" class="dialog-overlay" style="display: none;">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3>Bulk JIRA Sync</h3>
+          <button id="close-bulk-sync-dialog" class="dialog-close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="dialog-body">
+          <div class="bulk-sync-form">
+            <div class="sync-options">
+              <h4>Sync Options</h4>
+              <div class="sync-option">
+                <input type="radio" id="sync-to-jira" name="sync-direction" value="to-jira" checked>
+                <label for="sync-to-jira">Sync PlanForge → JIRA</label>
+                <small>Update JIRA issues with PlanForge data</small>
+              </div>
+              <div class="sync-option">
+                <input type="radio" id="sync-from-jira" name="sync-direction" value="from-jira">
+                <label for="sync-from-jira">Sync JIRA → PlanForge</label>
+                <small>Update PlanForge elements with JIRA data</small>
+              </div>
+            </div>
+            
+            <div class="sync-targets">
+              <h4>Target Elements</h4>
+              <div id="sync-targets-list">
+                <!-- Will be populated with linked elements -->
+              </div>
+            </div>
+            
+            <div class="sync-actions">
+              <button id="start-bulk-sync" class="btn-primary">
+                <span class="material-icons">sync</span>
+                Start Sync
+              </button>
+              <button id="cancel-bulk-sync" class="btn-secondary">Cancel</button>
+            </div>
+            
+            <div id="bulk-sync-progress" class="sync-progress" style="display: none;">
+              <div class="progress-bar">
+                <div class="progress-fill"></div>
+              </div>
+              <div class="progress-text">Syncing...</div>
+              <div id="sync-results" class="sync-results"></div>
             </div>
           </div>
         </div>

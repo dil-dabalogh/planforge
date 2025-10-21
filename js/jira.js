@@ -210,6 +210,96 @@ window.PlanForgeJIRA = (function() {
     };
   }
 
+  async function syncPlanForgeToJira(planForgeElement) {
+    if (!planForgeElement.jiraKey) {
+      throw new Error('Element is not linked to JIRA');
+    }
+
+    try {
+      const mappedData = mapPlanForgeToJira(planForgeElement);
+      const result = await updateIssue(planForgeElement.jiraKey, mappedData.fields);
+      
+      if (result.success) {
+        return {
+          success: true,
+          message: `Successfully synced ${planForgeElement.name} to JIRA`,
+          lastSynced: new Date().toISOString()
+        };
+      } else {
+        return {
+          success: false,
+          error: result.error
+        };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  async function syncJiraToPlanForge(jiraKey) {
+    try {
+      const result = await getIssue(jiraKey);
+      
+      if (!result.success) {
+        return {
+          success: false,
+          error: result.error
+        };
+      }
+
+      const mappedData = mapJiraToPlanForge(result.issue);
+      
+      return {
+        success: true,
+        data: mappedData,
+        message: `Successfully synced JIRA issue ${jiraKey}`
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  async function bulkSyncToJira(planForgeElements) {
+    const results = [];
+    
+    for (const element of planForgeElements) {
+      if (element.jiraKey) {
+        const result = await syncPlanForgeToJira(element);
+        results.push({
+          elementId: element.id,
+          elementName: element.name,
+          jiraKey: element.jiraKey,
+          success: result.success,
+          message: result.success ? result.message : result.error
+        });
+      }
+    }
+    
+    return results;
+  }
+
+  async function bulkSyncFromJira(jiraKeys) {
+    const results = [];
+    
+    for (const jiraKey of jiraKeys) {
+      const result = await syncJiraToPlanForge(jiraKey);
+      results.push({
+        jiraKey: jiraKey,
+        success: result.success,
+        data: result.data,
+        message: result.success ? result.message : result.error
+      });
+    }
+    
+    return results;
+  }
+
   return {
     initialize,
     testConnection,
@@ -217,6 +307,10 @@ window.PlanForgeJIRA = (function() {
     getIssue,
     updateIssue,
     mapPlanForgeToJira,
-    mapJiraToPlanForge
+    mapJiraToPlanForge,
+    syncPlanForgeToJira,
+    syncJiraToPlanForge,
+    bulkSyncToJira,
+    bulkSyncFromJira
   };
 })();
