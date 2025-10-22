@@ -218,171 +218,42 @@ function buildHTML(includeFonts = true, obfuscate = false, minifyCSS = false) {
 /**
  * Create distribution packages
  */
-function createDistribution(obfuscate = false) {
-  const suffix = obfuscate ? '-obfuscated' : '';
-  console.log(`Creating distribution packages${obfuscate ? ' (obfuscated)' : ''}...`);
+function createDistribution() {
+  console.log('Creating obfuscated full version...');
   
-  // Create full version with embedded fonts
-  console.log(`Building full version with embedded fonts${obfuscate ? ' (obfuscated)' : ''}...`);
-  const fullHTML = buildHTML(true, obfuscate, true);
-  fs.writeFileSync(path.join(DIST_DIR, `planforge-full${suffix}.html`), fullHTML);
+  // Create only obfuscated full version
+  const fullHTML = buildHTML(true, true, true);
+  fs.writeFileSync(path.join(DIST_DIR, 'index.html'), fullHTML);
   
-  // Create minimal version without fonts (uses system fonts)
-  console.log(`Building minimal version without fonts${obfuscate ? ' (obfuscated)' : ''}...`);
-  const minimalHTML = buildHTML(false, obfuscate, true);
-  fs.writeFileSync(path.join(DIST_DIR, `planforge-minimal${suffix}.html`), minimalHTML);
-  
-  // Create a simple launcher HTML that detects capabilities
-  const launcherHTML = `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PlanForge Launcher</title>
-  <style>
-    body { font-family: system-ui, sans-serif; margin: 40px; background: #f5f5f5; }
-    .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    h1 { color: #1976d2; margin-bottom: 20px; }
-    .option { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-    .option h3 { margin-top: 0; color: #333; }
-    .option p { margin-bottom: 10px; color: #666; }
-    .btn { background: #1976d2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; }
-    .btn:hover { background: #1565c0; }
-    .size { font-size: 0.9em; color: #888; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>PlanForge MVP</h1>
-    <p>Choose your preferred version:</p>
-    
-    <div class="option">
-      <h3>Full Version</h3>
-      <p>Complete application with embedded fonts. Best visual experience.</p>
-      <a href="planforge-full.html" class="btn">Launch Full Version</a>
-      <div class="size">~1.3MB</div>
-    </div>
-    
-    <div class="option">
-      <h3>Minimal Version</h3>
-      <p>Lightweight version using system fonts. Faster loading.</p>
-      <a href="planforge-minimal.html" class="btn">Launch Minimal Version</a>
-      <div class="size">~100KB</div>
-    </div>
-    
-    <div class="option">
-      <h3>Obfuscated Full Version</h3>
-      <p>Full version with obfuscated code. Protected and optimized.</p>
-      <a href="planforge-full-obfuscated.html" class="btn">Launch Obfuscated Full</a>
-      <div class="size">~2.5MB</div>
-    </div>
-    
-    <div class="option">
-      <h3>Obfuscated Minimal Version</h3>
-      <p>Minimal version with obfuscated code. Protected and compact.</p>
-      <a href="planforge-minimal-obfuscated.html" class="btn">Launch Obfuscated Minimal</a>
-      <div class="size">~940KB</div>
-    </div>
-    
-    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 0.9em; color: #666;">
-      <p><strong>Features:</strong> Project planning, timeline visualization, dependency management, JSON export/import</p>
-      <p><strong>Requirements:</strong> Modern browser with Canvas support</p>
-    </div>
-  </div>
-</body>
-</html>`;
-  
-  fs.writeFileSync(path.join(DIST_DIR, 'index.html'), launcherHTML);
-  
-  // Create a README for the distribution
-  const readmeContent = `# PlanForge Distribution
-
-This directory contains optimized, single-file versions of PlanForge for easy distribution and deployment.
-
-## Files
-
-- **index.html** - Launcher page to choose between versions
-- **planforge-full.html** - Complete application with embedded fonts (~1.3MB)
-- **planforge-minimal.html** - Lightweight version using system fonts (~100KB)
-
-## Usage
-
-### Local Use
-1. Open \`index.html\` in any modern browser
-2. Choose your preferred version
-3. All data is stored locally in your browser
-
-### Cloud Hosting
-1. Upload all files to any web server
-2. Access via \`index.html\` or directly via the version files
-3. No server-side processing required
-
-### Self-Contained Distribution
-- Each HTML file is completely self-contained
-- No external dependencies
-- Works offline after initial load
-- Can be shared as a single file
-
-## Technical Details
-
-- **Full Version**: Includes Material Icons fonts embedded as base64
-- **Minimal Version**: Uses system fonts, significantly smaller
-- **Storage**: Browser localStorage for data persistence
-- **Compatibility**: Modern browsers with Canvas API support
-
-## Deployment Options
-
-### Static Hosting
-- GitHub Pages
-- Netlify
-- Vercel
-- AWS S3 + CloudFront
-- Any static file server
-
-### Local Distribution
-- Email as attachment
-- USB drive
-- Internal file sharing
-- Direct file access
-`;
-
-  fs.writeFileSync(path.join(DIST_DIR, 'README.md'), readmeContent);
-  
-  console.log('Distribution packages created successfully!');
+  console.log('Distribution package created successfully!');
 }
 
 /**
  * Get file sizes for reporting
  */
 function getFileSizes() {
-  const files = ['planforge-full.html', 'planforge-minimal.html', 'index.html'];
   console.log('\nFile sizes:');
   
-  files.forEach(file => {
-    const filePath = path.join(DIST_DIR, file);
-    if (fs.existsSync(filePath)) {
-      const stats = fs.statSync(filePath);
-      const sizeKB = (stats.size / 1024).toFixed(1);
-      console.log(`  ${file}: ${sizeKB}KB`);
-    }
-  });
+  const filePath = path.join(DIST_DIR, 'index.html');
+  if (fs.existsSync(filePath)) {
+    const stats = fs.statSync(filePath);
+    const sizeKB = (stats.size / 1024).toFixed(1);
+    console.log(`  index.html: ${sizeKB}KB`);
+  }
 }
 
 // Main execution
 if (require.main === module) {
   try {
-    // Create standard versions
-    createDistribution(false);
-    
-    // Create obfuscated versions
-    createDistribution(true);
-    
+    createDistribution();
     getFileSizes();
     console.log('\n✅ Build completed successfully!');
-    console.log(`📁 Distribution files created in: ${DIST_DIR}`);
-    console.log('\n📦 Available versions:');
-    console.log('  • Standard versions (readable code)');
-    console.log('  • Obfuscated versions (protected code)');
+    console.log(`📁 Distribution file created: ${DIST_DIR}/index.html`);
+    console.log('\n🔒 Features:');
+    console.log('  • Obfuscated JavaScript code');
+    console.log('  • Embedded Material Icons fonts');
+    console.log('  • Minified CSS');
+    console.log('  • Single self-contained file');
     console.log('\n🚀 Ready for deployment!');
   } catch (error) {
     console.error('❌ Build failed:', error.message);

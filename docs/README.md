@@ -8,20 +8,21 @@ A lightweight project planning tool for visualizing initiatives, dependencies, a
 **Run:** Use the provided start scripts to serve the application:
 
 ```bash
-# Unix/Linux/macOS (starts both app server and CORS proxy)
-./start-server.sh
+# Unix/Linux/macOS
+./src/start-server.sh
 
-# Windows (starts both app server and CORS proxy)
-start-server.bat
-
-# Or using npm (starts both servers)
-npm run start-with-proxy
+# Or using npm
+npm start
+npm run dev
 ```
 
-This resolves CORS issues while keeping all data local and secure - no external services are used.
+This serves the application locally for development purposes.
 
 ### Option 2: Direct File Access
-**Run:** Open `index.html` in a modern browser.
+**Run:** Open `src/index.html` in a modern browser.
+
+### Option 3: Production Build
+**Build:** Run `npm run build` to create a single obfuscated distribution file at `dist/index.html`.
 
 ## Features
 
@@ -114,6 +115,46 @@ This resolves CORS issues while keeping all data local and secure - no external 
 - **Switch**: Toggle between different scenarios
 - **Rename**: Update scenario names and descriptions
 
+## Build System
+
+### Development Commands
+```bash
+# Start development server
+npm start
+
+# Start development server with live reload
+npm run dev
+
+# Build production distribution
+npm run build
+
+# Test distribution locally
+npm run build:dist
+```
+
+### Production Output
+- **File**: `dist/index.html` (approximately 1.7MB)
+- **Features**: Obfuscated JavaScript, embedded fonts, minified CSS
+- **Self-contained**: No external dependencies required
+
+### Automated Builds
+- **GitHub Actions**: Automatically builds on push to `main` or `staging` branches
+- **Workflow**: `.github/workflows/build.yml`
+- **Artifacts**: Build artifacts available for 30 days
+
+## Deployment
+
+### Local Distribution
+- **Single File**: Share `dist/index.html` directly
+- **Email**: Attach the HTML file to emails
+- **File Sharing**: Upload to any file sharing service
+
+### Cloud Hosting
+- **Netlify**: Drag `dist/` folder to netlify.com/drop
+- **Vercel**: Use `vercel --prod` command
+- **GitHub Pages**: Enable Pages in repository settings
+- **Static Hosts**: Upload `dist/index.html` to any web server
+
 ## Technical Notes
 
 - **Dates**: ISO format (YYYY-MM-DD) in UTC
@@ -121,6 +162,8 @@ This resolves CORS issues while keeping all data local and secure - no external 
 - **Performance**: Optimized for 100-200 work items
 - **Browser**: Modern browsers with Canvas support
 - **Dependencies**: Finish-to-Start (FS) relationships only
+- **Assets**: All fonts and icons are embedded in production builds
+- **Security**: JavaScript code is obfuscated in production builds
 
 ## Architecture
 

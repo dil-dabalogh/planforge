@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # PlanForge Build and Deploy Script
-# Usage: ./deploy.sh [local|netlify|vercel|github] [standard|obfuscated|both]
+# Usage: ./deploy.sh [local|netlify|vercel|github]
 
 set -e
 
@@ -27,26 +27,9 @@ if [ ! -d "node_modules" ]; then
     npm install
 fi
 
-# Determine build type
-BUILD_TYPE="${2:-both}"
-echo "🔨 Building application ($BUILD_TYPE)..."
-
-case "$BUILD_TYPE" in
-    "standard")
-        npm run build:standard
-        ;;
-    "obfuscated")
-        npm run build:obfuscated
-        ;;
-    "both"|"")
-        npm run build
-        ;;
-    *)
-        echo "❌ Unknown build type: $BUILD_TYPE"
-        echo "Available types: standard, obfuscated, both"
-        exit 1
-        ;;
-esac
+# Build the application
+echo "🔨 Building obfuscated application..."
+npm run build
 
 # Get file sizes
 echo ""
@@ -65,14 +48,14 @@ case "${1:-local}" in
     "local")
         echo "📁 Local Distribution Ready:"
         echo "  - Open dist/index.html in your browser"
-        echo "  - Share the dist/ folder with users"
-        echo "  - All files are self-contained"
+        echo "  - Share dist/index.html as a single file"
+        echo "  - File is completely self-contained"
         echo ""
-        if [ "$BUILD_TYPE" = "both" ]; then
-            echo "📦 Available versions:"
-            echo "  • Standard versions (readable code)"
-            echo "  • Obfuscated versions (protected code)"
-        fi
+        echo "🔒 Features:"
+        echo "  • Obfuscated JavaScript code"
+        echo "  • Embedded Material Icons fonts"
+        echo "  • Minified CSS"
+        echo "  • Single self-contained file"
         echo ""
         echo "💡 To test locally: npm run build:dist"
         ;;

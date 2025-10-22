@@ -11,10 +11,8 @@
     "start-with-proxy": "concurrently \"npm run proxy\" \"npm start\"",
     "dev-with-proxy": "concurrently \"npm run proxy\" \"npm run dev\"",
     "build": "node build.js",
-    "build:standard": "node -e \"require('./build.js').createDistribution(false)\"",
-    "build:obfuscated": "node -e \"require('./build.js').createDistribution(true)\"",
     "build:dist": "npm run build && npx http-server dist -p 8081 -o",
-    "deploy:prepare": "npm run build && echo 'Distribution ready in ./dist folder'"
+    "deploy:prepare": "npm run build && echo 'Distribution ready: dist/index.html'"
   },
   "keywords": [
     "project-management",

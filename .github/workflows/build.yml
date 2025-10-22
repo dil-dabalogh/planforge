@@ -1,0 +1,51 @@
+name: Build PlanForge Distribution
+
+on:
+  push:
+    branches: [ main, staging ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build application
+        run: npm run build
+        
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: planforge-distribution
+          path: dist/
+          retention-days: 30
+          
+      - name: Display build info
+        run: |
+          echo "✅ Build completed successfully!"
+          echo "📁 Distribution file: dist/index.html"
+          echo "📊 File size:"
+          ls -lh dist/index.html
+          echo ""
+          echo "🔒 Features:"
+          echo "  • Obfuscated JavaScript code"
+          echo "  • Embedded Material Icons fonts"
+          echo "  • Minified CSS"
+          echo "  • Single self-contained file"
+          echo ""
+          echo "🚀 Ready for deployment!"
