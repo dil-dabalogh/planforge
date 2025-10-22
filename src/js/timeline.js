@@ -385,15 +385,27 @@ window.PlanForgeTimeline = (function() {
       return rows;
     }
 
+    function drawRhombus(ctx, centerX, centerY, width, height) {
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY - height); // top
+      ctx.lineTo(centerX + width, centerY);   // right
+      ctx.lineTo(centerX, centerY + height); // bottom
+      ctx.lineTo(centerX - width, centerY);  // left
+      ctx.closePath();
+      ctx.fill();
+    }
+
     function renderItems() {
       const rows = getRows();
       const barHeight = 18;
       ctx.font = '12px system-ui';
       rows.forEach(({ item, depth, scenarioId, isScenario }, idx) => {
         const y = layout.header + idx * (layout.rowHeight + layout.rowGap);
-        // row label
-        ctx.fillStyle = '#9aa4c3';
-        ctx.fillText(''.padStart(depth*2, ' ') + item.name, 8, y + 14);
+        // row label - don't show text for milestones
+        if (!item.isMilestone) {
+          ctx.fillStyle = '#9aa4c3';
+          ctx.fillText(''.padStart(depth*2, ' ') + item.name, 8, y + 14);
+        }
         // bar
         const x1 = dateToX(item.start);
         const x2 = dateToX(item.end);
@@ -418,18 +430,24 @@ window.PlanForgeTimeline = (function() {
           ctx.fillRect(x1 - 2, y + 2, w + 4, barHeight + 4);
         }
         
-        ctx.fillStyle = barColor(item.level, scenarioId, isScenario);
-        ctx.fillRect(x1, y + 4, w, barHeight);
+        ctx.fillStyle = barColor(item.level, scenarioId, isScenario, item.isMilestone);
         
-        // handles (only for non-scenario items) - draw first
-        if (!isScenario) {
+        // Draw rhombus shape for milestones, rectangle for regular items
+        if (item.isMilestone) {
+          drawRhombus(ctx, x1 + w/2, y + 4 + barHeight/2, w/2, barHeight/2);
+        } else {
+          ctx.fillRect(x1, y + 4, w, barHeight);
+        }
+        
+        // handles (only for non-scenario, non-milestone items) - draw first
+        if (!isScenario && !item.isMilestone) {
           ctx.fillStyle = '#d2e3ff';
           ctx.fillRect(x1 - 2, y + 4, 4, barHeight);
           ctx.fillRect(x1 + w - 2, y + 4, 4, barHeight);
         }
         
         // Draw colored borders - left red, right green (drawn last to be visible)
-        if (!isScenario) {
+        if (!isScenario && !item.isMilestone) {
           // Left border (red) - very thick and visible
           ctx.strokeStyle = '#ff6a6a';
           ctx.lineWidth = 4;
@@ -452,6 +470,30 @@ window.PlanForgeTimeline = (function() {
             ctx.lineWidth = 3;
             ctx.strokeRect(x1 - 1, y + 3, w + 2, barHeight + 2);
           }
+        } else if (item.isMilestone) {
+          // For milestones, draw a simple border around the rhombus
+          ctx.strokeStyle = '#f59e0b'; // Darker yellow for border
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(x1 + w/2, y + 4);
+          ctx.lineTo(x1 + w, y + 4 + barHeight/2);
+          ctx.lineTo(x1 + w/2, y + 4 + barHeight);
+          ctx.lineTo(x1, y + 4 + barHeight/2);
+          ctx.closePath();
+          ctx.stroke();
+          
+          // Draw selection border if selected
+          if (isSelected) {
+            ctx.strokeStyle = '#6aa4ff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(x1 + w/2, y + 3);
+            ctx.lineTo(x1 + w + 1, y + 3 + barHeight/2);
+            ctx.lineTo(x1 + w/2, y + 3 + barHeight + 2);
+            ctx.lineTo(x1 - 1, y + 3 + barHeight/2);
+            ctx.closePath();
+            ctx.stroke();
+          }
         } else {
           // For scenarios, use default border or selection border
           if (isSelected) {
@@ -464,25 +506,27 @@ window.PlanForgeTimeline = (function() {
             ctx.strokeRect(x1, y + 4, w, barHeight);
           }
         }
-        // name on bar
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '11px system-ui';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const name = item.name;
-        const textWidth = ctx.measureText(name).width;
-        if (textWidth <= w - 8) {
-          ctx.fillText(name, x1 + w/2, y + 4 + barHeight/2);
-        } else {
-          const ellipsis = '...';
-          const ellipsisWidth = ctx.measureText(ellipsis).width;
-          let truncated = name;
-          while (ctx.measureText(truncated).width > w - 8 - ellipsisWidth && truncated.length > 0) {
-            truncated = truncated.slice(0, -1);
+        // name on bar - don't show text for milestones
+        if (!item.isMilestone) {
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '11px system-ui';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          const name = item.name;
+          const textWidth = ctx.measureText(name).width;
+          if (textWidth <= w - 8) {
+            ctx.fillText(name, x1 + w/2, y + 4 + barHeight/2);
+          } else {
+            const ellipsis = '...';
+            const ellipsisWidth = ctx.measureText(ellipsis).width;
+            let truncated = name;
+            while (ctx.measureText(truncated).width > w - 8 - ellipsisWidth && truncated.length > 0) {
+              truncated = truncated.slice(0, -1);
+            }
+            ctx.fillText(truncated + ellipsis, x1 + w/2, y + 4 + barHeight/2);
           }
-          ctx.fillText(truncated + ellipsis, x1 + w/2, y + 4 + barHeight/2);
+          ctx.textAlign = 'left';
         }
-        ctx.textAlign = 'left';
       });
     }
 
@@ -545,8 +589,9 @@ window.PlanForgeTimeline = (function() {
       });
     }
 
-    function barColor(level, scenarioId, isScenario) {
+    function barColor(level, scenarioId, isScenario, isMilestone = false) {
       if (isScenario) return '#9aa4c3'; // grey for scenarios
+      if (isMilestone) return '#fbbf24'; // yellow for milestones
       if (level === 'Initiative') return '#6aa4ff'; // blue
       if (level === 'Epic') return '#a06aff'; // purple
       if (level === 'Story') return '#67d38a'; // green
@@ -560,6 +605,7 @@ window.PlanForgeTimeline = (function() {
       renderItems();
       renderDependencies();
       renderDragConstraints();
+      updateZoomToContentButton();
     }
     
     function renderDragConstraints() {
@@ -710,8 +756,8 @@ window.PlanForgeTimeline = (function() {
         const x2 = dateToX(item.end);
         const w = Math.max(10, x2 - x1);
         if (py >= y+4 && py <= y+4+barHeight && px >= x1-4 && px <= x1+w+4) {
-          // Scenarios can only be moved (no resize handles)
-          if (isScenario) {
+          // Scenarios and milestones can only be moved (no resize handles)
+          if (isScenario || item.isMilestone) {
             return { id: item.id, mode: 'move', y, x1, w };
           }
           const nearStart = Math.abs(px - x1) <= 6;
@@ -820,7 +866,10 @@ window.PlanForgeTimeline = (function() {
     canvas.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
-    window.addEventListener('pf-refresh', render);
+    window.addEventListener('pf-refresh', () => {
+      render();
+      updateZoomToContentButton();
+    });
     
     // Listen for selection changes to ensure highlighting stays synchronized
     window.addEventListener('pf-selection-change', syncSelectionHighlight);
@@ -908,6 +957,14 @@ window.PlanForgeTimeline = (function() {
         updateZoomPresetButtons();
         render();
       });
+      
+      // Zoom to content button
+      const zoomToContentBtn = document.getElementById('zoom-to-content');
+      if (zoomToContentBtn) {
+        zoomToContentBtn.addEventListener('click', () => {
+          zoomToContent();
+        });
+      }
     }
 
     function updateZoomLevelDisplay() {
@@ -942,6 +999,57 @@ window.PlanForgeTimeline = (function() {
         case 'day':
           zoomPresets.day.classList.add('active');
           break;
+      }
+    }
+
+    function zoomToContent() {
+      const rows = getRows();
+      
+      // Check if timeline is empty
+      if (rows.length === 0) {
+        return;
+      }
+      
+      // Find earliest start date and latest end date from all visible elements
+      let earliestStart = null;
+      let latestEnd = null;
+      
+      rows.forEach(({ item }) => {
+        if (!earliestStart || item.start < earliestStart) {
+          earliestStart = item.start;
+        }
+        if (!latestEnd || item.end > latestEnd) {
+          latestEnd = item.end;
+        }
+      });
+      
+      // Update timeline configuration
+      if (earliestStart && latestEnd) {
+        timelineConfig.start = earliestStart;
+        timelineConfig.end = latestEnd;
+        
+        // Update the UI inputs to reflect the change
+        const startInput = document.getElementById('timeline-start');
+        const endInput = document.getElementById('timeline-end');
+        if (startInput) {
+          startInput.value = timelineConfig.start;
+        }
+        if (endInput) {
+          endInput.value = timelineConfig.end;
+        }
+        
+        // Re-render the timeline
+        render();
+      }
+    }
+
+    function updateZoomToContentButton() {
+      const button = document.getElementById('zoom-to-content');
+      const rows = getRows();
+      
+      // Enable/disable button based on whether timeline has content
+      if (button) {
+        button.disabled = rows.length === 0;
       }
     }
 
