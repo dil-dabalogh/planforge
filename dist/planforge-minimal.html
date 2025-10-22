@@ -1,0 +1,2745 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PlanForge MVP</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z' fill='%231976d2'/%3E%3C/svg%3E">
+  
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PlanForge MVP</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z' fill='%231976d2'/%3E%3C/svg%3E">
+    <style>
+@font-face {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: 400;
+  src: url(../woff2/material-icons.ttf) format('truetype')
+}
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: 400;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr
+}
+</style>
+    <style>
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  font-weight: 400;
+  src: url(../woff2/material-symbols-400.ttf) format('truetype')
+}
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: 400;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased
+}
+</style>
+    <style>
+:root {
+  --bg: #0a0b0f;
+  --panel: #1a1d23;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --accent: #f59e0b;
+  --accent-2: #10b981;
+  --danger: #ef4444;
+  --grid: #374151
+}
+* {
+  box-sizing: border-box
+}
+body,
+html {
+  height: 100%
+}
+body {
+  margin: 0;
+  font-family: -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  color: var(--text);
+  background: var(--bg)
+}
+.app-header {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--grid)
+}
+.brand {
+  font-weight: 700;
+  letter-spacing: .3px
+}
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: 16px;
+  width: 100%
+}
+.toolbar .spacer {
+  flex: 1
+}
+button,
+input[type=range],
+select {
+  background: #2d3748;
+  color: var(--text);
+  border: 1px solid var(--grid);
+  border-radius: 6px;
+  padding: 6px 10px
+}
+button:hover {
+  border-color: var(--accent)
+}
+button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px
+}
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: 400;
+  font-style: normal;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased
+}
+.app-main {
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  grid-template-rows: calc(100vh - 52px);
+  transition: grid-template-columns .3s
+}
+.app-main.right-sidebar-collapsed {
+  grid-template-columns: 280px 1fr 40px
+}
+.sidebar {
+  background: var(--panel);
+  border-right: 1px solid var(--grid);
+  overflow: auto;
+  position: relative;
+  transition: width .3s
+}
+#right-sidebar {
+  border-left: 1px solid var(--grid);
+  border-right: none
+}
+#right-sidebar.collapsed .sidebar-content {
+  display: none
+}
+.sidebar-toggle {
+  position: absolute;
+  top: 50%;
+  left: -20px;
+  transform: translateY(-50%);
+  z-index: 10
+}
+#right-sidebar.collapsed .sidebar-toggle {
+  left: -20px
+}
+.sidebar-toggle button {
+  background: var(--panel);
+  border: 1px solid var(--grid);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: .2s
+}
+.sidebar-toggle button:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg)
+}
+.sidebar-toggle button .material-symbols-outlined {
+  font-size: 20px
+}
+.sidebar-content {
+  width: 100%;
+  height: 100%;
+  overflow: auto
+}
+.pane {
+  padding: 12px;
+  border-bottom: 1px solid var(--grid)
+}
+.pane h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 600
+}
+.list,
+.tree {
+  display: flex;
+  flex-direction: column;
+  gap: 6px
+}
+.workspace {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column
+}
+.timeline-controls-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--grid);
+  background: #1f2937;
+  flex-shrink: 0
+}
+.timeline-controls {
+  display: flex;
+  gap: 16px;
+  align-items: center
+}
+.timeline-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted)
+}
+.timeline-controls input[type=date] {
+  padding: 6px 8px;
+  background: #2d3748;
+  color: var(--text);
+  border: 1px solid var(--grid);
+  border-radius: 6px;
+  font-size: 13px
+}
+.zoom-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center
+}
+.zoom-presets {
+  display: flex;
+  gap: 4px
+}
+.zoom-preset {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  background: #2d3748;
+  color: var(--muted);
+  border: 1px solid var(--grid);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: .2s
+}
+.zoom-preset:hover {
+  border-color: var(--accent);
+  color: var(--accent)
+}
+.zoom-preset.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent)
+}
+.zoom-slider-container {
+  display: flex;
+  align-items: center;
+  gap: 8px
+}
+.zoom-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500
+}
+#zoom-slider {
+  width: 120px;
+  height: 6px;
+  background: #374151;
+  border-radius: 3px;
+  outline: 0;
+  cursor: pointer
+}
+#zoom-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,.3)
+}
+#zoom-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,.3)
+}
+.zoom-level {
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 600;
+  min-width: 50px;
+  text-align: center
+}
+#timeline-container {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  overflow: auto
+}
+#timeline-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #0f172a
+}
+.resource-item,
+.tree-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--grid);
+  border-radius: 6px;
+  min-height: 32px
+}
+.tree-item > div:first-child {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden
+}
+.tag {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  border: 1px solid var(--grid);
+  color: var(--muted)
+}
+.row-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  align-items: center
+}
+.row-actions button {
+  padding: 2px 4px;
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0
+}
+.row-actions button .material-icons,
+.row-actions button .material-symbols-outlined {
+  font-size: 16px
+}
+.pill {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  border: 1px solid var(--grid)
+}
+.pill.engineer {
+  background: rgba(245,158,11,.12);
+  color: #fbbf24
+}
+.pill.qa {
+  background: rgba(239,68,68,.12);
+  color: #fca5a5
+}
+.pill.pm {
+  background: rgba(16,185,129,.12);
+  color: #6ee7b7
+}
+.details-field {
+  margin-bottom: 8px
+}
+.details-field label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px
+}
+.details-field input,
+.details-field select {
+  width: 100%;
+  padding: 6px 8px;
+  background: #1f2937;
+  color: var(--text);
+  border: 1px solid var(--grid);
+  border-radius: 6px
+}
+.link {
+  color: var(--accent);
+  cursor: pointer
+}
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000
+}
+.dialog-content {
+  background: var(--panel);
+  border: 1px solid var(--grid);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0,0,0,.3)
+}
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--grid)
+}
+.dialog-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text)
+}
+.dialog-close {
+  background: 0 0;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center
+}
+.dialog-close:hover {
+  background: rgba(255,255,255,.1);
+  color: var(--text)
+}
+.dialog-body {
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto
+}
+.dialog-body p {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 14px
+}
+#mermaid-code {
+  width: 100%;
+  height: 300px;
+  background: #0f172a;
+  color: var(--text);
+  border: 1px solid var(--grid);
+  border-radius: 8px;
+  padding: 12px;
+  font-family: Monaco,Menlo,'Ubuntu Mono',monospace;
+  font-size: 13px;
+  line-height: 1.4;
+  resize: vertical;
+  margin-bottom: 16px
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px
+}
+.btn-primary:hover {
+  background: #d97706
+}
+</style>
+  <style>
+      .material-icons, .material-symbols-outlined {
+        font-family: 'Material Icons', 'Material Symbols Outlined', sans-serif;
+        font-weight: normal;
+        font-style: normal;
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
+      }
+    </style>
+</head>
+<body>
+  
+    <header class="app-header">
+      <div class="brand">PlanForge</div>
+      <div class="toolbar">
+        <div class="spacer"></div>
+        <button id="btn-import-json" title="Import JSON File">
+          <span class="material-icons">folder_open</span>
+          Import JSON
+        </button>
+        <button id="btn-export-json" title="Export All Data to JSON">
+          <span class="material-icons">save</span>
+          Export JSON
+        </button>
+        <button id="btn-export-scenario" title="Export Scenario for JIRA Import">
+          <span class="material-icons">link</span>
+          Export Scenario
+        </button>
+        <button id="btn-export-mermaid" title="Export MermaidJS Gantt Chart">
+          <span class="material-icons">timeline</span>
+          Export MermaidJS
+        </button>
+        
+      </div>
+    </header>
+
+    <main class="app-main">
+      <aside class="sidebar" id="left-sidebar">
+        <div class="pane">
+          <h3>Hierarchy</h3>
+          <div id="hierarchy-tree" class="tree"></div>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <div id="timeline-container">
+          <canvas id="timeline-canvas"></canvas>
+        </div>
+        <div class="timeline-controls-bottom">
+          <div class="timeline-controls">
+            <label>Timeline Start
+              <input id="timeline-start" type="date" />
+            </label>
+            <label>Timeline End
+              <input id="timeline-end" type="date" />
+            </label>
+          </div>
+          
+          <div class="zoom-controls">
+            <div class="zoom-presets">
+              <button id="zoom-year" class="zoom-preset" title="Year View">Year</button>
+              <button id="zoom-quarter" class="zoom-preset" title="Quarter View">Quarter</button>
+              <button id="zoom-month" class="zoom-preset" title="Month View">Month</button>
+              <button id="zoom-day" class="zoom-preset" title="Day View">Day</button>
+            </div>
+            <div class="zoom-slider-container">
+              <span class="zoom-label">Zoom:</span>
+              <input id="zoom-slider" type="range" min="0" max="4" value="2" step="1" />
+              <span id="zoom-level" class="zoom-level">Month</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="sidebar" id="right-sidebar">
+        <div class="sidebar-toggle" id="right-sidebar-toggle">
+          <button id="toggle-right-panel" title="Toggle Details Panel">
+            <span class="material-symbols-outlined">keyboard_double_arrow_left</span>
+          </button>
+        </div>
+        <div class="sidebar-content">
+          <div class="pane">
+            <h3>Details</h3>
+            <div id="details"></div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <input id="file-input" type="file" accept=".json,.yaml,.yml,application/json,text/yaml" style="display:none" />
+
+    <!-- MermaidJS Export Dialog -->
+    <div id="mermaid-dialog" class="dialog-overlay" style="display: none;">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3>MermaidJS Gantt Chart</h3>
+          <button id="close-mermaid-dialog" class="dialog-close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="dialog-body">
+          <p>Copy the code below to embed this Gantt chart in your documentation:</p>
+          <textarea id="mermaid-code" readonly></textarea>
+          <div class="dialog-actions">
+            <button id="copy-mermaid-code" class="btn-primary">
+              <span class="material-icons">content_copy</span>
+              Copy to Clipboard
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+    <script>
+window.PlanForgeModel = (function() {
+  function today() { return new Date().toISOString().slice(0,10); }
+  function addDays(isoDate, days) {
+    const d = new Date(isoDate + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0,10);
+  }
+  function clampDate(iso) { return iso; }
+
+  function createInitialState() {
+    return {
+      scenarios: [{ id: 'default', name: 'Baseline', description: '', visible: true, data: emptyData() }],
+      activeScenarioId: 'default',
+      selection: null,
+      expandedItems: new Set() // Track which tree items are expanded
+    };
+  }
+  function emptyData() {
+    return { initiatives: [], dependencies: [], calendars: { holidays: [] } };
+  }
+  function getActiveData(state) {
+    return state.scenarios.find(s => s.id === state.activeScenarioId).data;
+  }
+  
+  function toggleExpanded(state, itemId) {
+    if (state.expandedItems.has(itemId)) {
+      state.expandedItems.delete(itemId);
+    } else {
+      state.expandedItems.add(itemId);
+    }
+  }
+  
+  function isExpanded(state, itemId) {
+    return state.expandedItems.has(itemId);
+  }
+  
+  function expandToShowItem(state, itemId) {
+    const data = getActiveData(state);
+    const item = data.initiatives.find(i => i.id === itemId);
+    if (!item) return false; // Item not found
+    
+    // If item has no parent, it's already visible
+    if (!item.parentId) return true;
+    
+    // Build path from root to item
+    const path = [];
+    let current = item;
+    while (current.parentId) {
+      path.unshift(current.parentId);
+      current = data.initiatives.find(i => i.id === current.parentId);
+      if (!current) break;
+    }
+    
+    // Expand all parents in the path
+    let allExpanded = true;
+    path.forEach(parentId => {
+      if (!state.expandedItems.has(parentId)) {
+        state.expandedItems.add(parentId);
+        allExpanded = false;
+      }
+    });
+    
+    return allExpanded; // Returns true if item was already visible
+  }
+  function setActiveScenario(state, id) { state.activeScenarioId = id; }
+  function renameActiveScenario(state, name) {
+    const s = state.scenarios.find(x => x.id === state.activeScenarioId);
+    if (s && name && name.trim()) s.name = name.trim();
+  }
+  function cloneActiveScenario(state) {
+    const current = state.scenarios.find(s => s.id === state.activeScenarioId);
+    const clone = JSON.parse(JSON.stringify(current));
+    clone.id = 'scn_' + Math.random().toString(36).slice(2,8);
+    clone.name = current.name + ' Copy';
+    clone.visible = true;
+    
+    console.log('=== CLONING SCENARIO ===');
+    console.log('Original scenario:', {
+      id: current.id,
+      name: current.name,
+      initiatives: current.data.initiatives.map(i => ({id: i.id, name: i.name, scenarioId: i.scenarioId})),
+      dependencies: current.data.dependencies
+    });
+    
+    // Create mapping of old IDs to new IDs for initiatives
+    const idMapping = new Map();
+    
+    // Generate new unique IDs for all initiatives and update scenarioId
+    clone.data.initiatives.forEach(initiative => {
+      const oldId = initiative.id;
+      const newId = 'itm_' + Math.random().toString(36).slice(2,8);
+      initiative.id = newId;
+      initiative.scenarioId = clone.id;
+      idMapping.set(oldId, newId);
+    });
+    
+    console.log('ID mapping:', Array.from(idMapping.entries()));
+    
+    // Update parentId references to use new IDs
+    clone.data.initiatives.forEach(initiative => {
+      if (initiative.parentId && idMapping.has(initiative.parentId)) {
+        initiative.parentId = idMapping.get(initiative.parentId);
+      }
+    });
+    
+    // Update dependencies to use new IDs and ensure they're scoped to the new scenario
+    console.log('Original dependencies:', clone.data.dependencies);
+    console.log('ID mapping keys:', Array.from(idMapping.keys()));
+    
+    clone.data.dependencies = clone.data.dependencies
+      .filter(dep => {
+        // Only keep dependencies where both fromId and toId exist in the mapping
+        const fromIdExists = idMapping.has(dep.fromId);
+        const toIdExists = idMapping.has(dep.toId);
+        console.log(`Filtering dependency ${dep.fromId} → ${dep.toId}: fromIdExists=${fromIdExists}, toIdExists=${toIdExists}`);
+        return fromIdExists && toIdExists;
+      })
+      .map(dep => {
+        const newFromId = idMapping.get(dep.fromId);
+        const newToId = idMapping.get(dep.toId);
+        
+        console.log(`Mapping dependency ${dep.fromId} → ${dep.toId} to ${newFromId} → ${newToId}`);
+        
+        return {
+          fromId: newFromId,
+          toId: newToId,
+          type: dep.type
+        };
+      });
+    
+    console.log('Cloned dependencies:', clone.data.dependencies);
+    console.log('Cloned initiatives:', clone.data.initiatives.map(i => ({id: i.id, name: i.name, scenarioId: i.scenarioId})));
+    
+    state.scenarios.push(clone);
+    state.activeScenarioId = clone.id;
+    
+    console.log('=== CLONING COMPLETE ===');
+    console.log('New active scenario ID:', state.activeScenarioId);
+    console.log('Total scenarios:', state.scenarios.length);
+  }
+  function addInitiative(state, { name, start, end, parentId = null, level = 'Initiative', size = 'M', description = '' }) {
+    const data = getActiveData(state);
+    const id = 'itm_' + Math.random().toString(36).slice(2,8);
+    // prevent children under Story level
+    if (parentId) {
+      const parent = data.initiatives.find(i => i.id === parentId);
+      if (parent && parent.level === 'Story') parentId = parent.id; // keep, but UI should prevent; no deeper levels created
+      // enforce child within parent date range
+      if (parent) {
+        if (start < parent.start) start = parent.start;
+        if (end > parent.end) end = parent.end;
+        if (end < start) end = start;
+      }
+    }
+    const length = Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000));
+    data.initiatives.push({ 
+      id, name, start, end, parentId, level, size, description, 
+      scenarioId: state.activeScenarioId, length
+    });
+    return id;
+  }
+  function linkDependency(state, fromId, toId) {
+    const data = getActiveData(state);
+    if (fromId === toId) return;
+    
+    // Ensure both items exist in the active scenario
+    const fromItem = data.initiatives.find(i => i.id === fromId);
+    const toItem = data.initiatives.find(i => i.id === toId);
+    
+    if (!fromItem || !toItem) return;
+    
+    // Ensure both items belong to the active scenario
+    if (fromItem.scenarioId !== state.activeScenarioId || toItem.scenarioId !== state.activeScenarioId) return;
+    
+    if (!data.dependencies.some(d => d.fromId === fromId && d.toId === toId)) {
+      data.dependencies.push({ fromId, toId, type: 'FS' });
+    }
+  }
+  function unlinkDependency(state, fromId, toId) {
+    const data = getActiveData(state);
+    
+    // Ensure both items exist in the active scenario
+    const fromItem = data.initiatives.find(i => i.id === fromId);
+    const toItem = data.initiatives.find(i => i.id === toId);
+    
+    if (!fromItem || !toItem) return;
+    
+    // Ensure both items belong to the active scenario
+    if (fromItem.scenarioId !== state.activeScenarioId || toItem.scenarioId !== state.activeScenarioId) return;
+    
+    data.dependencies = data.dependencies.filter(d => !(d.fromId === fromId && d.toId === toId));
+  }
+  function moveItem(state, id, { start, end }) {
+    const data = getActiveData(state);
+    const item = data.initiatives.find(i => i.id === id);
+    if (!item) return;
+    // enforce child stays within parent range
+    const parent = item.parentId ? data.initiatives.find(i => i.id === item.parentId) : null;
+    let newStart = clampDate(start);
+    let newEnd = clampDate(end);
+    if (parent) {
+      if (newStart < parent.start) newStart = parent.start;
+      if (newEnd > parent.end) newEnd = parent.end;
+      if (newEnd < newStart) newEnd = newStart;
+    }
+    // enforce parent cannot violate children ranges
+    const children = data.initiatives.filter(i => i.parentId === item.id);
+    if (children.length) {
+      const minChildStart = children.reduce((min, c) => c.start < min ? c.start : min, children[0].start);
+      const maxChildEnd = children.reduce((max, c) => c.end > max ? c.end : max, children[0].end);
+      if (newStart > minChildStart) newStart = minChildStart;
+      if (newEnd < maxChildEnd) newEnd = maxChildEnd;
+      if (newEnd < newStart) newEnd = newStart;
+    }
+    item.start = newStart;
+    item.end = newEnd;
+    item.length = Math.max(1, Math.round((new Date(newEnd) - new Date(newStart)) / 86400000));
+  }
+
+  function moveSubtree(state, rootId, deltaDays) {
+    const data = getActiveData(state);
+    const root = data.initiatives.find(i => i.id === rootId);
+    if (!root || !Number.isFinite(deltaDays) || deltaDays === 0) return 0;
+    // collect subtree
+    const subtree = [];
+    function walk(id){
+      const node = data.initiatives.find(i => i.id === id);
+      if (!node) return;
+      subtree.push(node);
+      data.initiatives.filter(i => i.parentId === id).forEach(c => walk(c.id));
+    }
+    walk(rootId);
+    // bounds of subtree
+    const minStart = subtree.reduce((min, n) => n.start < min ? n.start : min, subtree[0].start);
+    const maxEnd = subtree.reduce((max, n) => n.end > max ? n.end : max, subtree[0].end);
+    // clamp delta to ancestor bounds (root's parent)
+    const parent = root.parentId ? data.initiatives.find(i => i.id === root.parentId) : null;
+    let applied = deltaDays;
+    if (parent) {
+      // allowed delta so subtree remains within parent after shift
+      // lower: parent.start - subtree.minStart, upper: parent.end - subtree.maxEnd
+      const minDelta = daysBetween(minStart, parent.start);
+      const maxDelta = daysBetween(maxEnd, parent.end);
+      if (applied < minDelta) applied = minDelta;
+      if (applied > maxDelta) applied = maxDelta;
+    }
+    // apply shift
+    subtree.forEach(n => {
+      n.start = addDays(n.start, applied);
+      n.end = addDays(n.end, applied);
+      n.length = Math.max(1, Math.round((new Date(n.end) - new Date(n.start)) / 86400000));
+    });
+    return applied;
+  }
+
+  function daysBetween(aIso, bIso) {
+    const a = new Date(aIso + 'T00:00:00Z');
+    const b = new Date(bIso + 'T00:00:00Z');
+    return Math.round((b - a) / 86400000);
+  }
+
+  function deleteInitiative(state, id) {
+    const data = getActiveData(state);
+    // delete children first (DFS)
+    const children = data.initiatives.filter(i => i.parentId === id);
+    children.forEach(c => deleteInitiative(state, c.id));
+    // remove dependencies involving this id
+    data.dependencies = data.dependencies.filter(d => d.fromId !== id && d.toId !== id);
+    // remove the initiative itself
+    data.initiatives = data.initiatives.filter(i => i.id !== id);
+    // clear selection if needed
+    if (state.selection && state.selection.type === 'initiative' && state.selection.id === id) state.selection = null;
+  }
+
+  function deleteScenario(state, scenarioId) {
+    // Prevent deletion if this is the last scenario
+    if (state.scenarios.length <= 1) {
+      throw new Error('Cannot delete the last scenario. At least one scenario must remain.');
+    }
+    
+    // If deleting the active scenario, switch to another scenario
+    if (state.activeScenarioId === scenarioId) {
+      const otherScenario = state.scenarios.find(s => s.id !== scenarioId);
+      if (otherScenario) {
+        state.activeScenarioId = otherScenario.id;
+      }
+    }
+    
+    // Clear selection if it was pointing to this scenario
+    if (state.selection && state.selection.type === 'scenario' && state.selection.id === scenarioId) {
+      state.selection = null;
+    }
+    
+    // Remove the scenario
+    state.scenarios = state.scenarios.filter(s => s.id !== scenarioId);
+  }
+
+  function loadState(state, next) {
+    state.scenarios = next.scenarios;
+    state.activeScenarioId = next.activeScenarioId;
+    state.selection = null;
+  }
+
+
+  function seedDemo(state) {
+    const now = today();
+    const d = getActiveData(state);
+    const i1 = addInitiative(state, { name: 'Initiative A', start: now, end: addDays(now, 10), level: 'Initiative', size: 'L' });
+    const e1 = addInitiative(state, { name: 'Epic A1', start: addDays(now, 1), end: addDays(now, 6), parentId: i1, level: 'Epic', size: 'M' });
+    const s1 = addInitiative(state, { name: 'Story A1-1', start: addDays(now, 2), end: addDays(now, 4), parentId: e1, level: 'Story', size: 'S' });
+    linkDependency(state, s1, e1);
+  }
+
+  return {
+    today, addDays,
+    createInitialState, emptyData, getActiveData,
+    setActiveScenario, cloneActiveScenario, renameActiveScenario,
+    addInitiative, linkDependency, unlinkDependency, moveItem, moveSubtree, deleteInitiative, deleteScenario,
+    loadState, seedDemo,
+    toggleExpanded, isExpanded, expandToShowItem
+  };
+})();
+
+
+
+</script>
+    <script>
+window.PlanForgeStorage = (function() {
+  function serializeJSON(state){
+    return JSON.stringify({ scenarios: state.scenarios, activeScenarioId: state.activeScenarioId }, null, 2);
+  }
+  
+  function serializeActiveScenario(state){
+    const activeScenario = state.scenarios.find(s => s.id === state.activeScenarioId);
+    if (!activeScenario) {
+      throw new Error('No active scenario found');
+    }
+    
+    // Create a JIRA-compatible format
+    const projectKey = activeScenario.name.replace(/[^A-Z0-9]/g, '').substring(0, 10) || 'SCENARIO';
+    const now = new Date().toISOString();
+    
+    // Map PlanForge levels to JIRA issue types
+    const levelToIssueType = {
+      'Initiative': 'Epic',
+      'Epic': 'Story', 
+      'Story': 'Task'
+    };
+    
+    // Map PlanForge sizes to JIRA priorities
+    const sizeToPriority = {
+      'XS': 'Lowest',
+      'S': 'Low', 
+      'M': 'Medium',
+      'L': 'High',
+      'XL': 'Highest',
+      'XXL': 'Highest',
+      'infinit': 'Highest'
+    };
+    
+    // Create JIRA issues from initiatives
+    const issues = activeScenario.data.initiatives.map(initiative => {
+      const issue = {
+        summary: initiative.name,
+        description: initiative.description || `Work item: ${initiative.name}`,
+        issueType: levelToIssueType[initiative.level] || 'Task',
+        priority: sizeToPriority[initiative.size] || 'Medium',
+        status: 'To Do',
+        reporter: 'admin', // Default reporter - should be configurable
+        created: now,
+        updated: now,
+        customFieldValues: [
+          {
+            fieldName: 'Start Date',
+            fieldType: 'com.atlassian.jira.plugin.system.customfieldtypes:datepicker',
+            value: initiative.start
+          },
+          {
+            fieldName: 'Due Date', 
+            fieldType: 'com.atlassian.jira.plugin.system.customfieldtypes:datepicker',
+            value: initiative.end
+          },
+          {
+            fieldName: 'Story Points',
+            fieldType: 'com.pyxis.greenhopper.jira:gh-story-points',
+            value: initiative.length || 1
+          }
+        ]
+      };
+      
+      // Add parent link for hierarchical items
+      if (initiative.parentId) {
+        const parentInitiative = activeScenario.data.initiatives.find(i => i.id === initiative.parentId);
+        if (parentInitiative) {
+          issue.customFieldValues.push({
+            fieldName: 'Parent Link',
+            fieldType: 'com.atlassian.jira.plugin.system.customfieldtypes:select',
+            value: parentInitiative.name
+          });
+        }
+      }
+      
+      return issue;
+    });
+    
+    // Create JIRA-compatible JSON structure
+    const jiraData = {
+      projects: [
+        {
+          name: activeScenario.name,
+          key: projectKey,
+          type: 'software',
+          issues: issues
+        }
+      ],
+      exportDate: now,
+      exportedBy: 'PlanForge',
+      version: '1.0'
+    };
+    
+    return JSON.stringify(jiraData, null, 2);
+  }
+  function parseJSON(text){
+    const obj = JSON.parse(text);
+    validate(obj);
+    return obj;
+  }
+  function validate(obj){
+    if (!obj || !Array.isArray(obj.scenarios)) throw new Error('Invalid schema: scenarios[] missing');
+    obj.scenarios.forEach(s => {
+      if (!s.id || !s.name || !s.data) throw new Error('Invalid scenario');
+      const d = s.data;
+      if (!Array.isArray(d.initiatives) || !Array.isArray(d.dependencies)) throw new Error('Invalid data arrays');
+    });
+  }
+  function downloadText(text, filename, mime){
+    const blob = new Blob([text], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+    setTimeout(()=>URL.revokeObjectURL(url), 0);
+  }
+  return { serializeJSON, serializeActiveScenario, parseJSON, validate, downloadText };
+})();
+
+
+
+</script>
+    <script>
+window.PlanForgeTimeline = (function() {
+  function create(state, canvas) {
+    const ctx = canvas.getContext('2d');
+    const layout = { rowHeight: 28, rowGap: 8, header: 60, leftPad: 120 };
+    
+    // Timeline configuration
+    let timelineConfig = {
+      start: window.PlanForgeModel.addDays(window.PlanForgeModel.today(), -180), // 6 months ago
+      end: window.PlanForgeModel.addDays(window.PlanForgeModel.today(), 180), // 6 months from now
+      zoomLevel: 2 // 0=Year, 1=Quarter, 2=Month, 3=Week, 4=Day
+    };
+
+    // Zoom level mapping
+    const zoomLevels = [
+      { name: 'Year', granularity: 'year', pixelsPerUnit: 200, daysPerUnit: 365 },
+      { name: 'Quarter', granularity: 'quarter', pixelsPerUnit: 150, daysPerUnit: 90 },
+      { name: 'Month', granularity: 'month', pixelsPerUnit: 100, daysPerUnit: 30 },
+      { name: 'Week', granularity: 'week', pixelsPerUnit: 80, daysPerUnit: 7 },
+      { name: 'Day', granularity: 'day', pixelsPerUnit: 40, daysPerUnit: 1 }
+    ];
+
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      const container = canvas.parentElement;
+      const rect = container.getBoundingClientRect();
+      
+      // Calculate canvas width based on timeline span and granularity
+      // Ensure minimum timeline span to prevent empty space
+      const userDaysSpan = Math.round((new Date(timelineConfig.end) - new Date(timelineConfig.start)) / 86400000);
+      const minDaysSpan = getMinimumTimelineSpan();
+      const daysSpan = Math.max(minDaysSpan, userDaysSpan);
+      
+      const pixelsPerUnit = getPixelsPerUnit();
+      const contentWidthCss = layout.leftPad + (daysSpan / getDaysPerUnit()) * pixelsPerUnit + 200;
+      
+      // Ensure canvas fills the container width, but not less than content width
+      const containerWidth = rect.width;
+      const finalWidth = Math.max(contentWidthCss, containerWidth);
+      
+      canvas.style.width = finalWidth + 'px';
+      canvas.style.height = Math.max(400, rect.height) + 'px';
+      canvas.width = finalWidth * dpr;
+      canvas.height = Math.max(400, rect.height) * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    
+    function getMinimumTimelineSpan() {
+      // Define minimum timeline span based on zoom level to ensure meaningful content
+      const currentZoom = getCurrentZoomLevel();
+      switch (currentZoom.granularity) {
+        case 'year': return 365; // At least 1 year
+        case 'quarter': return 90; // At least 1 quarter
+        case 'month': return 60; // At least 2 months
+        case 'week': return 28; // At least 4 weeks
+        case 'day': return 14; // At least 2 weeks
+        default: return 60; // Default to 2 months
+      }
+    }
+    
+    function ensureMinimumTimelineSpan() {
+      const userDaysSpan = Math.round((new Date(timelineConfig.end) - new Date(timelineConfig.start)) / 86400000);
+      const minDaysSpan = getMinimumTimelineSpan();
+      
+      if (userDaysSpan < minDaysSpan) {
+        // Extend the end date to meet minimum span
+        const newEndDate = new Date(timelineConfig.start);
+        newEndDate.setUTCDate(newEndDate.getUTCDate() + minDaysSpan);
+        timelineConfig.end = newEndDate.toISOString().slice(0, 10);
+        
+        // Update the UI input to reflect the change
+        const endInput = document.getElementById('timeline-end');
+        if (endInput) {
+          endInput.value = timelineConfig.end;
+        }
+      }
+    }
+
+    function getCurrentZoomLevel() {
+      return zoomLevels[timelineConfig.zoomLevel];
+    }
+
+    function getPixelsPerUnit() {
+      return getCurrentZoomLevel().pixelsPerUnit;
+    }
+
+    function getDaysPerUnit() {
+      return getCurrentZoomLevel().daysPerUnit;
+    }
+
+    function dateToX(iso) {
+      const d = new Date(iso + 'T00:00:00Z');
+      const timelineStart = new Date(timelineConfig.start + 'T00:00:00Z');
+      const diffDays = Math.floor((d - timelineStart) / 86400000);
+      const pixelsPerUnit = getPixelsPerUnit();
+      const daysPerUnit = getDaysPerUnit();
+      return layout.leftPad + (diffDays / daysPerUnit) * pixelsPerUnit;
+    }
+    function xToDate(x) {
+      const timelineStart = new Date(timelineConfig.start + 'T00:00:00Z');
+      const pixelsPerUnit = getPixelsPerUnit();
+      const daysPerUnit = getDaysPerUnit();
+      const units = (x - layout.leftPad) / pixelsPerUnit;
+      const days = Math.round(units * daysPerUnit);
+      const d = new Date(timelineStart);
+      d.setUTCDate(d.getUTCDate() + days);
+      return d.toISOString().slice(0,10);
+    }
+
+    function renderGrid() {
+      const { width, height } = canvas;
+      ctx.clearRect(0,0,width,height);
+      ctx.fillStyle = '#0e1326';
+      ctx.fillRect(0,0,width,height);
+      
+      // Render timeline units based on granularity
+      const pixelsPerUnit = getPixelsPerUnit();
+      const timelineStart = new Date(timelineConfig.start + 'T00:00:00Z');
+      const timelineEnd = new Date(timelineConfig.end + 'T00:00:00Z');
+      
+      ctx.strokeStyle = '#2a3154';
+      ctx.lineWidth = 1;
+      
+      // Draw vertical grid lines across the full canvas width
+      for (let x = layout.leftPad; x < width; x += pixelsPerUnit) {
+        ctx.beginPath(); 
+        ctx.moveTo(x, 0); 
+        ctx.lineTo(x, height); 
+        ctx.stroke();
+      }
+      
+      // header background
+      ctx.fillStyle = '#11162c';
+      ctx.fillRect(0, 0, width, layout.header);
+      
+      // left panel separator
+      ctx.strokeStyle = '#2a3154';
+      ctx.beginPath(); 
+      ctx.moveTo(layout.leftPad, 0); 
+      ctx.lineTo(layout.leftPad, height); 
+      ctx.stroke();
+      
+      // Draw today indicator line
+      renderTodayIndicator();
+      
+      renderHeaderLabels();
+    }
+
+    function renderTodayIndicator() {
+      const { width, height } = canvas;
+      const today = window.PlanForgeModel.today();
+      const timelineStart = new Date(timelineConfig.start + 'T00:00:00Z');
+      const timelineEnd = new Date(timelineConfig.end + 'T00:00:00Z');
+      
+      // Only draw today indicator if today is within the visible timeline range
+      if (today >= timelineConfig.start && today <= timelineConfig.end) {
+        const todayX = dateToX(today);
+        
+        // Draw thin red vertical line for today
+        ctx.strokeStyle = '#ef4444'; // Red color
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(todayX, 0);
+        ctx.lineTo(todayX, height);
+        ctx.stroke();
+        
+        // Add a small "Today" label at the top
+        ctx.fillStyle = '#ef4444';
+        ctx.font = 'bold 11px system-ui';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Today', todayX, 8);
+      }
+    }
+
+    function renderHeaderLabels() {
+      const { width } = canvas;
+      const timelineStart = new Date(timelineConfig.start + 'T00:00:00Z');
+      const timelineEnd = new Date(timelineConfig.end + 'T00:00:00Z');
+      
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      // Render hierarchical time labels based on zoom level
+      const currentZoom = getCurrentZoomLevel();
+      
+      // Always show years (top level)
+      renderYearLabels(timelineStart, timelineEnd, width);
+      
+      // Show quarters if zoomed in enough
+      if (timelineConfig.zoomLevel >= 1) {
+        renderQuarterLabels(timelineStart, timelineEnd, width);
+      }
+      
+      // Show months if zoomed in enough
+      if (timelineConfig.zoomLevel >= 2) {
+        renderMonthLabels(timelineStart, timelineEnd, width);
+      }
+      
+      // Show weeks if zoomed in enough
+      if (timelineConfig.zoomLevel >= 3) {
+        renderWeekLabels(timelineStart, timelineEnd, width);
+      }
+      
+      // Show days if zoomed in enough
+      if (timelineConfig.zoomLevel >= 4) {
+        renderDayLabels(timelineStart, timelineEnd, width);
+      }
+    }
+
+    function renderYearLabels(start, end, width) {
+      ctx.fillStyle = '#6aa4ff';
+      ctx.font = 'bold 13px system-ui';
+      
+      const current = new Date(start);
+      current.setUTCMonth(0, 1); // Start of year
+      
+      while (current <= end) {
+        const x = dateToX(current.toISOString().slice(0,10));
+        if (x >= layout.leftPad && x <= width) {
+          const year = current.getUTCFullYear();
+          ctx.fillText(year.toString(), x, 12);
+          
+          // Draw year separator line
+          ctx.strokeStyle = '#6aa4ff';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, layout.header);
+          ctx.stroke();
+        }
+        current.setUTCFullYear(current.getUTCFullYear() + 1);
+      }
+    }
+
+    function renderQuarterLabels(start, end, width) {
+      ctx.fillStyle = '#8bd7a0';
+      ctx.font = '12px system-ui';
+      
+      const current = new Date(start);
+      // Align to quarter start
+      const quarterStart = Math.floor(current.getUTCMonth() / 3) * 3;
+      current.setUTCMonth(quarterStart, 1);
+      
+      while (current <= end) {
+        const x = dateToX(current.toISOString().slice(0,10));
+        if (x >= layout.leftPad && x <= width) {
+          const quarter = Math.floor(current.getUTCMonth() / 3) + 1;
+          ctx.fillText(`Q${quarter}`, x, 25);
+          
+          // Draw quarter separator line
+          ctx.strokeStyle = '#8bd7a0';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x, 18);
+          ctx.lineTo(x, layout.header);
+          ctx.stroke();
+        }
+        current.setUTCMonth(current.getUTCMonth() + 3);
+      }
+    }
+
+    function renderMonthLabels(start, end, width) {
+      ctx.fillStyle = '#ffb86c';
+      ctx.font = '11px system-ui';
+      
+      const current = new Date(start);
+      current.setUTCDate(1); // Start of month
+      
+      while (current <= end) {
+        const x = dateToX(current.toISOString().slice(0,10));
+        if (x >= layout.leftPad && x <= width) {
+          const monthName = current.toLocaleDateString('en', { month: 'short' });
+          ctx.fillText(monthName, x, 38);
+          
+          // Draw month separator line
+          ctx.strokeStyle = '#ffb86c';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x, 30);
+          ctx.lineTo(x, layout.header);
+          ctx.stroke();
+        }
+        current.setUTCMonth(current.getUTCMonth() + 1);
+      }
+    }
+
+    function renderWeekLabels(start, end, width) {
+      ctx.fillStyle = '#ff79c6';
+      ctx.font = '10px system-ui';
+      
+      const current = new Date(start);
+      // Align to week start (Monday)
+      const dayOfWeek = current.getUTCDay();
+      const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      current.setUTCDate(current.getUTCDate() - daysToMonday);
+      
+      while (current <= end) {
+        const x = dateToX(current.toISOString().slice(0,10));
+        if (x >= layout.leftPad && x <= width) {
+          const weekNum = getWeekNumber(current);
+          ctx.fillText(`W${weekNum}`, x, 51);
+          
+          // Draw week separator line
+          ctx.strokeStyle = '#ff79c6';
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(x, 43);
+          ctx.lineTo(x, layout.header);
+          ctx.stroke();
+        }
+        current.setUTCDate(current.getUTCDate() + 7);
+      }
+    }
+
+    function renderDayLabels(start, end, width) {
+      ctx.fillStyle = '#9aa4c3';
+      ctx.font = '9px system-ui';
+      
+      const current = new Date(start);
+      
+      while (current <= end) {
+        const x = dateToX(current.toISOString().slice(0,10));
+        if (x >= layout.leftPad && x <= width) {
+          const day = current.getUTCDate();
+          ctx.fillText(day.toString(), x, 58);
+          
+          // Draw day separator line
+          ctx.strokeStyle = '#9aa4c3';
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(x, 50);
+          ctx.lineTo(x, layout.header);
+          ctx.stroke();
+        }
+        current.setUTCDate(current.getUTCDate() + 1);
+      }
+    }
+
+
+    function getWeekNumber(date) {
+      const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+      return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+    }
+
+    function getRows() {
+      const rows = [];
+      state.scenarios.filter(s => s.visible).forEach(scenario => {
+        const data = scenario.data;
+        const roots = data.initiatives.filter(i => !i.parentId && i.scenarioId === scenario.id);
+        
+        // Add scenario row first
+        if (roots.length > 0) {
+          const scenarioStart = roots.reduce((min, r) => r.start < min ? r.start : min, roots[0].start);
+          const scenarioEnd = roots.reduce((max, r) => r.end > max ? r.end : max, roots[0].end);
+          // Find all children to get full date range
+          const allItems = data.initiatives.filter(i => i.scenarioId === scenario.id);
+          const fullStart = allItems.reduce((min, i) => i.start < min ? i.start : min, allItems[0].start);
+          const fullEnd = allItems.reduce((max, i) => i.end > max ? i.end : max, allItems[0].end);
+          
+          rows.push({ 
+            item: { 
+              id: scenario.id, 
+              name: scenario.name, 
+              start: fullStart, 
+              end: fullEnd, 
+              level: 'Scenario',
+              scenarioId: scenario.id 
+            }, 
+            depth: 0, 
+            scenarioId: scenario.id,
+            isScenario: true 
+          });
+        }
+        
+        // Add work items with increased depth
+        function walk(item, depth){ 
+          rows.push({ item, depth: depth + 1, scenarioId: scenario.id, isScenario: false }); 
+          data.initiatives.filter(c => c.parentId === item.id).forEach(c => walk(c, depth+2)); 
+        }
+        roots.forEach(r => walk(r, 0));
+      });
+      return rows;
+    }
+
+    function renderItems() {
+      const rows = getRows();
+      const barHeight = 18;
+      ctx.font = '12px system-ui';
+      rows.forEach(({ item, depth, scenarioId, isScenario }, idx) => {
+        const y = layout.header + idx * (layout.rowHeight + layout.rowGap);
+        // row label
+        ctx.fillStyle = '#9aa4c3';
+        ctx.fillText(''.padStart(depth*2, ' ') + item.name, 8, y + 14);
+        // bar
+        const x1 = dateToX(item.start);
+        const x2 = dateToX(item.end);
+        const w = Math.max(10, x2 - x1);
+        
+        // Check if this item is currently selected (active element) - same logic as renderDetails()
+        let isSelected = false;
+        if (state.selection) {
+          if (state.selection.type === 'initiative') {
+            const data = window.PlanForgeModel.getActiveData(state);
+            const selectedItem = data.initiatives.find(i => i.id === state.selection.id);
+            isSelected = selectedItem && selectedItem.id === item.id;
+          } else if (state.selection.type === 'scenario') {
+            const selectedScenario = state.scenarios.find(s => s.id === state.selection.id);
+            isSelected = selectedScenario && selectedScenario.id === item.id;
+          }
+        }
+        
+        // Draw selection highlight background if selected
+        if (isSelected) {
+          ctx.fillStyle = 'rgba(106,164,255,0.15)';
+          ctx.fillRect(x1 - 2, y + 2, w + 4, barHeight + 4);
+        }
+        
+        ctx.fillStyle = barColor(item.level, scenarioId, isScenario);
+        ctx.fillRect(x1, y + 4, w, barHeight);
+        
+        // handles (only for non-scenario items) - draw first
+        if (!isScenario) {
+          ctx.fillStyle = '#d2e3ff';
+          ctx.fillRect(x1 - 2, y + 4, 4, barHeight);
+          ctx.fillRect(x1 + w - 2, y + 4, 4, barHeight);
+        }
+        
+        // Draw colored borders - left red, right green (drawn last to be visible)
+        if (!isScenario) {
+          // Left border (red) - very thick and visible
+          ctx.strokeStyle = '#ff6a6a';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(x1, y + 4);
+          ctx.lineTo(x1, y + 4 + barHeight);
+          ctx.stroke();
+          
+          // Right border (green) - very thick and visible
+          ctx.strokeStyle = '#8bd7a0';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(x1 + w, y + 4);
+          ctx.lineTo(x1 + w, y + 4 + barHeight);
+          ctx.stroke();
+          
+          // Draw selection border if selected
+          if (isSelected) {
+            ctx.strokeStyle = '#6aa4ff';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x1 - 1, y + 3, w + 2, barHeight + 2);
+          }
+        } else {
+          // For scenarios, use default border or selection border
+          if (isSelected) {
+            ctx.strokeStyle = '#6aa4ff';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x1 - 1, y + 3, w + 2, barHeight + 2);
+          } else {
+            ctx.strokeStyle = '#2a3154';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x1, y + 4, w, barHeight);
+          }
+        }
+        // name on bar
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '11px system-ui';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const name = item.name;
+        const textWidth = ctx.measureText(name).width;
+        if (textWidth <= w - 8) {
+          ctx.fillText(name, x1 + w/2, y + 4 + barHeight/2);
+        } else {
+          const ellipsis = '...';
+          const ellipsisWidth = ctx.measureText(ellipsis).width;
+          let truncated = name;
+          while (ctx.measureText(truncated).width > w - 8 - ellipsisWidth && truncated.length > 0) {
+            truncated = truncated.slice(0, -1);
+          }
+          ctx.fillText(truncated + ellipsis, x1 + w/2, y + 4 + barHeight/2);
+        }
+        ctx.textAlign = 'left';
+      });
+    }
+
+    function renderDependencies() {
+      const rows = getRows();
+      const byId = new Map(rows.map((r, idx) => [r.item.id, idx]));
+      
+      // Render dependencies for each visible scenario separately
+      state.scenarios.filter(s => s.visible).forEach(scenario => {
+        const scenarioData = scenario.data;
+        
+        scenarioData.dependencies.forEach(dep => {
+          // Only render dependencies within the same scenario
+          const fromItem = scenarioData.initiatives.find(i => i.id === dep.fromId);
+          const toItem = scenarioData.initiatives.find(i => i.id === dep.toId);
+          
+          if (!fromItem || !toItem || !byId.has(dep.fromId) || !byId.has(dep.toId)) return;
+          
+          const from = rows[byId.get(dep.fromId)].item;
+          const to = rows[byId.get(dep.toId)].item;
+          
+          // Double-check that both items belong to the same scenario
+          if (from.scenarioId !== scenario.id || to.scenarioId !== scenario.id) return;
+          
+          const y1 = layout.header + byId.get(dep.fromId) * (layout.rowHeight + layout.rowGap) + 4 + 9;
+          const y2 = layout.header + byId.get(dep.toId) * (layout.rowHeight + layout.rowGap) + 4 + 9;
+          const x1 = dateToX(from.end);
+          const x2 = dateToX(to.start);
+          
+          // Draw dependency line with enhanced styling
+          ctx.strokeStyle = '#8bd7a0';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 3]); // Dashed line for better visibility
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.bezierCurveTo((x1+x2)/2, y1, (x1+x2)/2, y2, x2, y2);
+          ctx.stroke();
+          ctx.setLineDash([]); // Reset line dash
+          
+          // Draw arrowhead at the end
+          const arrowSize = 6;
+          const angle = Math.atan2(y2 - y1, x2 - x1);
+          ctx.fillStyle = '#8bd7a0';
+          ctx.beginPath();
+          ctx.moveTo(x2, y2);
+          ctx.lineTo(x2 - arrowSize * Math.cos(angle - Math.PI / 6), y2 - arrowSize * Math.sin(angle - Math.PI / 6));
+          ctx.lineTo(x2 - arrowSize * Math.cos(angle + Math.PI / 6), y2 - arrowSize * Math.sin(angle + Math.PI / 6));
+          ctx.closePath();
+          ctx.fill();
+          
+          // Draw connection points
+          ctx.fillStyle = '#8bd7a0';
+          ctx.beginPath();
+          ctx.arc(x1, y1, 3, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(x2, y2, 3, 0, 2 * Math.PI);
+          ctx.fill();
+        });
+      });
+    }
+
+    function barColor(level, scenarioId, isScenario) {
+      if (isScenario) return '#9aa4c3'; // grey for scenarios
+      if (level === 'Initiative') return '#6aa4ff'; // blue
+      if (level === 'Epic') return '#a06aff'; // purple
+      if (level === 'Story') return '#67d38a'; // green
+      return '#6aa4ff';
+    }
+
+    function render() {
+      resizeCanvas();
+      renderGrid();
+      renderScenarioBar();
+      renderItems();
+      renderDependencies();
+      renderDragConstraints();
+    }
+    
+    function renderDragConstraints() {
+      if (!dragging || !dragging.isConstrained) return;
+      
+      const { width, height } = canvas;
+      
+      // Draw constraint indicators
+      ctx.strokeStyle = '#ff6a6a';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      
+      // Draw constraint boundaries
+      if (dragging.isConstrained) {
+        // Left boundary
+        ctx.beginPath();
+        ctx.moveTo(layout.leftPad, 0);
+        ctx.lineTo(layout.leftPad, height);
+        ctx.stroke();
+        
+        // Right boundary
+        ctx.beginPath();
+        ctx.moveTo(width, 0);
+        ctx.lineTo(width, height);
+        ctx.stroke();
+        
+        // Top boundary
+        ctx.beginPath();
+        ctx.moveTo(0, layout.header);
+        ctx.lineTo(width, layout.header);
+        ctx.stroke();
+        
+        // Bottom boundary
+        ctx.beginPath();
+        ctx.moveTo(0, height);
+        ctx.lineTo(width, height);
+        ctx.stroke();
+      }
+      
+      ctx.setLineDash([]); // Reset line dash
+    }
+    
+    // Ensure timeline highlighting is always synchronized with details panel
+    function syncSelectionHighlight() {
+      // Force a rerender to ensure highlighting matches current selection
+      render();
+    }
+
+    function renderScenarioBar() {
+      // removed - scenarios now render as boxes in main timeline
+    }
+
+    // interactions
+    let dragging = null; // { id, mode: 'move'|'start'|'end', offsetX, startDateAtDown, endDateAtDown, appliedDelta }
+    let autoScrollInterval = null;
+
+    function autoScrollTimeline(mouseX, containerWidth) {
+      if (!dragging) return;
+      
+      const scrollThreshold = 80; // pixels from edge to trigger scroll
+      const scrollSpeed = 12; // pixels per scroll step
+      const container = canvas.parentElement;
+      
+      // Clear existing interval
+      if (autoScrollInterval) {
+        clearInterval(autoScrollInterval);
+        autoScrollInterval = null;
+      }
+      
+      // Check if mouse is near left edge (but not in the left panel area)
+      if (mouseX < scrollThreshold && mouseX > layout.leftPad) {
+        autoScrollInterval = setInterval(() => {
+          const currentScroll = container.scrollLeft;
+          if (currentScroll > 0) {
+            container.scrollLeft = Math.max(0, currentScroll - scrollSpeed);
+            // Re-render to update the visual position
+            render();
+          }
+        }, 16); // ~60fps
+      }
+      // Check if mouse is near right edge
+      else if (mouseX > containerWidth - scrollThreshold) {
+        autoScrollInterval = setInterval(() => {
+          const currentScroll = container.scrollLeft;
+          const maxScroll = container.scrollWidth - container.clientWidth;
+          if (currentScroll < maxScroll) {
+            container.scrollLeft = Math.min(maxScroll, currentScroll + scrollSpeed);
+            // Re-render to update the visual position
+            render();
+          }
+        }, 16); // ~60fps
+      }
+    }
+
+    function constrainDragToTimeline(px, py) {
+      if (!dragging) return { x: px, y: py };
+      
+      const container = canvas.parentElement;
+      const containerRect = container.getBoundingClientRect();
+      const canvasRect = canvas.getBoundingClientRect();
+      
+      // Calculate the visible timeline area (excluding the left panel)
+      const timelineStartX = layout.leftPad;
+      const timelineEndX = canvas.width;
+      
+      // Constrain X to timeline bounds
+      let constrainedX = px;
+      let isConstrainedX = false;
+      if (px < timelineStartX) {
+        constrainedX = timelineStartX;
+        isConstrainedX = true;
+      } else if (px > timelineEndX) {
+        constrainedX = timelineEndX;
+        isConstrainedX = true;
+      }
+      
+      // Constrain Y to canvas bounds
+      let constrainedY = py;
+      let isConstrainedY = false;
+      if (py < layout.header) {
+        constrainedY = layout.header;
+        isConstrainedY = true;
+      } else if (py > canvas.height) {
+        constrainedY = canvas.height;
+        isConstrainedY = true;
+      }
+      
+      // Store constraint info for visual feedback
+      dragging.isConstrained = isConstrainedX || isConstrainedY;
+      
+      return { x: constrainedX, y: constrainedY };
+    }
+
+    function stopAutoScroll() {
+      if (autoScrollInterval) {
+        clearInterval(autoScrollInterval);
+        autoScrollInterval = null;
+      }
+    }
+    function hitTestBars(px, py) {
+      const rows = getRows();
+      const barHeight = 18;
+      for (let idx = 0; idx < rows.length; idx++) {
+        const item = rows[idx].item;
+        const isScenario = rows[idx].isScenario;
+        const y = layout.header + idx * (layout.rowHeight + layout.rowGap);
+        const x1 = dateToX(item.start);
+        const x2 = dateToX(item.end);
+        const w = Math.max(10, x2 - x1);
+        if (py >= y+4 && py <= y+4+barHeight && px >= x1-4 && px <= x1+w+4) {
+          // Scenarios can only be moved (no resize handles)
+          if (isScenario) {
+            return { id: item.id, mode: 'move', y, x1, w };
+          }
+          const nearStart = Math.abs(px - x1) <= 6;
+          const nearEnd = Math.abs(px - (x1+w)) <= 6;
+          const mode = nearStart ? 'start' : nearEnd ? 'end' : 'move';
+          return { id: item.id, mode, y, x1, w };
+        }
+      }
+      return null;
+    }
+
+    function onPointerDown(ev) {
+      const rect = canvas.getBoundingClientRect();
+      const px = ev.clientX - rect.left;
+      const py = ev.clientY - rect.top;
+      const hit = hitTestBars(px, py);
+      if (hit) {
+        const rows = getRows();
+        const hitRow = rows.find(r => r.item.id === hit.id);
+        const isScenario = hitRow ? hitRow.isScenario : false;
+        
+        if (isScenario) {
+          // For scenarios, find the scenario object
+          const scenario = state.scenarios.find(s => s.id === hit.id);
+          dragging = { id: hit.id, mode: 'move', offsetX: px - hit.x1, startDateAtDown: scenario ? scenario.data.initiatives.reduce((min, i) => i.start < min ? i.start : min, scenario.data.initiatives[0].start) : hit.startDateAtDown, endDateAtDown: scenario ? scenario.data.initiatives.reduce((max, i) => i.end > max ? i.end : max, scenario.data.initiatives[0].end) : hit.endDateAtDown, appliedDelta: 0, isScenario: true };
+          emitSelect({ type: 'scenario', id: hit.id });
+        } else {
+          const data = window.PlanForgeModel.getActiveData(state);
+          const item = data.initiatives.find(i => i.id === hit.id);
+          dragging = { id: hit.id, mode: hit.mode, offsetX: px - hit.x1, startDateAtDown: item.start, endDateAtDown: item.end, appliedDelta: 0, isScenario: false };
+          emitSelect({ type: 'initiative', id: hit.id });
+        }
+      }
+    }
+    function onPointerMove(ev) {
+      if (!dragging) return;
+      const rect = canvas.getBoundingClientRect();
+      const px = ev.clientX - rect.left;
+      const py = ev.clientY - rect.top;
+      
+      // Constrain dragging to timeline bounds
+      const constrained = constrainDragToTimeline(px, py);
+      const constrainedPx = constrained.x;
+      const constrainedPy = constrained.y;
+      
+      // Auto-scroll timeline when dragging near edges
+      autoScrollTimeline(constrainedPx, rect.width);
+      
+      if (dragging.isScenario) {
+        // Move entire scenario subtree
+        const scenario = state.scenarios.find(s => s.id === dragging.id);
+        if (!scenario) return;
+        
+        const newStart = xToDate(constrainedPx - dragging.offsetX);
+        const delta = Math.round((new Date(newStart) - new Date(dragging.startDateAtDown)) / 86400000);
+        const incremental = delta - dragging.appliedDelta;
+        
+        if (incremental !== 0) {
+          // Move all initiatives in this scenario
+          scenario.data.initiatives.forEach(initiative => {
+            const newInitiativeStart = window.PlanForgeModel.addDays(initiative.start, incremental);
+            const newInitiativeEnd = window.PlanForgeModel.addDays(initiative.end, incremental);
+            initiative.start = newInitiativeStart;
+            initiative.end = newInitiativeEnd;
+            initiative.length = Math.max(1, Math.round((new Date(newInitiativeEnd) - new Date(newInitiativeStart)) / 86400000));
+          });
+          dragging.appliedDelta += incremental;
+        }
+      } else {
+        // Regular initiative movement
+        const data = window.PlanForgeModel.getActiveData(state);
+        const item = data.initiatives.find(i => i.id === dragging.id);
+        if (!item) return;
+        
+        if (dragging.mode === 'move') {
+          const newStart = xToDate(constrainedPx - dragging.offsetX);
+          const wantedDelta = Math.round((new Date(newStart) - new Date(dragging.startDateAtDown)) / 86400000);
+          const incremental = wantedDelta - dragging.appliedDelta;
+          if (incremental !== 0) {
+            // move subtree by incremental delta; model clamps as needed
+            const appliedInc = window.PlanForgeModel.moveSubtree(state, item.id, incremental);
+            dragging.appliedDelta += appliedInc;
+            if (appliedInc !== incremental) {
+              // adjust offset so pointer stays anchored to bar start after clamping
+              const correctedStart = window.PlanForgeModel.addDays(dragging.startDateAtDown, dragging.appliedDelta);
+              const correctedX = dateToX(correctedStart);
+              dragging.offsetX = constrainedPx - correctedX;
+            }
+          }
+        } else if (dragging.mode === 'start') {
+          const newStart = xToDate(constrainedPx);
+          window.PlanForgeModel.moveItem(state, item.id, { start: newStart, end: item.end });
+        } else if (dragging.mode === 'end') {
+          const newEnd = xToDate(constrainedPx);
+          window.PlanForgeModel.moveItem(state, item.id, { start: item.start, end: newEnd });
+        }
+      }
+      render();
+      emitChange();
+    }
+    function onPointerUp() { 
+      stopAutoScroll();
+      dragging = null; 
+    }
+
+    canvas.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pf-refresh', render);
+    
+    // Listen for selection changes to ensure highlighting stays synchronized
+    window.addEventListener('pf-selection-change', syncSelectionHighlight);
+
+    // public api
+    const listeners = { select: [], change: [] };
+    function onSelect(cb){ listeners.select.push(cb); }
+    function onChange(cb){ listeners.change.push(cb); }
+    function emitSelect(sel){ listeners.select.forEach(cb => cb(sel)); }
+    function emitChange(){ listeners.change.forEach(cb => cb()); }
+    // Timeline configuration controls
+    function setupTimelineControls() {
+      const startInput = document.getElementById('timeline-start');
+      const endInput = document.getElementById('timeline-end');
+      const zoomSlider = document.getElementById('zoom-slider');
+      const zoomLevel = document.getElementById('zoom-level');
+      const zoomPresets = {
+        year: document.getElementById('zoom-year'),
+        quarter: document.getElementById('zoom-quarter'),
+        month: document.getElementById('zoom-month'),
+        day: document.getElementById('zoom-day')
+      };
+      
+      // Initialize with current config
+      startInput.value = timelineConfig.start;
+      endInput.value = timelineConfig.end;
+      zoomSlider.value = timelineConfig.zoomLevel;
+      updateZoomLevelDisplay();
+      updateZoomPresetButtons();
+      
+      // Event listeners
+      startInput.addEventListener('change', (e) => {
+        timelineConfig.start = e.target.value;
+        ensureMinimumTimelineSpan();
+        render();
+      });
+      
+      endInput.addEventListener('change', (e) => {
+        timelineConfig.end = e.target.value;
+        ensureMinimumTimelineSpan();
+        render();
+      });
+      
+      zoomSlider.addEventListener('input', (e) => {
+        timelineConfig.zoomLevel = parseInt(e.target.value);
+        ensureMinimumTimelineSpan();
+        updateZoomLevelDisplay();
+        updateZoomPresetButtons();
+        render();
+      });
+      
+      // Zoom preset buttons
+      zoomPresets.year.addEventListener('click', () => {
+        timelineConfig.zoomLevel = 0;
+        zoomSlider.value = 0;
+        ensureMinimumTimelineSpan();
+        updateZoomLevelDisplay();
+        updateZoomPresetButtons();
+        render();
+      });
+      
+      zoomPresets.quarter.addEventListener('click', () => {
+        timelineConfig.zoomLevel = 1;
+        zoomSlider.value = 1;
+        ensureMinimumTimelineSpan();
+        updateZoomLevelDisplay();
+        updateZoomPresetButtons();
+        render();
+      });
+      
+      zoomPresets.month.addEventListener('click', () => {
+        timelineConfig.zoomLevel = 2;
+        zoomSlider.value = 2;
+        ensureMinimumTimelineSpan();
+        updateZoomLevelDisplay();
+        updateZoomPresetButtons();
+        render();
+      });
+      
+      zoomPresets.day.addEventListener('click', () => {
+        timelineConfig.zoomLevel = 4;
+        zoomSlider.value = 4;
+        ensureMinimumTimelineSpan();
+        updateZoomLevelDisplay();
+        updateZoomPresetButtons();
+        render();
+      });
+    }
+
+    function updateZoomLevelDisplay() {
+      const zoomLevelElement = document.getElementById('zoom-level');
+      const currentZoom = getCurrentZoomLevel();
+      zoomLevelElement.textContent = currentZoom.name;
+    }
+
+    function updateZoomPresetButtons() {
+      const zoomPresets = {
+        year: document.getElementById('zoom-year'),
+        quarter: document.getElementById('zoom-quarter'),
+        month: document.getElementById('zoom-month'),
+        day: document.getElementById('zoom-day')
+      };
+      
+      // Remove active class from all buttons
+      Object.values(zoomPresets).forEach(btn => btn.classList.remove('active'));
+      
+      // Add active class to current zoom level
+      const currentZoom = getCurrentZoomLevel();
+      switch(currentZoom.granularity) {
+        case 'year':
+          zoomPresets.year.classList.add('active');
+          break;
+        case 'quarter':
+          zoomPresets.quarter.classList.add('active');
+          break;
+        case 'month':
+          zoomPresets.month.classList.add('active');
+          break;
+        case 'day':
+          zoomPresets.day.classList.add('active');
+          break;
+      }
+    }
+
+    // Initialize timeline controls
+    setupTimelineControls();
+
+    // Return public API
+    return {
+      render,
+      onSelect,
+      onChange
+    };
+  }
+
+  return { create };
+})();
+
+
+
+</script>
+    <script>
+window.PlanForgeUI = (function() {
+  function el(id){ return document.getElementById(id); }
+  function createUI(state){
+    const bindings = { scenarioClone: [], exportJSON: [], importJSON: [], exportScenario: [], exportMermaid: [] };
+    el('btn-export-json').addEventListener('click', () => bindings.exportJSON.forEach(cb => cb()));
+    el('btn-import-json').addEventListener('click', () => bindings.importJSON.forEach(cb => cb()));
+    el('btn-export-scenario').addEventListener('click', () => bindings.exportScenario.forEach(cb => cb()));
+    el('btn-export-mermaid').addEventListener('click', () => bindings.exportMermaid.forEach(cb => cb()));
+
+    function renderHierarchy(){
+      const container = el('hierarchy-tree'); container.innerHTML = '';
+      // scenarios header
+      const scWrap = document.createElement('div'); scWrap.className = 'tree-item';
+      const scLeft = document.createElement('div'); scLeft.textContent = 'Scenarios'; scLeft.style.fontWeight = '600';
+      scWrap.appendChild(scLeft); scWrap.appendChild(document.createElement('div'));
+      container.appendChild(scWrap);
+      state.scenarios.forEach(s => {
+        const row = document.createElement('div'); row.className = 'tree-item';
+        if (s.id === state.activeScenarioId) {
+          row.style.backgroundColor = 'rgba(245,158,11,0.15)';
+          row.style.borderColor = '#f59e0b';
+          row.style.borderWidth = '2px';
+        }
+        const left = document.createElement('div'); left.style.paddingLeft = '12px'; left.style.display = 'flex'; left.style.alignItems = 'center'; left.style.gap = '8px';
+        const toggle = document.createElement('button'); 
+        toggle.innerHTML = s.visible ? '<span class="material-icons">visibility</span>' : '<span class="material-icons">visibility_off</span>'; 
+        toggle.style.width = '24px'; 
+        toggle.style.height = '20px'; 
+        toggle.style.padding = '0'; 
+        toggle.style.fontSize = '18px'; 
+        toggle.style.color = s.visible ? '#f59e0b' : '#94a3b8'; 
+        toggle.style.display = 'flex'; 
+        toggle.style.alignItems = 'center'; 
+        toggle.style.justifyContent = 'center';
+        
+        // Visibility toggle is always enabled for all scenarios
+        toggle.disabled = false;
+        
+        toggle.addEventListener('click', (e)=>{ 
+          e.stopPropagation(); 
+          s.visible = !s.visible; 
+          renderHierarchy(); 
+          window.dispatchEvent(new Event('pf-refresh')); 
+        });
+        const name = document.createElement('span'); name.textContent = s.name; name.className = 'link';
+        if (s.id === state.activeScenarioId) { name.style.color = '#f59e0b'; name.style.fontWeight = '600'; }
+        
+        // Check if this is the active scenario for button states
+        const isActiveScenario = s.id === state.activeScenarioId;
+        
+        // Make scenario name editable
+        name.addEventListener('dblclick', (e) => {
+          e.stopPropagation();
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = s.name;
+          input.style.background = '#1a2040';
+          input.style.color = '#f59e0b';
+          input.style.border = '1px solid #f59e0b';
+          input.style.padding = '2px 4px';
+          input.style.fontSize = 'inherit';
+          input.style.fontWeight = 'inherit';
+          input.style.width = '100%';
+          
+          const saveEdit = () => {
+            if (input.value.trim()) {
+              s.name = input.value.trim();
+              renderHierarchy();
+              renderDetails();
+              window.dispatchEvent(new Event('pf-refresh'));
+            }
+          };
+          
+          input.addEventListener('blur', saveEdit);
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              saveEdit();
+            } else if (e.key === 'Escape') {
+              renderHierarchy();
+            }
+          });
+          
+          name.replaceWith(input);
+          input.focus();
+          input.select();
+        });
+        
+        name.addEventListener('click', ()=>{ 
+          state.activeScenarioId = s.id; 
+          state.selection = { type: 'scenario', id: s.id }; 
+          renderHierarchy(); // Re-render to update highlighting
+          renderDetails(); 
+          window.dispatchEvent(new Event('pf-refresh')); 
+          window.dispatchEvent(new Event('pf-selection-change')); 
+        });
+        left.appendChild(toggle); left.appendChild(name);
+        
+        const right = document.createElement('div'); right.className = 'row-actions';
+        
+        // Add clone button (only enabled for active scenario)
+        const cloneScenario = document.createElement('button'); 
+        cloneScenario.innerHTML = '<span class="material-symbols-outlined">content_copy</span>'; 
+        cloneScenario.title = 'Clone Scenario';
+        cloneScenario.disabled = !isActiveScenario;
+        if (!isActiveScenario) {
+          cloneScenario.style.opacity = '0.5';
+          cloneScenario.style.cursor = 'not-allowed';
+        }
+        cloneScenario.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (isActiveScenario) {
+            bindings.scenarioClone.forEach(cb => cb());
+          }
+        });
+        right.appendChild(cloneScenario);
+        
+        // Add initiative button (only enabled for active scenario)
+        const addInitiative = document.createElement('button'); 
+        addInitiative.innerHTML = '<span class="material-symbols-outlined">add</span>'; 
+        addInitiative.title = 'Add Initiative';
+        addInitiative.disabled = !isActiveScenario;
+        if (!isActiveScenario) {
+          addInitiative.style.opacity = '0.5';
+          addInitiative.style.cursor = 'not-allowed';
+        }
+        addInitiative.addEventListener('click', () => {
+          if (isActiveScenario) {
+            const id = window.PlanForgeModel.addInitiative(state, { name: 'New Initiative', start: window.PlanForgeModel.today(), end: window.PlanForgeModel.addDays(window.PlanForgeModel.today(), 7), level: 'Initiative', size: 'M' });
+            state.selection = { type: 'initiative', id };
+            renderHierarchy();
+            renderDetails();
+            window.dispatchEvent(new Event('pf-refresh'));
+            window.dispatchEvent(new Event('pf-selection-change'));
+          }
+        });
+        right.appendChild(addInitiative);
+        
+        // Add delete scenario button (only show if there's more than one scenario)
+        if (state.scenarios.length > 1) {
+          const deleteScenario = document.createElement('button'); 
+          deleteScenario.innerHTML = '<span class="material-symbols-outlined">remove</span>'; 
+          deleteScenario.title = 'Delete Scenario';
+          deleteScenario.addEventListener('click', (e) => {
+            e.stopPropagation();
+            try {
+              window.PlanForgeModel.deleteScenario(state, s.id);
+              renderHierarchy();
+              renderDetails();
+              window.dispatchEvent(new Event('pf-refresh'));
+              window.dispatchEvent(new Event('pf-selection-change'));
+            } catch (error) {
+              alert(error.message);
+            }
+          });
+          right.appendChild(deleteScenario);
+        }
+        
+        row.appendChild(left); row.appendChild(right);
+        container.appendChild(row);
+      });
+      // initiatives
+      const data = window.PlanForgeModel.getActiveData(state);
+      const top = data.initiatives.filter(i => !i.parentId && i.scenarioId === state.activeScenarioId);
+      top.forEach(i => container.appendChild(row(i, 0)));
+      function row(item, depth){
+        const d = document.createElement('div'); d.className = 'tree-item';
+        
+        // Check if this item is currently selected (active element)
+        let isSelected = false;
+        if (state.selection) {
+          if (state.selection.type === 'initiative') {
+            const data = window.PlanForgeModel.getActiveData(state);
+            const selectedItem = data.initiatives.find(i => i.id === state.selection.id);
+            isSelected = selectedItem && selectedItem.id === item.id;
+          } else if (state.selection.type === 'scenario') {
+            const selectedScenario = state.scenarios.find(s => s.id === state.selection.id);
+            isSelected = selectedScenario && selectedScenario.id === item.id;
+          }
+        }
+        
+        // Apply highlighting for selected element
+        if (isSelected) {
+          d.style.backgroundColor = 'rgba(106,164,255,0.15)';
+          d.style.borderColor = '#6aa4ff';
+          d.style.borderWidth = '2px';
+        }
+        
+        const left = document.createElement('div'); left.style.paddingLeft = (depth*12)+'px'; left.className = 'link'; left.style.display = 'flex'; left.style.alignItems = 'center'; left.style.gap = '6px';
+        
+        // Add expand/collapse button if item has children
+        const children = data.initiatives.filter(i => i.parentId === item.id);
+        if (children.length > 0) {
+          const expandBtn = document.createElement('button');
+          expandBtn.style.width = '20px';
+          expandBtn.style.height = '20px';
+          expandBtn.style.padding = '0';
+          expandBtn.style.border = 'none';
+          expandBtn.style.background = 'none';
+          expandBtn.style.cursor = 'pointer';
+          expandBtn.style.display = 'flex';
+          expandBtn.style.alignItems = 'center';
+          expandBtn.style.justifyContent = 'center';
+          expandBtn.style.color = 'var(--muted)';
+          expandBtn.style.fontSize = '16px';
+          
+          const isExpanded = window.PlanForgeModel.isExpanded(state, item.id);
+          expandBtn.innerHTML = isExpanded ? '<span class="material-symbols-outlined">expand_circle_up</span>' : '<span class="material-symbols-outlined">expand_circle_down</span>';
+          expandBtn.title = isExpanded ? 'Collapse' : 'Expand';
+          
+          expandBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            window.PlanForgeModel.toggleExpanded(state, item.id);
+            renderHierarchy();
+          });
+          
+          left.appendChild(expandBtn);
+        } else {
+          // Add spacer for items without children to maintain alignment
+          const spacer = document.createElement('div');
+          spacer.style.width = '20px';
+          spacer.style.height = '20px';
+          left.appendChild(spacer);
+        }
+        
+        // Add dependency indicator if this item has dependencies
+        const hasDeps = data.dependencies.some(d => d.fromId === item.id || d.toId === item.id);
+        if (hasDeps) {
+          const depIcon = document.createElement('span'); depIcon.textContent = '↗'; depIcon.title = 'Has dependencies'; depIcon.style.color = '#10b981'; depIcon.style.fontSize = '12px';
+          left.appendChild(depIcon);
+        }
+        
+        const nameSpan = document.createElement('span'); nameSpan.textContent = item.name; left.appendChild(nameSpan);
+        left.addEventListener('click', () => { 
+          state.selection = { type: 'initiative', id: item.id }; 
+          renderHierarchy(); // Re-render to update highlighting
+          renderDetails(); 
+          window.dispatchEvent(new Event('pf-refresh')); 
+          window.dispatchEvent(new Event('pf-selection-change')); 
+        });
+        const right = document.createElement('div'); right.className = 'row-actions';
+        
+        // Check if this initiative belongs to the active scenario
+        const isActiveScenario = item.scenarioId === state.activeScenarioId;
+        
+        if (item.level !== 'Story') {
+          const addEpic = document.createElement('button'); 
+          addEpic.innerHTML = '<span class="material-symbols-outlined">add</span>'; 
+          addEpic.title = 'Add child';
+          addEpic.disabled = !isActiveScenario;
+          if (!isActiveScenario) {
+            addEpic.style.opacity = '0.5';
+            addEpic.style.cursor = 'not-allowed';
+          }
+          addEpic.addEventListener('click', () => {
+            if (isActiveScenario) {
+              const nextLevel = item.level==='Initiative'?'Epic':'Story';
+              const id = window.PlanForgeModel.addInitiative(state, { name: nextLevel, start: item.start, end: item.end, parentId: item.id, level: nextLevel, size: 'M' });
+              renderHierarchy();
+              // re-render timeline and details so child appears immediately
+              window.dispatchEvent(new Event('pf-refresh'));
+            }
+          });
+          right.appendChild(addEpic);
+        }
+        
+        const delBtn = document.createElement('button'); 
+        delBtn.innerHTML = '<span class="material-symbols-outlined">remove</span>'; 
+        delBtn.title = 'Delete';
+        delBtn.disabled = !isActiveScenario;
+        if (!isActiveScenario) {
+          delBtn.style.opacity = '0.5';
+          delBtn.style.cursor = 'not-allowed';
+        }
+        delBtn.addEventListener('click', () => {
+          if (isActiveScenario) {
+            window.PlanForgeModel.deleteInitiative(state, item.id);
+            renderHierarchy();
+            renderDetails(); window.dispatchEvent(new Event('pf-refresh'));
+            window.dispatchEvent(new Event('pf-refresh'));
+          }
+        });
+        right.appendChild(delBtn);
+        d.appendChild(left); d.appendChild(right);
+        const wrap = document.createElement('div'); wrap.appendChild(d);
+        
+        // Only render children if the item is expanded
+        const isExpanded = window.PlanForgeModel.isExpanded(state, item.id);
+        if (isExpanded) {
+          const children = data.initiatives.filter(i => i.parentId === item.id);
+          children.forEach(c => wrap.appendChild(row(c, depth+1)));
+        }
+        return wrap;
+      }
+    }
+    function renderDetails(){
+      const panel = el('details'); panel.innerHTML = '';
+      const sel = state.selection; if (!sel) { panel.textContent = 'Select an item…'; return; }
+      if (sel.type === 'initiative'){
+        const data = window.PlanForgeModel.getActiveData(state);
+        const item = data.initiatives.find(i => i.id === sel.id); if (!item) return;
+        panel.appendChild(field('Name', item.name, (v)=>{ item.name=v; renderHierarchy(); window.dispatchEvent(new Event('pf-refresh')); }));
+        panel.appendChild(field('Start', item.start, (v)=>{ window.PlanForgeModel.moveItem(state, item.id, { start: v, end: item.end }); window.dispatchEvent(new Event('pf-refresh')); } ,'date'));
+        panel.appendChild(field('End', item.end, (v)=>{ window.PlanForgeModel.moveItem(state, item.id, { start: item.start, end: v }); window.dispatchEvent(new Event('pf-refresh')); } ,'date'));
+        panel.appendChild(field('Length (days)', item.length || '', ()=>{}, 'number', true));
+        panel.appendChild(field('Description', item.description||'', (v)=>{ item.description=v; window.dispatchEvent(new Event('pf-refresh')); }));
+        // size dropdown
+        const sizeWrap = document.createElement('div'); sizeWrap.className = 'details-field';
+        const sizeLabel = document.createElement('label'); sizeLabel.textContent = 'T-Shirt Size';
+        const sizeSel = document.createElement('select');
+        ;['XS','S','M','L','XL','XXL','infinit'].forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; if (item.size===s) o.selected=true; sizeSel.appendChild(o); });
+        sizeSel.addEventListener('change', ()=>{ item.size=sizeSel.value; window.dispatchEvent(new Event('pf-refresh')); });
+        sizeWrap.appendChild(sizeLabel); sizeWrap.appendChild(sizeSel); panel.appendChild(sizeWrap);
+        // add child buttons
+        const nextLevel = item.level === 'Initiative' ? 'Epic' : item.level === 'Epic' ? 'Story' : null;
+        const childWrap = document.createElement('div'); childWrap.className = 'details-field';
+        const addChildBtn = document.createElement('button'); addChildBtn.textContent = nextLevel?('Add Child '+nextLevel):'No child level'; addChildBtn.disabled = !nextLevel;
+        addChildBtn.addEventListener('click', () => {
+          if (!nextLevel) return;
+          const id = window.PlanForgeModel.addInitiative(state, { name: nextLevel, start: item.start, end: item.end, parentId: item.id, level: nextLevel, size: 'M' });
+          state.selection = { type: 'initiative', id };
+          renderHierarchy(); renderDetails(); window.dispatchEvent(new Event('pf-refresh')); window.dispatchEvent(new Event('pf-selection-change'));
+        });
+        childWrap.appendChild(addChildBtn); panel.appendChild(childWrap);
+        
+        // dependencies section
+        const depWrap = document.createElement('div'); depWrap.className = 'details-field';
+        const depLabel = document.createElement('label'); depLabel.textContent = 'Dependencies'; depWrap.appendChild(depLabel);
+        
+        // existing dependencies
+        const existingDeps = data.dependencies.filter(d => d.fromId === item.id || d.toId === item.id);
+        if (existingDeps.length > 0) {
+          const existingList = document.createElement('div'); existingList.style.marginBottom = '12px';
+          existingDeps.forEach(dep => {
+            const depRow = document.createElement('div'); depRow.style.display = 'flex'; depRow.style.alignItems = 'center'; depRow.style.justifyContent = 'space-between'; depRow.style.padding = '4px 0'; depRow.style.borderBottom = '1px solid #2a3154';
+            const depItem = data.initiatives.find(i => i.id === (dep.fromId === item.id ? dep.toId : dep.fromId));
+            const depText = document.createElement('span'); depText.textContent = `${dep.fromId === item.id ? '→' : '←'} ${depItem ? depItem.name : 'Unknown'}`; depText.style.color = '#8bd7a0';
+            const removeBtn = document.createElement('button'); removeBtn.innerHTML = '<span class="material-symbols-outlined">remove</span>'; removeBtn.title = 'Remove dependency'; removeBtn.style.width = '20px'; removeBtn.style.height = '20px'; removeBtn.style.fontSize = '12px';
+            removeBtn.addEventListener('click', () => {
+              window.PlanForgeModel.unlinkDependency(state, dep.fromId, dep.toId);
+              window.dispatchEvent(new Event('pf-refresh'));
+              renderDetails(); window.dispatchEvent(new Event('pf-refresh'));
+            });
+            depRow.appendChild(depText); depRow.appendChild(removeBtn); existingList.appendChild(depRow);
+          });
+          depWrap.appendChild(existingList);
+        }
+        
+        // add new dependency
+        const addDepWrap = document.createElement('div'); addDepWrap.style.display = 'flex'; addDepWrap.style.gap = '8px'; addDepWrap.style.alignItems = 'center';
+        const depSelect = document.createElement('select'); depSelect.style.flex = '1';
+        const depOption = document.createElement('option'); depOption.value = ''; depOption.textContent = 'Depends on...'; depSelect.appendChild(depOption);
+        
+        // Add all other initiatives as options (excluding self and children)
+        const allItems = data.initiatives.filter(i => i.id !== item.id && i.scenarioId === state.activeScenarioId);
+        const children = data.initiatives.filter(i => i.parentId === item.id);
+        const availableItems = allItems.filter(i => !children.some(c => c.id === i.id));
+        
+        availableItems.forEach(otherItem => {
+          const option = document.createElement('option'); option.value = otherItem.id; option.textContent = otherItem.name; depSelect.appendChild(option);
+        });
+        
+        const addDepBtn = document.createElement('button'); addDepBtn.textContent = 'Add Dependency'; addDepBtn.disabled = true;
+        addDepBtn.addEventListener('click', () => {
+          if (depSelect.value) {
+            window.PlanForgeModel.linkDependency(state, item.id, depSelect.value);
+            window.dispatchEvent(new Event('pf-refresh'));
+            renderDetails(); window.dispatchEvent(new Event('pf-refresh'));
+          }
+        });
+        
+        depSelect.addEventListener('change', () => {
+          addDepBtn.disabled = !depSelect.value;
+        });
+        
+        addDepWrap.appendChild(depSelect); addDepWrap.appendChild(addDepBtn); depWrap.appendChild(addDepWrap); panel.appendChild(depWrap);
+        
+      }
+      if (sel.type === 'scenario'){
+        const s = state.scenarios.find(x => x.id === sel.id); if (!s) return;
+        panel.appendChild(field('Scenario Name', s.name, (v)=>{ s.name=v; renderHierarchy(); window.dispatchEvent(new Event('pf-refresh')); }));
+        panel.appendChild(field('Description', s.description||'', (v)=>{ s.description=v; window.dispatchEvent(new Event('pf-refresh')); }));
+        // Calculate scenario length from its initiatives
+        const data = s.data;
+        if (data.initiatives.length > 0) {
+          const start = data.initiatives.reduce((min, i) => i.start < min ? i.start : min, data.initiatives[0].start);
+          const end = data.initiatives.reduce((max, i) => i.end > max ? i.end : max, data.initiatives[0].end);
+          const length = Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000));
+          panel.appendChild(field('Length (days)', length, ()=>{}, 'number', true));
+        }
+      }
+      function field(label, value, onChange, type='text', disabled=false){
+        const wrap = document.createElement('div'); wrap.className = 'details-field';
+        const l = document.createElement('label'); l.textContent = label;
+        const input = document.createElement('input'); input.type = type; input.value = value; 
+        if (disabled) {
+          input.disabled = true;
+          input.style.backgroundColor = '#1a2040';
+          input.style.color = '#9aa4c3';
+        } else {
+          input.addEventListener('input', ()=>onChange(input.value));
+        }
+        wrap.appendChild(l); wrap.appendChild(input);
+        return wrap;
+      }
+    }
+
+    function showMermaidDialog(mermaidCode) {
+      const dialog = el('mermaid-dialog');
+      const codeTextarea = el('mermaid-code');
+      codeTextarea.value = mermaidCode;
+      dialog.style.display = 'flex';
+      
+      // Close dialog handlers
+      el('close-mermaid-dialog').addEventListener('click', () => {
+        dialog.style.display = 'none';
+      });
+      
+      // Close on overlay click
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) {
+          dialog.style.display = 'none';
+        }
+      });
+      
+      // Copy to clipboard handler
+      el('copy-mermaid-code').addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(mermaidCode);
+          const btn = el('copy-mermaid-code');
+          const originalText = btn.innerHTML;
+          btn.innerHTML = '<span class="material-icons">check</span>Copied!';
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+          }, 2000);
+        } catch (err) {
+          console.error('Failed to copy: ', err);
+        }
+      });
+    }
+
+
+
+
+    function generateMermaidGantt(state) {
+      const data = window.PlanForgeModel.getActiveData(state);
+      const activeScenario = state.scenarios.find(s => s.id === state.activeScenarioId);
+      
+      if (!data.initiatives.length) {
+        return '```mermaid\ngantt\n    title Empty Timeline\n    dateFormat YYYY-MM-DD\n```';
+      }
+      
+      // Get all initiatives and sort by start date
+      const initiatives = data.initiatives
+        .filter(i => i.scenarioId === state.activeScenarioId)
+        .sort((a, b) => new Date(a.start) - new Date(b.start));
+      
+      let mermaid = '```mermaid\ngantt\n';
+      mermaid += `    title ${activeScenario ? activeScenario.name : 'Timeline'}\n`;
+      mermaid += '    dateFormat YYYY-MM-DD\n';
+      mermaid += `    axisFormat %m/%d\n\n`;
+      
+      // Create a map of initiative IDs to their safe names for dependency references
+      const initiativeIdMap = new Map();
+      initiatives.forEach(initiative => {
+        const safeName = initiative.name.replace(/[":]/g, '');
+        initiativeIdMap.set(initiative.id, safeName);
+      });
+      
+      // Group initiatives by level for better organization
+      const initiativesByLevel = {
+        'Initiative': initiatives.filter(i => i.level === 'Initiative'),
+        'Epic': initiatives.filter(i => i.level === 'Epic'),
+        'Story': initiatives.filter(i => i.level === 'Story')
+      };
+      
+      // Add sections for each level
+      Object.keys(initiativesByLevel).forEach(level => {
+        const levelInitiatives = initiativesByLevel[level];
+        if (levelInitiatives.length > 0) {
+          mermaid += `    section ${level}s\n`;
+          levelInitiatives.forEach(initiative => {
+            // Escape special characters in names and ensure proper syntax
+            const safeName = initiative.name.replace(/[":]/g, '');
+            
+            // Check for dependencies - find tasks that this initiative depends on
+            const dependencies = data.dependencies.filter(dep => dep.toId === initiative.id);
+            
+            // Check if it's a single day task (milestone) or multi-day task
+            const startDate = new Date(initiative.start);
+            const endDate = new Date(initiative.end);
+            const isSameDay = startDate.getTime() === endDate.getTime();
+            
+            if (dependencies.length > 0) {
+              // Task has dependencies - use after syntax
+              const dependencyNames = dependencies.map(dep => {
+                const depName = initiativeIdMap.get(dep.fromId);
+                return depName || 'unknown';
+              });
+              
+              if (isSameDay) {
+                // Single day task with dependencies - use milestone syntax
+                mermaid += `        ${safeName} :milestone, after ${dependencyNames.join(',')}, 0d\n`;
+              } else {
+                // Multi-day task with dependencies - use task syntax
+                const duration = Math.max(1, Math.round((endDate - startDate) / 86400000));
+                mermaid += `        ${safeName} :after ${dependencyNames.join(',')}, ${duration}d\n`;
+              }
+            } else {
+              // Task has no dependencies - use original date-based syntax
+              if (isSameDay) {
+                // Single day task - use milestone syntax
+                mermaid += `        ${safeName} :milestone, ${initiative.start}\n`;
+              } else {
+                // Multi-day task - use task syntax
+                mermaid += `        ${safeName} :${initiative.start}, ${initiative.end}\n`;
+              }
+            }
+          });
+          mermaid += '\n';
+        }
+      });
+      
+      mermaid += '```';
+      return mermaid;
+    }
+
+    return {
+      renderHierarchy, renderDetails,
+      showMermaidDialog, generateMermaidGantt,
+      onScenarioClone: (cb)=>bindings.scenarioClone.push(cb),
+      onExportJSON: (cb)=>bindings.exportJSON.push(cb),
+      onImportJSON: (cb)=>bindings.importJSON.push(cb),
+      onExportScenario: (cb)=>bindings.exportScenario.push(cb),
+      onExportMermaid: (cb)=>bindings.exportMermaid.push(cb)
+    };
+  }
+
+  async function pickFile(accept){
+    return new Promise((resolve) => {
+      const input = document.getElementById('file-input');
+      input.accept = accept.join(',');
+      input.onchange = async () => {
+        const file = input.files && input.files[0];
+        if (!file) return resolve(null);
+        const text = await file.text();
+        input.value = '';
+        resolve(text);
+      };
+      input.click();
+    });
+  }
+
+  function saveFile(content, defaultFilename, mimeType = 'application/json') {
+    // Create a filename dialog
+    const filename = prompt('Enter filename:', defaultFilename);
+    if (!filename) return; // User cancelled
+    
+    // Create and download the file
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
+
+  return { createUI, pickFile, saveFile };
+})();
+
+
+
+</script>
+    <script>
+/* Entry point: wires UI, storage, model, and timeline */
+(function() {
+  const state = window.PlanForgeModel.createInitialState();
+  const ui = window.PlanForgeUI.createUI(state);
+  const timeline = window.PlanForgeTimeline.create(state, document.getElementById('timeline-canvas'));
+
+  function renderAll() {
+    ui.renderHierarchy();
+    ui.renderDetails();
+    timeline.render();
+  }
+
+  // UI event bindings
+  ui.onScenarioClone(() => {
+    window.PlanForgeModel.cloneActiveScenario(state);
+    renderAll();
+    window.dispatchEvent(new Event('pf-refresh'));
+  });
+
+  // Timeline interactions
+  timeline.onSelect((selection) => { 
+    state.selection = selection; 
+    
+    // If selecting a scenario, also update the active scenario
+    if (selection.type === 'scenario') {
+      state.activeScenarioId = selection.id;
+    }
+    
+    // If selecting an initiative, expand tree to show it
+    if (selection.type === 'initiative') {
+      window.PlanForgeModel.expandToShowItem(state, selection.id);
+    }
+    
+    ui.renderHierarchy(); // Update sidebar highlighting
+    ui.renderDetails(); 
+    window.dispatchEvent(new Event('pf-refresh')); 
+    window.dispatchEvent(new Event('pf-selection-change')); 
+  });
+  timeline.onChange(() => { ui.renderDetails(); renderAll(); });
+
+  // Import/Export
+  ui.onExportJSON(() => {
+    const json = window.PlanForgeStorage.serializeJSON(state);
+    const activeScenario = state.scenarios.find(s => s.id === state.activeScenarioId);
+    const defaultFilename = activeScenario ? `planforge-${activeScenario.name.replace(/[^a-zA-Z0-9]/g, '_')}.json` : 'planforge.json';
+    window.PlanForgeUI.saveFile(json, defaultFilename, 'application/json');
+  });
+  
+  ui.onImportJSON(async () => {
+    const text = await window.PlanForgeUI.pickFile(['.json','application/json']);
+    if (!text) return;
+    
+    // Confirm overwrite if there's existing data
+    const hasData = state.scenarios.some(s => s.data.initiatives.length > 0);
+    if (hasData) {
+      const confirmOverwrite = confirm('This will overwrite your current data. Continue?');
+      if (!confirmOverwrite) return;
+    }
+    
+    try {
+      const next = window.PlanForgeStorage.parseJSON(text);
+      window.PlanForgeModel.loadState(state, next);
+      renderAll();
+      window.dispatchEvent(new Event('pf-refresh'));
+    } catch (error) {
+      alert('Error importing file: ' + error.message);
+    }
+  });
+  
+  ui.onExportScenario(() => {
+    try {
+      const scenarioJson = window.PlanForgeStorage.serializeActiveScenario(state);
+      const activeScenario = state.scenarios.find(s => s.id === state.activeScenarioId);
+      const defaultFilename = activeScenario ? `scenario-${activeScenario.name.replace(/[^a-zA-Z0-9]/g, '_')}.json` : 'scenario.json';
+      window.PlanForgeUI.saveFile(scenarioJson, defaultFilename, 'application/json');
+    } catch (error) {
+      alert('Error exporting scenario: ' + error.message);
+    }
+  });
+
+  ui.onExportMermaid(() => {
+    try {
+      const mermaidCode = ui.generateMermaidGantt(state);
+      ui.showMermaidDialog(mermaidCode);
+    } catch (error) {
+      alert('Error generating MermaidJS: ' + error.message);
+    }
+  });
+
+
+  // Right sidebar toggle functionality
+  const rightSidebar = document.getElementById('right-sidebar');
+  const toggleButton = document.getElementById('toggle-right-panel');
+  const toggleIcon = toggleButton.querySelector('.material-symbols-outlined');
+  const appMain = document.querySelector('.app-main');
+  
+  let isRightSidebarCollapsed = false;
+  
+  toggleButton.addEventListener('click', () => {
+    isRightSidebarCollapsed = !isRightSidebarCollapsed;
+    
+    if (isRightSidebarCollapsed) {
+      rightSidebar.classList.add('collapsed');
+      appMain.classList.add('right-sidebar-collapsed');
+      toggleIcon.textContent = 'keyboard_double_arrow_right';
+      toggleButton.title = 'Expand Details Panel';
+    } else {
+      rightSidebar.classList.remove('collapsed');
+      appMain.classList.remove('right-sidebar-collapsed');
+      toggleIcon.textContent = 'keyboard_double_arrow_left';
+      toggleButton.title = 'Collapse Details Panel';
+    }
+  });
+
+  // Initial render without demo data
+  renderAll();
+})();
+
+
+
+</script>
+  
+</body>
+</html>

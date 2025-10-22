@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mermaid Dependency Debug Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; }
+        textarea { width: 100%; height: 300px; font-family: monospace; font-size: 12px; }
+        button { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Mermaid Dependency Debug Tool</h1>
+    <p>This tool will help you debug why dependencies might not be showing up in your Mermaid export.</p>
+    
+    <div class="debug-section">
+        <h3>Step 1: Load Your Data</h3>
+        <p>First, export your current scenario as JSON and paste it below:</p>
+        <textarea id="json-input" placeholder="Paste your exported JSON data here..."></textarea>
+        <br>
+        <button onclick="loadData()">Load Data</button>
+    </div>
+
+    <div id="debug-results"></div>
+
+    <script src="../src/js/model.js"></script>
+    <script src="../src/js/ui.js"></script>
+    <script>
+        let loadedState = null;
+
+        function loadData() {
+            const jsonInput = document.getElementById('json-input').value.trim();
+            if (!jsonInput) {
+                alert('Please paste your JSON data first');
+                return;
+            }
+
+            try {
+                const parsedData = JSON.parse(jsonInput);
+                loadedState = parsedData;
+                analyzeData();
+            } catch (error) {
+                alert('Invalid JSON: ' + error.message);
+            }
+        }
+
+        function analyzeData() {
+            const results = document.getElementById('debug-results');
+            results.innerHTML = '';
+
+            if (!loadedState || !loadedState.scenarios || loadedState.scenarios.length === 0) {
+                addResult('Data Analysis', false, 'No scenarios found in the loaded data');
+                return;
+            }
+
+            // Analyze each scenario
+            loadedState.scenarios.forEach((scenario, index) => {
+                addResult(`Scenario ${index + 1}: ${scenario.name}`, true, `
+                    <strong>Initiatives:</strong> ${scenario.data.initiatives.length}
+                    <br><strong>Dependencies:</strong> ${scenario.data.dependencies.length}
+                    
+                    <h4>Initiatives:</h4>
+                    <pre>${JSON.stringify(scenario.data.initiatives.map(i => ({
+                        id: i.id,
+                        name: i.name,
+                        level: i.level,
+                        start: i.start,
+                        end: i.end
+                    })), null, 2)}</pre>
+                    
+                    <h4>Dependencies:</h4>
+                    <pre>${JSON.stringify(scenario.data.dependencies, null, 2)}</pre>
+                `);
+
+                // Check dependency mapping
+                const initiatives = scenario.data.initiatives;
+                const dependencies = scenario.data.dependencies;
+                
+                let dependencyAnalysis = '<h4>Dependency Analysis:</h4>';
+                
+                dependencies.forEach(dep => {
+                    const fromItem = initiatives.find(i => i.id === dep.fromId);
+                    const toItem = initiatives.find(i => i.id === dep.toId);
+                    
+                    if (fromItem && toItem) {
+                        dependencyAnalysis += `<div class="success">✓ ${fromItem.name} → ${toItem.name}</div>`;
+                    } else {
+                        dependencyAnalysis += `<div class="error">✗ Invalid dependency: ${dep.fromId} → ${dep.toId}</div>`;
+                    }
+                });
+
+                if (dependencies.length === 0) {
+                    dependencyAnalysis += '<div class="info">No dependencies found in this scenario</div>';
+                }
+
+                addResult(`Dependency Mapping for Scenario ${index + 1}`, true, dependencyAnalysis);
+
+                // Test Mermaid generation
+                if (index === 0) { // Test with first scenario
+                    const testState = {
+                        scenarios: [scenario],
+                        activeScenarioId: scenario.id
+                    };
+                    
+                    const ui = window.PlanForgeUI.createUI(testState);
+                    const mermaidCode = ui.generateMermaidGantt(testState);
+                    
+                    addResult('Generated Mermaid Code', true, `
+                        <textarea readonly>${mermaidCode}</textarea>
+                    `);
+                    
+                    // Check if dependencies are in the output
+                    const hasAfterSyntax = mermaidCode.includes('after');
+                    const afterCount = (mermaidCode.match(/after/g) || []).length;
+                    
+                    addResult('Dependency Detection in Mermaid', hasAfterSyntax, `
+                        After syntax found: ${hasAfterSyntax}
+                        <br>Number of 'after' occurrences: ${afterCount}
+                        <br>Expected: ${dependencies.length}
+                    `);
+                }
+            });
+        }
+
+        function addResult(title, passed, details) {
+            const results = document.getElementById('debug-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'debug-section ' + (passed ? 'success' : 'error');
+            resultDiv.innerHTML = `<h3>${title}</h3><div>${details}</div>`;
+            results.appendChild(resultDiv);
+        }
+    </script>
+</body>
+</html>

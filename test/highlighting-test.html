@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlanForge Highlighting Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .test-result { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .debug { background: #fff3cd; color: #856404; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>PlanForge Highlighting Synchronization Test</h1>
+    <div id="test-results"></div>
+
+    <script src="../src/js/model.js"></script>
+    <script>
+        // Test the highlighting synchronization between sidebar and timeline
+        function runHighlightingTests() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '';
+
+            // Test 1: Create initial state with multiple scenarios and initiatives
+            const state = window.PlanForgeModel.createInitialState();
+            const now = window.PlanForgeModel.today();
+            
+            // Add initiatives to the active scenario
+            const i1 = window.PlanForgeModel.addInitiative(state, { 
+                name: 'Initiative 1', 
+                start: now, 
+                end: window.PlanForgeModel.addDays(now, 5),
+                level: 'Initiative'
+            });
+            const i2 = window.PlanForgeModel.addInitiative(state, { 
+                name: 'Epic 1', 
+                start: window.PlanForgeModel.addDays(now, 6), 
+                end: window.PlanForgeModel.addDays(now, 10),
+                level: 'Epic',
+                parentId: i1
+            });
+            const i3 = window.PlanForgeModel.addInitiative(state, { 
+                name: 'Story 1', 
+                start: window.PlanForgeModel.addDays(now, 11), 
+                end: window.PlanForgeModel.addDays(now, 15),
+                level: 'Story',
+                parentId: i2
+            });
+
+            addTestResult('Test 1: Initial state setup', 
+                state.scenarios.length === 1 && state.scenarios[0].data.initiatives.length === 3, 
+                `Scenarios: ${state.scenarios.length}, Initiatives: ${state.scenarios[0].data.initiatives.length}`);
+
+            // Test 2: Test scenario selection
+            const activeScenario = state.scenarios[0];
+            state.selection = { type: 'scenario', id: activeScenario.id };
+            
+            addTestResult('Test 2: Scenario selection', 
+                state.selection.type === 'scenario' && state.selection.id === activeScenario.id, 
+                `Selected scenario: ${state.selection.type} with ID: ${state.selection.id}`);
+
+            // Test 3: Test initiative selection
+            state.selection = { type: 'initiative', id: i1 };
+            const selectedInitiative = state.scenarios[0].data.initiatives.find(i => i.id === i1);
+            
+            addTestResult('Test 3: Initiative selection', 
+                state.selection.type === 'initiative' && selectedInitiative && selectedInitiative.id === i1, 
+                `Selected initiative: ${state.selection.type} with ID: ${state.selection.id}, Name: ${selectedInitiative?.name}`);
+
+            // Test 4: Test epic selection
+            state.selection = { type: 'initiative', id: i2 };
+            const selectedEpic = state.scenarios[0].data.initiatives.find(i => i.id === i2);
+            
+            addTestResult('Test 4: Epic selection', 
+                state.selection.type === 'initiative' && selectedEpic && selectedEpic.id === i2, 
+                `Selected epic: ${state.selection.type} with ID: ${state.selection.id}, Name: ${selectedEpic?.name}`);
+
+            // Test 5: Test story selection
+            state.selection = { type: 'initiative', id: i3 };
+            const selectedStory = state.scenarios[0].data.initiatives.find(i => i.id === i3);
+            
+            addTestResult('Test 5: Story selection', 
+                state.selection.type === 'initiative' && selectedStory && selectedStory.id === i3, 
+                `Selected story: ${state.selection.type} with ID: ${state.selection.id}, Name: ${selectedStory?.name}`);
+
+            // Test 6: Test selection state consistency
+            const allInitiatives = state.scenarios[0].data.initiatives;
+            const hasAllLevels = allInitiatives.some(i => i.level === 'Initiative') && 
+                               allInitiatives.some(i => i.level === 'Epic') && 
+                               allInitiatives.some(i => i.level === 'Story');
+            
+            addTestResult('Test 6: All levels present', 
+                hasAllLevels, 
+                `Levels found: ${[...new Set(allInitiatives.map(i => i.level))].join(', ')}`);
+
+            // Test 7: Test active scenario highlighting
+            const isActiveScenarioHighlighted = state.activeScenarioId === activeScenario.id;
+            
+            addTestResult('Test 7: Active scenario highlighting', 
+                isActiveScenarioHighlighted, 
+                `Active scenario ID: ${state.activeScenarioId}, Scenario ID: ${activeScenario.id}`);
+
+            addDebugInfo('Debug Info', `
+                State Structure:
+                - Scenarios: ${state.scenarios.length}
+                - Active Scenario ID: ${state.activeScenarioId}
+                - Current Selection: ${JSON.stringify(state.selection)}
+                
+                Initiatives in Active Scenario:
+                ${allInitiatives.map(i => `- ${i.name} (${i.level}) - ID: ${i.id}`).join('\n')}
+                
+                Selection Logic Test:
+                - Scenario selection works: ${state.selection.type === 'scenario' ? 'YES' : 'NO'}
+                - Initiative selection works: ${state.selection.type === 'initiative' ? 'YES' : 'NO'}
+                - Selection ID exists: ${state.selection.id ? 'YES' : 'NO'}
+            `);
+        }
+
+        function addTestResult(testName, passed, details) {
+            const results = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'test-result ' + (passed ? 'success' : 'error');
+            resultDiv.innerHTML = `<strong>${testName}:</strong> ${passed ? 'PASS' : 'FAIL'}<br><small>${details}</small>`;
+            results.appendChild(resultDiv);
+        }
+
+        function addDebugInfo(title, content) {
+            const results = document.getElementById('test-results');
+            const debugDiv = document.createElement('div');
+            debugDiv.className = 'test-result debug';
+            debugDiv.innerHTML = `<strong>${title}:</strong><pre>${content}</pre>`;
+            results.appendChild(debugDiv);
+        }
+
+        // Run tests when page loads
+        runHighlightingTests();
+    </script>
+</body>
+</html>

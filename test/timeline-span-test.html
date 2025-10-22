@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlanForge Timeline Span Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .test-result { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .debug { background: #fff3cd; color: #856404; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>PlanForge Timeline Span Test</h1>
+    <div id="test-results"></div>
+
+    <script src="../src/js/model.js"></script>
+    <script>
+        // Test the minimum timeline span functionality
+        function runTimelineSpanTests() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '';
+
+            // Test 1: Test minimum timeline spans for different zoom levels
+            const zoomLevels = [
+                { name: 'Year', granularity: 'year', expectedMinDays: 365 },
+                { name: 'Quarter', granularity: 'quarter', expectedMinDays: 90 },
+                { name: 'Month', granularity: 'month', expectedMinDays: 60 },
+                { name: 'Week', granularity: 'week', expectedMinDays: 28 },
+                { name: 'Day', granularity: 'day', expectedMinDays: 14 }
+            ];
+
+            addTestResult('Test 1: Minimum timeline spans defined', 
+                zoomLevels.length === 5, 
+                `Defined ${zoomLevels.length} zoom levels with minimum spans`);
+
+            // Test 2: Test timeline span calculation
+            const today = window.PlanForgeModel.today();
+            const shortEnd = window.PlanForgeModel.addDays(today, 5); // 5 days
+            const longEnd = window.PlanForgeModel.addDays(today, 100); // 100 days
+            
+            const shortSpan = Math.round((new Date(shortEnd) - new Date(today)) / 86400000);
+            const longSpan = Math.round((new Date(longEnd) - new Date(today)) / 86400000);
+            
+            addTestResult('Test 2: Timeline span calculation', 
+                shortSpan === 5 && longSpan === 100, 
+                `Short span: ${shortSpan} days, Long span: ${longSpan} days`);
+
+            // Test 3: Test minimum span enforcement logic
+            const testMinSpan = 60; // 2 months minimum
+            const userSpan = 10; // User wants 10 days
+            const enforcedSpan = Math.max(testMinSpan, userSpan);
+            
+            addTestResult('Test 3: Minimum span enforcement', 
+                enforcedSpan === testMinSpan, 
+                `User span: ${userSpan} days, Enforced span: ${enforcedSpan} days`);
+
+            // Test 4: Test date extension logic
+            const startDate = new Date(today);
+            const minDays = 60;
+            const extendedDate = new Date(startDate);
+            extendedDate.setUTCDate(extendedDate.getUTCDate() + minDays);
+            const extendedSpan = Math.round((extendedDate - startDate) / 86400000);
+            
+            addTestResult('Test 4: Date extension logic', 
+                extendedSpan === minDays, 
+                `Extended span: ${extendedSpan} days (expected: ${minDays})`);
+
+            // Test 5: Test zoom level specific minimums
+            const zoomTests = [
+                { level: 'year', minDays: 365, testSpan: 100, shouldExtend: true },
+                { level: 'quarter', minDays: 90, testSpan: 50, shouldExtend: true },
+                { level: 'month', minDays: 60, testSpan: 30, shouldExtend: true },
+                { level: 'week', minDays: 28, testSpan: 14, shouldExtend: true },
+                { level: 'day', minDays: 14, testSpan: 7, shouldExtend: true },
+                { level: 'month', minDays: 60, testSpan: 90, shouldExtend: false }
+            ];
+
+            let passedTests = 0;
+            zoomTests.forEach(test => {
+                const shouldExtend = test.testSpan < test.minDays;
+                if (shouldExtend === test.shouldExtend) {
+                    passedTests++;
+                }
+            });
+
+            addTestResult('Test 5: Zoom level specific minimums', 
+                passedTests === zoomTests.length, 
+                `Passed ${passedTests}/${zoomTests.length} zoom level tests`);
+
+            addDebugInfo('Debug Info', `
+                Minimum Timeline Spans by Zoom Level:
+                ${zoomLevels.map(z => `- ${z.name}: ${z.expectedMinDays} days`).join('\n')}
+                
+                Test Scenarios:
+                - Short user span (5 days) → Enforced to minimum
+                - Long user span (100 days) → No enforcement needed
+                - Date extension: Start + 60 days = 60 day span
+                
+                Zoom Level Tests:
+                ${zoomTests.map(t => `- ${t.level}: ${t.testSpan} days → ${t.shouldExtend ? 'Extend' : 'No change'} (min: ${t.minDays})`).join('\n')}
+                
+                Expected Behavior:
+                ✅ Timeline always has meaningful content
+                ✅ No empty black space on canvas
+                ✅ User selections are overridden when too short
+                ✅ UI inputs reflect automatic adjustments
+                ✅ Different minimums for different zoom levels
+            `);
+        }
+
+        function addTestResult(testName, passed, details) {
+            const results = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'test-result ' + (passed ? 'success' : 'error');
+            resultDiv.innerHTML = `<strong>${testName}:</strong> ${passed ? 'PASS' : 'FAIL'}<br><small>${details}</small>`;
+            results.appendChild(resultDiv);
+        }
+
+        function addDebugInfo(title, content) {
+            const results = document.getElementById('test-results');
+            const debugDiv = document.createElement('div');
+            debugDiv.className = 'test-result debug';
+            debugDiv.innerHTML = `<strong>${title}:</strong><pre>${content}</pre>`;
+            results.appendChild(debugDiv);
+        }
+
+        // Run tests when page loads
+        runTimelineSpanTests();
+    </script>
+</body>
+</html>

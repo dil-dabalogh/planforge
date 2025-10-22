@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlanForge Dependency Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1a1a1a; color: #fff; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #444; border-radius: 8px; }
+        button { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2563eb; }
+        .timeline-container { border: 1px solid #444; border-radius: 8px; margin: 20px 0; overflow: auto; }
+        canvas { display: block; }
+        .console-output { background: #000; color: #0f0; padding: 10px; border-radius: 4px; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #1e4d2b; color: #4ade80; }
+        .error { background: #4d1e1e; color: #f87171; }
+        .info { background: #1e3a4d; color: #60a5fa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PlanForge Dependency Cloning Debug</h1>
+        
+        <div class="debug-section">
+            <h3>Test Controls</h3>
+            <button onclick="createTestData()">1. Create Test Data</button>
+            <button onclick="cloneScenario()">2. Clone Scenario</button>
+            <button onclick="switchToOriginal()">3. Switch to Original</button>
+            <button onclick="switchToClone()">4. Switch to Clone</button>
+            <button onclick="refreshTimeline()">5. Refresh Timeline</button>
+        </div>
+
+        <div class="debug-section">
+            <h3>Status</h3>
+            <div id="status"></div>
+        </div>
+
+        <div class="debug-section">
+            <h3>Timeline View</h3>
+            <div class="timeline-container">
+                <canvas id="timeline-canvas" width="1000" height="500"></canvas>
+            </div>
+        </div>
+
+        <div class="debug-section">
+            <h3>Console Output</h3>
+            <div id="console-output" class="console-output"></div>
+        </div>
+    </div>
+
+    <script src="../src/js/model.js"></script>
+    <script src="../src/js/timeline.js"></script>
+    <script>
+        let state = null;
+        let timeline = null;
+        let originalScenarioId = null;
+        let clonedScenarioId = null;
+
+        // Override console.log to capture output
+        const originalConsoleLog = console.log;
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            const output = document.getElementById('console-output');
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            output.appendChild(logEntry);
+            output.scrollTop = output.scrollHeight;
+        };
+
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function createTestData() {
+            console.log('=== CREATING TEST DATA ===');
+            state = window.PlanForgeModel.createInitialState();
+            
+            const now = window.PlanForgeModel.today();
+            
+            // Create test initiatives
+            const i1 = window.PlanForgeModel.addInitiative(state, { 
+                name: 'Task 1', 
+                start: now, 
+                end: window.PlanForgeModel.addDays(now, 5),
+                level: 'Initiative'
+            });
+            const i2 = window.PlanForgeModel.addInitiative(state, { 
+                name: 'Task 2', 
+                start: window.PlanForgeModel.addDays(now, 6), 
+                end: window.PlanForgeModel.addDays(now, 10),
+                level: 'Initiative'
+            });
+            
+            // Create dependency
+            window.PlanForgeModel.linkDependency(state, i1, i2);
+            
+            originalScenarioId = state.activeScenarioId;
+            
+            // Initialize timeline
+            const canvas = document.getElementById('timeline-canvas');
+            timeline = window.PlanForgeTimeline.create(state, canvas);
+            
+            updateStatus(`✅ Test data created: Initiatives ${i1}, ${i2} with dependency ${i1} → ${i2}`, 'success');
+            renderTimeline();
+        }
+
+        function cloneScenario() {
+            if (!state) {
+                updateStatus('❌ No test data created yet', 'error');
+                return;
+            }
+            
+            console.log('=== CLONING SCENARIO ===');
+            window.PlanForgeModel.cloneActiveScenario(state);
+            clonedScenarioId = state.activeScenarioId;
+            
+            updateStatus(`✅ Scenario cloned: ${clonedScenarioId}`, 'success');
+            renderTimeline();
+        }
+
+        function switchToOriginal() {
+            if (!state || !originalScenarioId) {
+                updateStatus('❌ No original scenario available', 'error');
+                return;
+            }
+            
+            window.PlanForgeModel.setActiveScenario(state, originalScenarioId);
+            updateStatus(`✅ Switched to original scenario: ${state.activeScenarioId}`, 'success');
+            renderTimeline();
+        }
+
+        function switchToClone() {
+            if (!state || !clonedScenarioId) {
+                updateStatus('❌ No cloned scenario available', 'error');
+                return;
+            }
+            
+            window.PlanForgeModel.setActiveScenario(state, clonedScenarioId);
+            updateStatus(`✅ Switched to cloned scenario: ${state.activeScenarioId}`, 'success');
+            renderTimeline();
+        }
+
+        function refreshTimeline() {
+            if (!timeline) {
+                updateStatus('❌ No timeline available', 'error');
+                return;
+            }
+            
+            updateStatus('🔄 Refreshing timeline...', 'info');
+            renderTimeline();
+            updateStatus('✅ Timeline refreshed', 'success');
+        }
+
+        function renderTimeline() {
+            if (timeline) {
+                timeline.render();
+            }
+        }
+
+        // Initialize
+        updateStatus('Ready to debug dependency cloning. Click "Create Test Data" to start.', 'info');
+        console.log('Debug page loaded. Ready to test dependency cloning.');
+    </script>
+</body>
+</html>

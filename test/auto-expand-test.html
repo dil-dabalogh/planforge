@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlanForge Auto-Expand Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .test-result { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .debug { background: #fff3cd; color: #856404; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>PlanForge Auto-Expand Tree Test</h1>
+    <div id="test-results"></div>
+
+    <script src="../src/js/model.js"></script>
+    <script>
+        // Test the auto-expand functionality
+        function runAutoExpandTests() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '';
+
+            // Test 1: Create hierarchical structure
+            const state = window.PlanForgeModel.createInitialState();
+            const now = window.PlanForgeModel.today();
+            
+            // Create a deep hierarchy: Initiative -> Epic -> Story
+            const initiative = window.PlanForgeModel.addInitiative(state, { 
+                name: 'Initiative 1', 
+                start: now, 
+                end: window.PlanForgeModel.addDays(now, 10),
+                level: 'Initiative'
+            });
+            const epic = window.PlanForgeModel.addInitiative(state, { 
+                name: 'Epic 1', 
+                start: window.PlanForgeModel.addDays(now, 1), 
+                end: window.PlanForgeModel.addDays(now, 8),
+                level: 'Epic',
+                parentId: initiative
+            });
+            const story = window.PlanForgeModel.addInitiative(state, { 
+                name: 'Story 1', 
+                start: window.PlanForgeModel.addDays(now, 2), 
+                end: window.PlanForgeModel.addDays(now, 5),
+                level: 'Story',
+                parentId: epic
+            });
+
+            addTestResult('Test 1: Hierarchical structure created', 
+                state.scenarios[0].data.initiatives.length === 3, 
+                `Created ${state.scenarios[0].data.initiatives.length} initiatives: Initiative -> Epic -> Story`);
+
+            // Test 2: Initially nothing is expanded
+            const initiallyExpanded = state.expandedItems.size;
+            addTestResult('Test 2: Initially collapsed', 
+                initiallyExpanded === 0, 
+                `Expanded items count: ${initiallyExpanded}`);
+
+            // Test 3: Expand to show story (should expand initiative and epic)
+            const wasAlreadyVisible = window.PlanForgeModel.expandToShowItem(state, story);
+            const expandedCount = state.expandedItems.size;
+            const initiativeExpanded = state.expandedItems.has(initiative);
+            const epicExpanded = state.expandedItems.has(epic);
+            
+            addTestResult('Test 3: Expand to show story', 
+                !wasAlreadyVisible && expandedCount === 2 && initiativeExpanded && epicExpanded, 
+                `Was already visible: ${wasAlreadyVisible}, Expanded count: ${expandedCount}, Initiative expanded: ${initiativeExpanded}, Epic expanded: ${epicExpanded}`);
+
+            // Test 4: Try to expand to show story again (should not change anything)
+            const wasAlreadyVisible2 = window.PlanForgeModel.expandToShowItem(state, story);
+            const expandedCount2 = state.expandedItems.size;
+            
+            addTestResult('Test 4: Expand to show story again (no change)', 
+                wasAlreadyVisible2 && expandedCount2 === 2, 
+                `Was already visible: ${wasAlreadyVisible2}, Expanded count: ${expandedCount2}`);
+
+            // Test 5: Expand to show epic (should not change anything since it's already visible)
+            const wasAlreadyVisible3 = window.PlanForgeModel.expandToShowItem(state, epic);
+            const expandedCount3 = state.expandedItems.size;
+            
+            addTestResult('Test 5: Expand to show epic (already visible)', 
+                wasAlreadyVisible3 && expandedCount3 === 2, 
+                `Was already visible: ${wasAlreadyVisible3}, Expanded count: ${expandedCount3}`);
+
+            // Test 6: Expand to show initiative (should not change anything since it's already visible)
+            const wasAlreadyVisible4 = window.PlanForgeModel.expandToShowItem(state, initiative);
+            const expandedCount4 = state.expandedItems.size;
+            
+            addTestResult('Test 6: Expand to show initiative (already visible)', 
+                wasAlreadyVisible4 && expandedCount4 === 2, 
+                `Was already visible: ${wasAlreadyVisible4}, Expanded count: ${expandedCount4}`);
+
+            // Test 7: Test with non-existent item
+            const nonExistentResult = window.PlanForgeModel.expandToShowItem(state, 'non-existent-id');
+            addTestResult('Test 7: Non-existent item', 
+                nonExistentResult === false, 
+                `Result for non-existent item: ${nonExistentResult}`);
+
+            addDebugInfo('Debug Info', `
+                Tree Structure:
+                - Initiative 1 (ID: ${initiative})
+                  - Epic 1 (ID: ${epic})
+                    - Story 1 (ID: ${story})
+                
+                Expansion State:
+                - Expanded items: ${Array.from(state.expandedItems).join(', ')}
+                - Initiative expanded: ${state.expandedItems.has(initiative)}
+                - Epic expanded: ${state.expandedItems.has(epic)}
+                - Story expanded: ${state.expandedItems.has(story)}
+                
+                Test Results:
+                - expandToShowItem(story) first time: ${wasAlreadyVisible ? 'already visible' : 'expanded'}
+                - expandToShowItem(story) second time: ${wasAlreadyVisible2 ? 'already visible' : 'expanded'}
+                - expandToShowItem(epic): ${wasAlreadyVisible3 ? 'already visible' : 'expanded'}
+                - expandToShowItem(initiative): ${wasAlreadyVisible4 ? 'already visible' : 'expanded'}
+            `);
+        }
+
+        function addTestResult(testName, passed, details) {
+            const results = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'test-result ' + (passed ? 'success' : 'error');
+            resultDiv.innerHTML = `<strong>${testName}:</strong> ${passed ? 'PASS' : 'FAIL'}<br><small>${details}</small>`;
+            results.appendChild(resultDiv);
+        }
+
+        function addDebugInfo(title, content) {
+            const results = document.getElementById('test-results');
+            const debugDiv = document.createElement('div');
+            debugDiv.className = 'test-result debug';
+            debugDiv.innerHTML = `<strong>${title}:</strong><pre>${content}</pre>`;
+            results.appendChild(debugDiv);
+        }
+
+        // Run tests when page loads
+        runAutoExpandTests();
+    </script>
+</body>
+</html>

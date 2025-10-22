@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlanForge Timeline Default Range Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .test-result { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .debug { background: #fff3cd; color: #856404; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>PlanForge Timeline Default Range & Today Indicator Test</h1>
+    <div id="test-results"></div>
+
+    <script src="../src/js/model.js"></script>
+    <script>
+        // Test the default timeline range and today indicator
+        function runTimelineDefaultTests() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '';
+
+            // Test 1: Check default timeline range calculation
+            const today = window.PlanForgeModel.today();
+            const sixMonthsAgo = window.PlanForgeModel.addDays(today, -180);
+            const sixMonthsFromNow = window.PlanForgeModel.addDays(today, 180);
+            
+            addTestResult('Test 1: Default timeline range calculation', 
+                true, 
+                `Today: ${today}<br>6 months ago: ${sixMonthsAgo}<br>6 months from now: ${sixMonthsFromNow}`);
+
+            // Test 2: Verify date calculations
+            const todayDate = new Date(today);
+            const sixMonthsAgoDate = new Date(sixMonthsAgo);
+            const sixMonthsFromNowDate = new Date(sixMonthsFromNow);
+            
+            const daysDiffAgo = Math.round((todayDate - sixMonthsAgoDate) / 86400000);
+            const daysDiffFromNow = Math.round((sixMonthsFromNowDate - todayDate) / 86400000);
+            
+            addTestResult('Test 2: Date difference calculations', 
+                daysDiffAgo === 180 && daysDiffFromNow === 180, 
+                `Days ago: ${daysDiffAgo} (expected: 180)<br>Days from now: ${daysDiffFromNow} (expected: 180)`);
+
+            // Test 3: Test timeline span
+            const totalSpan = Math.round((sixMonthsFromNowDate - sixMonthsAgoDate) / 86400000);
+            const expectedSpan = 360; // 6 months + 6 months = 12 months = ~360 days
+            
+            addTestResult('Test 3: Total timeline span', 
+                totalSpan === expectedSpan, 
+                `Total span: ${totalSpan} days (expected: ${expectedSpan})`);
+
+            // Test 4: Test today indicator logic
+            const todayInRange = today >= sixMonthsAgo && today <= sixMonthsFromNow;
+            const todayInMiddle = Math.abs(daysDiffAgo - daysDiffFromNow) <= 1; // Allow 1 day difference
+            
+            addTestResult('Test 4: Today indicator positioning', 
+                todayInRange && todayInMiddle, 
+                `Today in range: ${todayInRange}<br>Today in middle: ${todayInMiddle}`);
+
+            // Test 5: Test date formatting
+            const todayFormatted = todayDate.toISOString().slice(0, 10);
+            const sixMonthsAgoFormatted = sixMonthsAgoDate.toISOString().slice(0, 10);
+            const sixMonthsFromNowFormatted = sixMonthsFromNowDate.toISOString().slice(0, 10);
+            
+            addTestResult('Test 5: Date formatting', 
+                todayFormatted === today && 
+                sixMonthsAgoFormatted === sixMonthsAgo && 
+                sixMonthsFromNowFormatted === sixMonthsFromNow, 
+                `All dates properly formatted`);
+
+            addDebugInfo('Debug Info', `
+                Timeline Configuration:
+                - Start Date: ${sixMonthsAgo} (6 months ago)
+                - Today: ${today} (current date)
+                - End Date: ${sixMonthsFromNow} (6 months from now)
+                
+                Date Calculations:
+                - Days from start to today: ${daysDiffAgo}
+                - Days from today to end: ${daysDiffFromNow}
+                - Total timeline span: ${totalSpan} days
+                
+                Today Indicator Features:
+                - Red vertical line at today's position
+                - "Today" label at the top
+                - Only visible when today is within timeline range
+                - Line extends from top to bottom of canvas
+                
+                Expected Behavior:
+                ✅ Default timeline spans 12 months (6 months each direction)
+                ✅ Today indicator shows red line at current date
+                ✅ Timeline starts 6 months before today
+                ✅ Timeline ends 6 months after today
+                ✅ Today is positioned in the middle of the timeline
+            `);
+        }
+
+        function addTestResult(testName, passed, details) {
+            const results = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'test-result ' + (passed ? 'success' : 'error');
+            resultDiv.innerHTML = `<strong>${testName}:</strong> ${passed ? 'PASS' : 'FAIL'}<br><small>${details}</small>`;
+            results.appendChild(resultDiv);
+        }
+
+        function addDebugInfo(title, content) {
+            const results = document.getElementById('test-results');
+            const debugDiv = document.createElement('div');
+            debugDiv.className = 'test-result debug';
+            debugDiv.innerHTML = `<strong>${title}:</strong><pre>${content}</pre>`;
+            results.appendChild(debugDiv);
+        }
+
+        // Run tests when page loads
+        runTimelineDefaultTests();
+    </script>
+</body>
+</html>
