@@ -244,11 +244,7 @@ window.PlanForgeUI = (function() {
           left.appendChild(spacer);
         }
         
-        // Add milestone indicator
-        if (item.isMilestone) {
-          const milestoneIcon = document.createElement('span'); milestoneIcon.textContent = '◆'; milestoneIcon.title = 'Milestone'; milestoneIcon.style.color = '#fbbf24'; milestoneIcon.style.fontSize = '12px';
-          left.appendChild(milestoneIcon);
-        }
+        // Milestone indicator removed - cleaner UI without diamond symbol
         
         // Add dependency indicator if this item has dependencies
         const hasDeps = data.dependencies.some(d => d.fromId === item.id || d.toId === item.id);
