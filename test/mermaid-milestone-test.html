@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mermaid Milestone Export Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: var(--bg);
+            color: var(--text);
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: var(--panel);
+            border-radius: 8px;
+            border: 1px solid var(--grid);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 16px;
+            background: #1f2937;
+            border-radius: 6px;
+            border: 1px solid var(--grid);
+        }
+        .test-result { 
+            margin: 10px 0; 
+            padding: 10px; 
+            border-radius: 4px; 
+        }
+        .success { background: rgba(16,185,129,0.12); color: #6ee7b7; }
+        .error { background: rgba(239,68,68,0.12); color: #fca5a5; }
+        button { 
+            background: var(--accent); 
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        .mermaid-output {
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid var(--grid);
+            font-family: monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        .mermaid-preview {
+            background: white;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Mermaid Milestone Export Test</h1>
+        
+        <div class="test-section">
+            <h3>Test Milestone Generation</h3>
+            <button onclick="runTest()">Run Test</button>
+            <div id="results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Generated Mermaid Code</h3>
+            <div id="mermaid-output" class="mermaid-output"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Mermaid Preview</h3>
+            <div id="mermaid-preview" class="mermaid-preview"></div>
+        </div>
+    </div>
+
+    <script src="../src/js/model.js"></script>
+    <script src="../src/js/ui.js"></script>
+    <script>
+        function runTest() {
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+
+            // Create test state with multiple milestones
+            const state = window.PlanForgeModel.createInitialState();
+            const now = window.PlanForgeModel.today();
+            
+            // Add multiple milestones with same name to test duplicate handling
+            const m1 = window.PlanForgeModel.addInitiative(state, { 
+                name: 'New Milestone', 
+                start: now, 
+                end: now,
+                level: 'Initiative',
+                isMilestone: true
+            });
+            
+            const m2 = window.PlanForgeModel.addInitiative(state, { 
+                name: 'New Milestone', 
+                start: window.PlanForgeModel.addDays(now, 5), 
+                end: window.PlanForgeModel.addDays(now, 5),
+                level: 'Initiative',
+                isMilestone: true
+            });
+            
+            const m3 = window.PlanForgeModel.addInitiative(state, { 
+                name: 'New Milestone', 
+                start: window.PlanForgeModel.addDays(now, 10), 
+                end: window.PlanForgeModel.addDays(now, 10),
+                level: 'Initiative',
+                isMilestone: true
+            });
+            
+            // Add a regular task
+            const t1 = window.PlanForgeModel.addInitiative(state, { 
+                name: 'Regular Task', 
+                start: window.PlanForgeModel.addDays(now, 15), 
+                end: window.PlanForgeModel.addDays(now, 20),
+                level: 'Initiative'
+            });
+            
+            // Create dependencies
+            window.PlanForgeModel.linkDependency(state, m1, m2);
+            window.PlanForgeModel.linkDependency(state, m2, m3);
+            window.PlanForgeModel.linkDependency(state, m3, t1);
+
+            addResult('Step 1: Test data created', 
+                state.scenarios[0].data.initiatives.length === 4, 
+                `Created ${state.scenarios[0].data.initiatives.length} initiatives`);
+
+            addResult('Step 2: Dependencies created', 
+                state.scenarios[0].data.dependencies.length === 3, 
+                `Created ${state.scenarios[0].data.dependencies.length} dependencies`);
+
+            // Generate Mermaid code
+            const ui = window.PlanForgeUI.createUI(state);
+            const mermaidCode = ui.generateMermaidGantt(state);
+            
+            addResult('Step 3: Mermaid code generated', 
+                mermaidCode.includes('```mermaid'), 
+                'Mermaid code generated successfully');
+
+            // Display the generated code
+            document.getElementById('mermaid-output').textContent = mermaidCode;
+
+            // Test if the code is valid by trying to parse it
+            try {
+                // Remove the markdown wrapper
+                const cleanCode = mermaidCode.replace(/```mermaid\n/, '').replace(/```$/, '');
+                
+                addResult('Step 4: Mermaid syntax validation', 
+                    !cleanCode.includes('New Milestone') || cleanCode.includes('New_Milestone'), 
+                    'Duplicate names properly handled');
+
+                // Try to render with Mermaid
+                mermaid.initialize({ startOnLoad: false });
+                mermaid.render('mermaid-diagram', cleanCode).then(({ svg }) => {
+                    document.getElementById('mermaid-preview').innerHTML = svg;
+                    addResult('Step 5: Mermaid rendering', true, 'Mermaid diagram rendered successfully');
+                }).catch((error) => {
+                    addResult('Step 5: Mermaid rendering', false, `Rendering error: ${error.message}`);
+                });
+
+            } catch (error) {
+                addResult('Step 4: Mermaid syntax validation', false, `Syntax error: ${error.message}`);
+            }
+        }
+
+        function addResult(title, passed, details) {
+            const results = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'test-result ' + (passed ? 'success' : 'error');
+            resultDiv.innerHTML = `<strong>${title}:</strong> ${passed ? 'PASS' : 'FAIL'}<br><small>${details}</small>`;
+            results.appendChild(resultDiv);
+        }
+
+        // Run test automatically on load
+        window.addEventListener('load', () => {
+            setTimeout(runTest, 100);
+        });
+    </script>
+</body>
+</html>

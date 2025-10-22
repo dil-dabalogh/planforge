@@ -401,9 +401,11 @@ window.PlanForgeTimeline = (function() {
       ctx.font = '12px system-ui';
       rows.forEach(({ item, depth, scenarioId, isScenario }, idx) => {
         const y = layout.header + idx * (layout.rowHeight + layout.rowGap);
-        // row label
-        ctx.fillStyle = '#9aa4c3';
-        ctx.fillText(''.padStart(depth*2, ' ') + item.name, 8, y + 14);
+        // row label - don't show text for milestones
+        if (!item.isMilestone) {
+          ctx.fillStyle = '#9aa4c3';
+          ctx.fillText(''.padStart(depth*2, ' ') + item.name, 8, y + 14);
+        }
         // bar
         const x1 = dateToX(item.start);
         const x2 = dateToX(item.end);
@@ -504,25 +506,27 @@ window.PlanForgeTimeline = (function() {
             ctx.strokeRect(x1, y + 4, w, barHeight);
           }
         }
-        // name on bar
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '11px system-ui';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const name = item.name;
-        const textWidth = ctx.measureText(name).width;
-        if (textWidth <= w - 8) {
-          ctx.fillText(name, x1 + w/2, y + 4 + barHeight/2);
-        } else {
-          const ellipsis = '...';
-          const ellipsisWidth = ctx.measureText(ellipsis).width;
-          let truncated = name;
-          while (ctx.measureText(truncated).width > w - 8 - ellipsisWidth && truncated.length > 0) {
-            truncated = truncated.slice(0, -1);
+        // name on bar - don't show text for milestones
+        if (!item.isMilestone) {
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '11px system-ui';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          const name = item.name;
+          const textWidth = ctx.measureText(name).width;
+          if (textWidth <= w - 8) {
+            ctx.fillText(name, x1 + w/2, y + 4 + barHeight/2);
+          } else {
+            const ellipsis = '...';
+            const ellipsisWidth = ctx.measureText(ellipsis).width;
+            let truncated = name;
+            while (ctx.measureText(truncated).width > w - 8 - ellipsisWidth && truncated.length > 0) {
+              truncated = truncated.slice(0, -1);
+            }
+            ctx.fillText(truncated + ellipsis, x1 + w/2, y + 4 + barHeight/2);
           }
-          ctx.fillText(truncated + ellipsis, x1 + w/2, y + 4 + barHeight/2);
+          ctx.textAlign = 'left';
         }
-        ctx.textAlign = 'left';
       });
     }
 
