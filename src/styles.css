@@ -264,6 +264,36 @@ button {
   text-align: center;
 }
 
+.zoom-to-content-btn {
+  padding: 6px;
+  min-width: 32px;
+  height: 32px;
+  background: #2d3748;
+  color: var(--muted);
+  border: 1px solid var(--grid);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+}
+
+.zoom-to-content-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.zoom-to-content-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.zoom-to-content-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
 #timeline-container { 
   position: relative; 
   width: 100%; 

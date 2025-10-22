@@ -605,6 +605,7 @@ window.PlanForgeTimeline = (function() {
       renderItems();
       renderDependencies();
       renderDragConstraints();
+      updateZoomToContentButton();
     }
     
     function renderDragConstraints() {
@@ -865,7 +866,10 @@ window.PlanForgeTimeline = (function() {
     canvas.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
-    window.addEventListener('pf-refresh', render);
+    window.addEventListener('pf-refresh', () => {
+      render();
+      updateZoomToContentButton();
+    });
     
     // Listen for selection changes to ensure highlighting stays synchronized
     window.addEventListener('pf-selection-change', syncSelectionHighlight);
@@ -953,6 +957,14 @@ window.PlanForgeTimeline = (function() {
         updateZoomPresetButtons();
         render();
       });
+      
+      // Zoom to content button
+      const zoomToContentBtn = document.getElementById('zoom-to-content');
+      if (zoomToContentBtn) {
+        zoomToContentBtn.addEventListener('click', () => {
+          zoomToContent();
+        });
+      }
     }
 
     function updateZoomLevelDisplay() {
@@ -987,6 +999,57 @@ window.PlanForgeTimeline = (function() {
         case 'day':
           zoomPresets.day.classList.add('active');
           break;
+      }
+    }
+
+    function zoomToContent() {
+      const rows = getRows();
+      
+      // Check if timeline is empty
+      if (rows.length === 0) {
+        return;
+      }
+      
+      // Find earliest start date and latest end date from all visible elements
+      let earliestStart = null;
+      let latestEnd = null;
+      
+      rows.forEach(({ item }) => {
+        if (!earliestStart || item.start < earliestStart) {
+          earliestStart = item.start;
+        }
+        if (!latestEnd || item.end > latestEnd) {
+          latestEnd = item.end;
+        }
+      });
+      
+      // Update timeline configuration
+      if (earliestStart && latestEnd) {
+        timelineConfig.start = earliestStart;
+        timelineConfig.end = latestEnd;
+        
+        // Update the UI inputs to reflect the change
+        const startInput = document.getElementById('timeline-start');
+        const endInput = document.getElementById('timeline-end');
+        if (startInput) {
+          startInput.value = timelineConfig.start;
+        }
+        if (endInput) {
+          endInput.value = timelineConfig.end;
+        }
+        
+        // Re-render the timeline
+        render();
+      }
+    }
+
+    function updateZoomToContentButton() {
+      const button = document.getElementById('zoom-to-content');
+      const rows = getRows();
+      
+      // Enable/disable button based on whether timeline has content
+      if (button) {
+        button.disabled = rows.length === 0;
       }
     }
 
