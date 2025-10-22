@@ -244,11 +244,7 @@ window.PlanForgeUI = (function() {
           left.appendChild(spacer);
         }
         
-        // Add milestone indicator
-        if (item.isMilestone) {
-          const milestoneIcon = document.createElement('span'); milestoneIcon.textContent = '◆'; milestoneIcon.title = 'Milestone'; milestoneIcon.style.color = '#fbbf24'; milestoneIcon.style.fontSize = '12px';
-          left.appendChild(milestoneIcon);
-        }
+        // Milestone indicator removed - cleaner UI without diamond symbol
         
         // Add dependency indicator if this item has dependencies
         const hasDeps = data.dependencies.some(d => d.fromId === item.id || d.toId === item.id);
@@ -327,22 +323,6 @@ window.PlanForgeUI = (function() {
         const data = window.PlanForgeModel.getActiveData(state);
         const item = data.initiatives.find(i => i.id === sel.id); if (!item) return;
         panel.appendChild(field('Name', item.name, (v)=>{ item.name=v; renderHierarchy(); window.dispatchEvent(new Event('pf-refresh')); }));
-        
-        // Milestone toggle
-        const milestoneWrap = document.createElement('div'); milestoneWrap.className = 'details-field';
-        const milestoneLabel = document.createElement('label'); milestoneLabel.textContent = 'Is Milestone';
-        const milestoneCheckbox = document.createElement('input'); milestoneCheckbox.type = 'checkbox'; milestoneCheckbox.checked = item.isMilestone || false;
-        milestoneCheckbox.addEventListener('change', ()=>{
-          item.isMilestone = milestoneCheckbox.checked;
-          // If converting to milestone, set end date to start date
-          if (item.isMilestone) {
-            item.end = item.start;
-            item.length = 1;
-          }
-          renderDetails(); // Re-render to show/hide appropriate fields
-          window.dispatchEvent(new Event('pf-refresh'));
-        });
-        milestoneWrap.appendChild(milestoneLabel); milestoneWrap.appendChild(milestoneCheckbox); panel.appendChild(milestoneWrap);
         
         if (item.isMilestone) {
           // Milestone: single target date
@@ -428,6 +408,38 @@ window.PlanForgeUI = (function() {
         });
         
         addDepWrap.appendChild(depSelect); addDepWrap.appendChild(addDepBtn); depWrap.appendChild(addDepWrap); panel.appendChild(depWrap);
+        
+        // Milestone toggle - moved to bottom for less crowded UI
+        const milestoneWrap = document.createElement('div'); milestoneWrap.className = 'details-field';
+        const milestoneLabel = document.createElement('label'); milestoneLabel.className = 'm3-switch-label';
+        
+        const labelText = document.createElement('span'); 
+        labelText.textContent = 'Milestone';
+        labelText.className = 'switch-label-text';
+        
+        const switchContainer = document.createElement('div'); switchContainer.className = 'm3-switch';
+        const milestoneSwitch = document.createElement('input'); 
+        milestoneSwitch.type = 'checkbox'; 
+        milestoneSwitch.checked = item.isMilestone || false;
+        const switchSlider = document.createElement('span'); switchSlider.className = 'm3-switch-slider';
+        
+        milestoneSwitch.addEventListener('change', ()=>{
+          item.isMilestone = milestoneSwitch.checked;
+          // If converting to milestone, set end date to start date
+          if (item.isMilestone) {
+            item.end = item.start;
+            item.length = 1;
+          }
+          renderDetails(); // Re-render to show/hide appropriate fields
+          window.dispatchEvent(new Event('pf-refresh'));
+        });
+        
+        switchContainer.appendChild(milestoneSwitch);
+        switchContainer.appendChild(switchSlider);
+        milestoneLabel.appendChild(labelText);
+        milestoneLabel.appendChild(switchContainer);
+        milestoneWrap.appendChild(milestoneLabel);
+        panel.appendChild(milestoneWrap);
         
       }
       if (sel.type === 'scenario'){
@@ -516,8 +528,25 @@ window.PlanForgeUI = (function() {
       
       // Create a map of initiative IDs to their safe names for dependency references
       const initiativeIdMap = new Map();
+      const nameCounts = new Map();
+      
       initiatives.forEach(initiative => {
-        const safeName = initiative.name.replace(/[":]/g, '');
+        // Create a safe name by removing special characters and spaces
+        let safeName = initiative.name.replace(/[":\s]/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+        
+        // Handle duplicate names by adding a counter
+        if (nameCounts.has(safeName)) {
+          nameCounts.set(safeName, nameCounts.get(safeName) + 1);
+          safeName = `${safeName}_${nameCounts.get(safeName)}`;
+        } else {
+          nameCounts.set(safeName, 1);
+        }
+        
+        // Ensure the name starts with a letter (Mermaid requirement)
+        if (!/^[a-zA-Z]/.test(safeName)) {
+          safeName = `task_${safeName}`;
+        }
+        
         initiativeIdMap.set(initiative.id, safeName);
       });
       
@@ -534,8 +563,9 @@ window.PlanForgeUI = (function() {
         if (levelInitiatives.length > 0) {
           mermaid += `    section ${level}s\n`;
           levelInitiatives.forEach(initiative => {
-            // Escape special characters in names and ensure proper syntax
-            const safeName = initiative.name.replace(/[":]/g, '');
+            // Get the safe name from our map
+            const safeName = initiativeIdMap.get(initiative.id);
+            const displayName = initiative.name; // Keep original name for display
             
             // Check for dependencies - find tasks that this initiative depends on
             const dependencies = data.dependencies.filter(dep => dep.toId === initiative.id);
@@ -554,20 +584,20 @@ window.PlanForgeUI = (function() {
               
               if (isSameDay) {
                 // Single day task with dependencies - use milestone syntax
-                mermaid += `        ${safeName} :milestone, after ${dependencyNames.join(',')}, 0d\n`;
+                mermaid += `        ${displayName} :milestone, ${safeName}, after ${dependencyNames.join(',')}, 0d\n`;
               } else {
                 // Multi-day task with dependencies - use task syntax
                 const duration = Math.max(1, Math.round((endDate - startDate) / 86400000));
-                mermaid += `        ${safeName} :after ${dependencyNames.join(',')}, ${duration}d\n`;
+                mermaid += `        ${displayName} :${safeName}, after ${dependencyNames.join(',')}, ${duration}d\n`;
               }
             } else {
               // Task has no dependencies - use original date-based syntax
               if (isSameDay) {
                 // Single day task - use milestone syntax
-                mermaid += `        ${safeName} :milestone, ${initiative.start}\n`;
+                mermaid += `        ${displayName} :milestone, ${safeName}, ${initiative.start}\n`;
               } else {
                 // Multi-day task - use task syntax
-                mermaid += `        ${safeName} :${initiative.start}, ${initiative.end}\n`;
+                mermaid += `        ${displayName} :${safeName}, ${initiative.start}, ${initiative.end}\n`;
               }
             }
           });

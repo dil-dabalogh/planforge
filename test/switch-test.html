@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Material Design 3 Switch Test</title>
+    <link rel="stylesheet" href="../src/styles.css">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: var(--bg);
+            color: var(--text);
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: var(--panel);
+            border-radius: 8px;
+            border: 1px solid var(--grid);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 16px;
+            background: #1f2937;
+            border-radius: 6px;
+            border: 1px solid var(--grid);
+        }
+        .test-result { 
+            margin: 10px 0; 
+            padding: 10px; 
+            border-radius: 4px; 
+        }
+        .success { background: rgba(16,185,129,0.12); color: #6ee7b7; }
+        .error { background: rgba(239,68,68,0.12); color: #fca5a5; }
+        button { 
+            background: var(--accent); 
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        .switch-demo {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .switch-state {
+            font-family: monospace;
+            background: #0f172a;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid var(--grid);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Material Design 3 Switch Component Test</h1>
+        
+        <div class="test-section">
+            <h3>Switch Demo</h3>
+            <div class="switch-demo">
+                <label class="m3-switch-label">
+                    <span>Is Milestone</span>
+                    <div class="m3-switch">
+                        <input type="checkbox" id="test-switch">
+                        <span class="m3-switch-slider"></span>
+                    </div>
+                </label>
+                
+                <div class="switch-state">
+                    Switch State: <span id="switch-state">OFF</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test Results</h3>
+            <button onclick="runTests()">Run Tests</button>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        // Update switch state display
+        const switchInput = document.getElementById('test-switch');
+        const stateDisplay = document.getElementById('switch-state');
+        
+        switchInput.addEventListener('change', function() {
+            stateDisplay.textContent = this.checked ? 'ON' : 'OFF';
+        });
+
+        function runTests() {
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+
+            // Test 1: Switch exists and is functional
+            const switchElement = document.getElementById('test-switch');
+            const switchSlider = document.querySelector('.m3-switch-slider');
+            
+            addResult('Test 1: Switch element exists', 
+                switchElement !== null, 
+                'Switch input element found');
+
+            addResult('Test 2: Switch slider exists', 
+                switchSlider !== null, 
+                'Switch slider element found');
+
+            // Test 3: Switch toggles correctly
+            const initialState = switchElement.checked;
+            switchElement.click();
+            const afterClickState = switchElement.checked;
+            
+            addResult('Test 3: Switch toggles on click', 
+                initialState !== afterClickState, 
+                `Initial: ${initialState}, After click: ${afterClickState}`);
+
+            // Test 4: CSS classes are applied
+            const switchContainer = document.querySelector('.m3-switch');
+            const hasCorrectClass = switchContainer && switchContainer.classList.contains('m3-switch');
+            
+            addResult('Test 4: CSS classes applied', 
+                hasCorrectClass, 
+                'Switch container has correct CSS class');
+
+            // Test 5: Visual feedback works
+            const sliderElement = document.querySelector('.m3-switch-slider');
+            const hasSliderClass = sliderElement && sliderElement.classList.contains('m3-switch-slider');
+            
+            addResult('Test 5: Slider styling applied', 
+                hasSliderClass, 
+                'Slider element has correct CSS class');
+
+            // Test 6: Accessibility
+            const hasLabel = switchElement.labels && switchElement.labels.length > 0;
+            
+            addResult('Test 6: Accessibility (label association)', 
+                hasLabel, 
+                'Switch has associated label for accessibility');
+
+            // Test 7: Material Design 3 specifications
+            const switchRect = switchContainer ? switchContainer.getBoundingClientRect() : null;
+            const correctWidth = switchRect && Math.abs(switchRect.width - 52) < 2; // Allow 2px tolerance
+            const correctHeight = switchRect && Math.abs(switchRect.height - 32) < 2;
+            
+            addResult('Test 7: Material Design 3 dimensions', 
+                correctWidth && correctHeight, 
+                `Width: ${switchRect?.width}px (expected: 52px), Height: ${switchRect?.height}px (expected: 32px)`);
+        }
+
+        function addResult(title, passed, details) {
+            const results = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'test-result ' + (passed ? 'success' : 'error');
+            resultDiv.innerHTML = `<strong>${title}:</strong> ${passed ? 'PASS' : 'FAIL'}<br><small>${details}</small>`;
+            results.appendChild(resultDiv);
+        }
+
+        // Run tests automatically on load
+        window.addEventListener('load', () => {
+            setTimeout(runTests, 100);
+        });
+    </script>
+</body>
+</html>
