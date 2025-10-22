@@ -8,10 +8,6 @@ A lightweight project planning tool for visualizing initiatives, dependencies, a
 **Run:** Use the provided start scripts to serve the application:
 
 ```bash
-# Unix/Linux/macOS
-./src/start-server.sh
-
-# Or using npm
 npm start
 npm run dev
 ```
