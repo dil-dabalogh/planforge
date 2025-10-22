@@ -135,6 +135,28 @@ window.PlanForgeUI = (function() {
         });
         right.appendChild(addInitiative);
         
+        // Add milestone button (only enabled for active scenario)
+        const addMilestone = document.createElement('button'); 
+        addMilestone.innerHTML = '<span class="material-symbols-outlined">flag</span>'; 
+        addMilestone.title = 'Add Milestone';
+        addMilestone.disabled = !isActiveScenario;
+        if (!isActiveScenario) {
+          addMilestone.style.opacity = '0.5';
+          addMilestone.style.cursor = 'not-allowed';
+        }
+        addMilestone.addEventListener('click', () => {
+          if (isActiveScenario) {
+            const today = window.PlanForgeModel.today();
+            const id = window.PlanForgeModel.addInitiative(state, { name: 'New Milestone', start: today, end: today, level: 'Initiative', size: 'M', isMilestone: true });
+            state.selection = { type: 'initiative', id };
+            renderHierarchy();
+            renderDetails();
+            window.dispatchEvent(new Event('pf-refresh'));
+            window.dispatchEvent(new Event('pf-selection-change'));
+          }
+        });
+        right.appendChild(addMilestone);
+        
         // Add delete scenario button (only show if there's more than one scenario)
         if (state.scenarios.length > 1) {
           const deleteScenario = document.createElement('button'); 
@@ -222,6 +244,12 @@ window.PlanForgeUI = (function() {
           left.appendChild(spacer);
         }
         
+        // Add milestone indicator
+        if (item.isMilestone) {
+          const milestoneIcon = document.createElement('span'); milestoneIcon.textContent = '◆'; milestoneIcon.title = 'Milestone'; milestoneIcon.style.color = '#fbbf24'; milestoneIcon.style.fontSize = '12px';
+          left.appendChild(milestoneIcon);
+        }
+        
         // Add dependency indicator if this item has dependencies
         const hasDeps = data.dependencies.some(d => d.fromId === item.id || d.toId === item.id);
         if (hasDeps) {
@@ -242,7 +270,7 @@ window.PlanForgeUI = (function() {
         // Check if this initiative belongs to the active scenario
         const isActiveScenario = item.scenarioId === state.activeScenarioId;
         
-        if (item.level !== 'Story') {
+        if (item.level !== 'Story' && !item.isMilestone) {
           const addEpic = document.createElement('button'); 
           addEpic.innerHTML = '<span class="material-symbols-outlined">add</span>'; 
           addEpic.title = 'Add child';
@@ -299,9 +327,34 @@ window.PlanForgeUI = (function() {
         const data = window.PlanForgeModel.getActiveData(state);
         const item = data.initiatives.find(i => i.id === sel.id); if (!item) return;
         panel.appendChild(field('Name', item.name, (v)=>{ item.name=v; renderHierarchy(); window.dispatchEvent(new Event('pf-refresh')); }));
-        panel.appendChild(field('Start', item.start, (v)=>{ window.PlanForgeModel.moveItem(state, item.id, { start: v, end: item.end }); window.dispatchEvent(new Event('pf-refresh')); } ,'date'));
-        panel.appendChild(field('End', item.end, (v)=>{ window.PlanForgeModel.moveItem(state, item.id, { start: item.start, end: v }); window.dispatchEvent(new Event('pf-refresh')); } ,'date'));
-        panel.appendChild(field('Length (days)', item.length || '', ()=>{}, 'number', true));
+        
+        // Milestone toggle
+        const milestoneWrap = document.createElement('div'); milestoneWrap.className = 'details-field';
+        const milestoneLabel = document.createElement('label'); milestoneLabel.textContent = 'Is Milestone';
+        const milestoneCheckbox = document.createElement('input'); milestoneCheckbox.type = 'checkbox'; milestoneCheckbox.checked = item.isMilestone || false;
+        milestoneCheckbox.addEventListener('change', ()=>{
+          item.isMilestone = milestoneCheckbox.checked;
+          // If converting to milestone, set end date to start date
+          if (item.isMilestone) {
+            item.end = item.start;
+            item.length = 1;
+          }
+          renderDetails(); // Re-render to show/hide appropriate fields
+          window.dispatchEvent(new Event('pf-refresh'));
+        });
+        milestoneWrap.appendChild(milestoneLabel); milestoneWrap.appendChild(milestoneCheckbox); panel.appendChild(milestoneWrap);
+        
+        if (item.isMilestone) {
+          // Milestone: single target date
+          panel.appendChild(field('Target Date', item.start, (v)=>{ window.PlanForgeModel.moveItem(state, item.id, { start: v, end: v }); window.dispatchEvent(new Event('pf-refresh')); } ,'date'));
+          panel.appendChild(field('Length (days)', '1', ()=>{}, 'number', true));
+        } else {
+          // Regular initiative: start and end dates
+          panel.appendChild(field('Start', item.start, (v)=>{ window.PlanForgeModel.moveItem(state, item.id, { start: v, end: item.end }); window.dispatchEvent(new Event('pf-refresh')); } ,'date'));
+          panel.appendChild(field('End', item.end, (v)=>{ window.PlanForgeModel.moveItem(state, item.id, { start: item.start, end: v }); window.dispatchEvent(new Event('pf-refresh')); } ,'date'));
+          panel.appendChild(field('Length (days)', item.length || '', ()=>{}, 'number', true));
+        }
+        
         panel.appendChild(field('Description', item.description||'', (v)=>{ item.description=v; window.dispatchEvent(new Event('pf-refresh')); }));
         // size dropdown
         const sizeWrap = document.createElement('div'); sizeWrap.className = 'details-field';
@@ -310,12 +363,14 @@ window.PlanForgeUI = (function() {
         ;['XS','S','M','L','XL','XXL','infinit'].forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; if (item.size===s) o.selected=true; sizeSel.appendChild(o); });
         sizeSel.addEventListener('change', ()=>{ item.size=sizeSel.value; window.dispatchEvent(new Event('pf-refresh')); });
         sizeWrap.appendChild(sizeLabel); sizeWrap.appendChild(sizeSel); panel.appendChild(sizeWrap);
-        // add child buttons
+        // add child buttons (disabled for milestones)
         const nextLevel = item.level === 'Initiative' ? 'Epic' : item.level === 'Epic' ? 'Story' : null;
         const childWrap = document.createElement('div'); childWrap.className = 'details-field';
-        const addChildBtn = document.createElement('button'); addChildBtn.textContent = nextLevel?('Add Child '+nextLevel):'No child level'; addChildBtn.disabled = !nextLevel;
+        const addChildBtn = document.createElement('button'); 
+        addChildBtn.textContent = item.isMilestone ? 'Milestones cannot have children' : (nextLevel ? ('Add Child '+nextLevel) : 'No child level'); 
+        addChildBtn.disabled = !nextLevel || item.isMilestone;
         addChildBtn.addEventListener('click', () => {
-          if (!nextLevel) return;
+          if (!nextLevel || item.isMilestone) return;
           const id = window.PlanForgeModel.addInitiative(state, { name: nextLevel, start: item.start, end: item.end, parentId: item.id, level: nextLevel, size: 'M' });
           state.selection = { type: 'initiative', id };
           renderHierarchy(); renderDetails(); window.dispatchEvent(new Event('pf-refresh')); window.dispatchEvent(new Event('pf-selection-change'));
