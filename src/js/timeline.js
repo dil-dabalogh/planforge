@@ -1028,7 +1028,10 @@ window.PlanForgeTimeline = (function() {
         timelineConfig.start = earliestStart;
         timelineConfig.end = latestEnd;
         
-        // Update the UI inputs to reflect the change
+        // Ensure minimum timeline span is maintained for current zoom level
+        ensureMinimumTimelineSpan();
+        
+        // Update the UI inputs to reflect the change (after ensureMinimumTimelineSpan)
         const startInput = document.getElementById('timeline-start');
         const endInput = document.getElementById('timeline-end');
         if (startInput) {
