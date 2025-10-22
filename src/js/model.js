@@ -138,9 +138,20 @@ window.PlanForgeModel = (function() {
     console.log('New active scenario ID:', state.activeScenarioId);
     console.log('Total scenarios:', state.scenarios.length);
   }
-  function addInitiative(state, { name, start, end, parentId = null, level = 'Initiative', size = 'M', description = '' }) {
+  function addInitiative(state, { name, start, end, parentId = null, level = 'Initiative', size = 'M', description = '', isMilestone = false }) {
     const data = getActiveData(state);
     const id = 'itm_' + Math.random().toString(36).slice(2,8);
+    
+    // Milestone constraints
+    if (isMilestone) {
+      // Milestones cannot have children, so no parentId allowed
+      parentId = null;
+      // For milestones, start and end should be the same (target date)
+      if (start !== end) {
+        end = start; // Use start as the target date
+      }
+    }
+    
     // prevent children under Story level
     if (parentId) {
       const parent = data.initiatives.find(i => i.id === parentId);
@@ -154,7 +165,7 @@ window.PlanForgeModel = (function() {
     }
     const length = Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000));
     data.initiatives.push({ 
-      id, name, start, end, parentId, level, size, description, 
+      id, name, start, end, parentId, level, size, description, isMilestone,
       scenarioId: state.activeScenarioId, length
     });
     return id;
@@ -194,6 +205,16 @@ window.PlanForgeModel = (function() {
     const data = getActiveData(state);
     const item = data.initiatives.find(i => i.id === id);
     if (!item) return;
+    
+    // Milestone constraints: milestones only have a single target date
+    if (item.isMilestone) {
+      const targetDate = clampDate(start);
+      item.start = targetDate;
+      item.end = targetDate;
+      item.length = 1; // Milestones are always 1 day
+      return;
+    }
+    
     // enforce child stays within parent range
     const parent = item.parentId ? data.initiatives.find(i => i.id === item.parentId) : null;
     let newStart = clampDate(start);
@@ -248,7 +269,13 @@ window.PlanForgeModel = (function() {
     subtree.forEach(n => {
       n.start = addDays(n.start, applied);
       n.end = addDays(n.end, applied);
-      n.length = Math.max(1, Math.round((new Date(n.end) - new Date(n.start)) / 86400000));
+      // For milestones, ensure start and end are the same
+      if (n.isMilestone) {
+        n.end = n.start;
+        n.length = 1;
+      } else {
+        n.length = Math.max(1, Math.round((new Date(n.end) - new Date(n.start)) / 86400000));
+      }
     });
     return applied;
   }
