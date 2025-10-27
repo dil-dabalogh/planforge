@@ -225,15 +225,30 @@ ${embeddedMaterialSymbolsCSS}
     </style>`;
   }
   
-  // Construct the final HTML
+  // Preserve SEO meta tags and other head content
+  const originalHeadLines = headMatch[1].split('\n');
+  const preservedHeadContent = [];
+  
+  // Extract all meta tags, title, and other important head elements
+  for (const line of originalHeadLines) {
+    // Skip external stylesheets and scripts (we inline those)
+    if (line.includes('<link rel="stylesheet"')) continue;
+    if (line.includes('<script src=')) continue;
+    // Preserve everything else (meta tags, title, favicon, structured data, etc.)
+    if (line.trim() && !line.includes('<style')) {
+      preservedHeadContent.push(line);
+    }
+  }
+  
+  // Combine preserved head content with inlined styles and add fonts
+  const preservedHead = preservedHeadContent.join('\n');
+  
+  // Construct the final HTML - keep all meta tags from source
   const finalHTML = `<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PlanForge MVP</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z' fill='%231976d2'/%3E%3C/svg%3E">
-  ${headContent}
+${preservedHead}
+${headContent}
 </head>
 <body>
   ${bodyContent}
