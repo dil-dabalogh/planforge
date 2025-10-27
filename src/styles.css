@@ -20,6 +20,19 @@
   font-display: swap;
 }
 
+/* Visually hidden for SEO purposes */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
 :root {
   /* ========================================
      UI COLOR PALETTE
@@ -37,7 +50,7 @@
   --color-text-light: #94a3b8;           /* Light/disabled text */
   
   /* UI Accent Colors */
-  --color-primary: #ff8f8f;              /* Main accent - salmon */
+  --color-primary: #d95959;              /* Main accent - salmon (darkened for better contrast) */
   --color-secondary: #fff1cb;             /* Secondary accent - cream */
   --color-accent: #c2e2fa;               /* Accent highlight - light blue */
   --color-highlight: #b7a3e3;            /* Highlight - lavender */
@@ -54,7 +67,7 @@
      ======================================== */
   
   --color-content-scenario: #b8b8d4;     /* Scenarios - muted purple-grey */
-  --color-content-initiative: #ff8f8f;    /* Initiatives - salmon */
+  --color-content-initiative: #d95959;    /* Initiatives - salmon (darkened for better contrast) */
   --color-content-milestone: #ffd89b;    /* Milestones - warm gold */
   --color-content-epic: #b7a3e3;         /* Epics - lavender */
   --color-content-story: #8ad4e8;        /* Stories - light blue */
@@ -64,8 +77,8 @@
      Used for specific UI states
      ======================================== */
   
-  --color-selection-bg: rgba(255, 143, 143, 0.15);  /* Selection background */
-  --color-hover-bg: rgba(255, 143, 143, 0.08);       /* Hover state */
+  --color-selection-bg: rgba(217, 89, 89, 0.15);  /* Selection background (darkened) */
+  --color-hover-bg: rgba(217, 89, 89, 0.08);       /* Hover state (darkened) */
   
   /* Legacy variable names for backward compatibility */
   --bg: var(--color-bg);

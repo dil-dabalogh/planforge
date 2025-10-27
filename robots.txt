@@ -1,0 +1,11 @@
+# robots.txt for PlanForge
+User-agent: *
+Allow: /
+
+# Disallow admin or private endpoints if any
+# Disallow: /admin/
+# Disallow: /private/
+
+# Sitemap
+Sitemap: https://planforge.cc/sitemap.xml
+

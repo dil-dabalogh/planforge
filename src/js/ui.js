@@ -695,10 +695,14 @@ window.PlanForgeUI = (function() {
           <h3>Export Options</h3>
           <p>Export your project data to MermaidJS format for seamless integration into your markdown documentation, or export as JSON for easy import into JIRA and other project management platforms.</p>
           
-          <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-panel); display: flex; gap: 1.5rem; align-items: center;">
+          <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-panel); display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
             <a href="https://github.com/dil-dabalogh/planforge" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
               <span class="material-symbols-outlined">code</span>
               GitHub Repository
+            </a>
+            <a href="https://www.linkedin.com/in/cinegemadar/" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+              <span class="material-symbols-outlined">person</span>
+              LinkedIn Profile
             </a>
             <a href="https://buymeacoffee.com/cinegemadar" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
               <span class="material-symbols-outlined">favorite</span>
