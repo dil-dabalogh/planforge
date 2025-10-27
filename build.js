@@ -225,29 +225,12 @@ ${embeddedMaterialSymbolsCSS}
     </style>`;
   }
   
-  // Preserve SEO meta tags and other head content
-  const originalHeadLines = headMatch[1].split('\n');
-  const preservedHeadContent = [];
-  
-  // Extract all meta tags, title, and other important head elements
-  for (const line of originalHeadLines) {
-    // Skip external stylesheets and scripts (we inline those)
-    if (line.includes('<link rel="stylesheet"')) continue;
-    if (line.includes('<script src=')) continue;
-    // Preserve everything else (meta tags, title, favicon, structured data, etc.)
-    if (line.trim() && !line.includes('<style')) {
-      preservedHeadContent.push(line);
-    }
-  }
-  
-  // Combine preserved head content with inlined styles and add fonts
-  const preservedHead = preservedHeadContent.join('\n');
-  
   // Construct the final HTML - keep all meta tags from source
+  // headContent already has the meta tags, title, structured data, etc. from the original
+  // It just had the external stylesheets replaced with inlined CSS
   const finalHTML = `<!doctype html>
 <html lang="en">
 <head>
-${preservedHead}
 ${headContent}
 </head>
 <body>
