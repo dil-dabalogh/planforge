@@ -65,10 +65,16 @@ window.PlanForgeTimeline = (function() {
       const containerWidth = rect.width;
       const finalWidth = Math.max(contentWidthCss, containerWidth);
       
+      // Calculate height based on number of rows
+      const rows = getRows();
+      const contentHeight = layout.header + rows.length * (layout.rowHeight + layout.rowGap) + layout.rowGap;
+      const minHeight = Math.max(400, rect.height);
+      const finalHeight = Math.max(minHeight, contentHeight);
+      
       canvas.style.width = finalWidth + 'px';
-      canvas.style.height = Math.max(400, rect.height) + 'px';
+      canvas.style.height = finalHeight + 'px';
       canvas.width = finalWidth * dpr;
-      canvas.height = Math.max(400, rect.height) * dpr;
+      canvas.height = finalHeight * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
     
@@ -1091,7 +1097,8 @@ window.PlanForgeTimeline = (function() {
     return {
       render,
       onSelect,
-      onChange
+      onChange,
+      zoomToContent
     };
   }
 

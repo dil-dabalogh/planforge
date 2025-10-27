@@ -162,6 +162,15 @@ function buildHTML(includeFonts = true, obfuscate = false, minifyCSS = false) {
     }
   );
   
+  // Embed demo data if available
+  let embeddedDemoData = '';
+  const demoSource = path.join(SRC_DIR, 'data/demo-full-features.json');
+  if (fs.existsSync(demoSource)) {
+    const demoContent = fs.readFileSync(demoSource, 'utf8');
+    embeddedDemoData = `<script id="embedded-demo-data" type="application/json">${demoContent}</script>`;
+    console.log('Demo data embedded in HTML');
+  }
+  
   // Handle fonts if requested
   if (includeFonts) {
     // Replace font CSS with embedded fonts
@@ -223,6 +232,11 @@ ${embeddedMaterialSymbolsCSS}
         -webkit-font-smoothing: antialiased;
       }
     </style>`;
+  }
+  
+  // Embed demo data in body if available
+  if (embeddedDemoData) {
+    bodyContent = embeddedDemoData + '\n  ' + bodyContent;
   }
   
   // Construct the final HTML - keep all meta tags from source

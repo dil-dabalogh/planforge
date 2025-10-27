@@ -128,9 +128,14 @@ button:hover { border-color: var(--color-primary); }
 .icon-only-button {
   padding: 6px;
   min-width: 32px;
-  width: 32px;
-  height: 32px;
+  width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 0;
 }
 
 .icon-only-button .material-icons {
@@ -241,9 +246,10 @@ button {
 
 .workspace { 
   position: relative; 
-  overflow-y: auto; 
+  overflow: auto; 
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .timeline-controls-bottom {
@@ -399,9 +405,10 @@ button {
   position: relative; 
   width: 100%; 
   flex: 1;
-  overflow: auto; 
+  overflow: auto;
+  min-height: 0;
 }
-#timeline-canvas { width: 100%; height: 100%; display: block; background: var(--color-bg); }
+#timeline-canvas { width: 100%; height: auto; min-height: 100%; display: block; background: var(--color-bg); }
 
 .tree-item, .resource-item {
   display: flex;
