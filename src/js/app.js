@@ -16,6 +16,16 @@
     renderAll();
     window.dispatchEvent(new Event('pf-refresh'));
   });
+  
+  // Erase button handler
+  ui.onErase(() => {
+    const confirmed = confirm('Are you sure you want to clear all data? This action cannot be undone.');
+    if (confirmed) {
+      window.PlanForgeModel.clearAllData(state);
+      renderAll();
+      window.dispatchEvent(new Event('pf-refresh'));
+    }
+  });
 
   // Timeline interactions
   timeline.onSelect((selection) => { 
@@ -112,8 +122,34 @@
     }
   });
 
-  // Initial render without demo data
+  // Initial render
   renderAll();
+  
+  // Auto-load demo.json if available
+  (async function loadDemoIfAvailable() {
+    try {
+      console.log('Attempting to load demo.json...');
+      // Try to load from current directory first (for dist), then from data folder (for src)
+      let response = await fetch('./demo.json');
+      if (!response.ok) {
+        response = await fetch('./data/demo-full-features.json');
+      }
+      console.log('Response status:', response.status);
+      if (response.ok) {
+        const text = await response.text();
+        const next = window.PlanForgeStorage.parseJSON(text);
+        window.PlanForgeModel.loadState(state, next);
+        console.log('Demo data loaded successfully');
+        renderAll();
+        window.dispatchEvent(new Event('pf-refresh'));
+      } else {
+        console.log('Demo file not found or not accessible');
+      }
+    } catch (error) {
+      // Demo file not found or other error - silent failure is OK
+      console.log('Demo file not available:', error.message);
+    }
+  })();
 })();
 
 

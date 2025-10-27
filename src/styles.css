@@ -137,6 +137,10 @@ button:hover { border-color: var(--color-primary); }
   font-size: 20px;
 }
 
+.icon-only-button.btn-danger .material-icons {
+  color: var(--color-danger);
+}
+
 /* Button styling */
 button {
   display: flex;
@@ -237,7 +241,7 @@ button {
 
 .workspace { 
   position: relative; 
-  overflow: hidden; 
+  overflow-y: auto; 
   display: flex;
   flex-direction: column;
 }

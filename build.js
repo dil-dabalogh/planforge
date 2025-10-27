@@ -265,6 +265,14 @@ function createDistribution() {
     console.log('Robots.txt copied to dist/');
   }
   
+  // Copy demo-full-features.json to dist as demo.json if it exists
+  const demoSource = path.join(SRC_DIR, 'data/demo-full-features.json');
+  if (fs.existsSync(demoSource)) {
+    // Copy to dist for production (app looks for ./demo.json)
+    fs.copyFileSync(demoSource, path.join(DIST_DIR, 'demo.json'));
+    console.log('Demo data copied to dist/demo.json');
+  }
+  
   console.log('Distribution package created successfully!');
 }
 

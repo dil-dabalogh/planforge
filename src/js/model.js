@@ -354,6 +354,14 @@ window.PlanForgeModel = (function() {
       'Story': 'Story'
     };
   }
+  
+  function clearAllData(state) {
+    // Reset to initial state with empty data
+    state.scenarios = [{ id: 'default', name: 'Baseline', description: '', visible: true, data: emptyData() }];
+    state.activeScenarioId = 'default';
+    state.selection = null;
+    state.expandedItems.clear();
+  }
 
 
   function seedDemo(state) {
@@ -370,7 +378,7 @@ window.PlanForgeModel = (function() {
     createInitialState, emptyData, getActiveData,
     setActiveScenario, cloneActiveScenario, renameActiveScenario,
     addInitiative, linkDependency, unlinkDependency, moveItem, moveSubtree, deleteInitiative, deleteScenario,
-    loadState, seedDemo,
+    loadState, seedDemo, clearAllData,
     toggleExpanded, isExpanded, expandToShowItem,
     getLevelName, updateLevelName, resetLevelNames
   };
