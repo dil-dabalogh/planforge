@@ -223,9 +223,8 @@ window.PlanForgeUI = (function() {
         });
         left.appendChild(visibilityIndicator); left.appendChild(name);
         
-        // Add right-click context menu for scenarios
-        row.addEventListener('contextmenu', (e) => {
-          e.preventDefault();
+        // Function to create scenario context menu items
+        const createScenarioMenuItems = (e) => {
           const isActiveScenario = s.id === state.activeScenarioId;
           const items = [
             {
@@ -293,6 +292,28 @@ window.PlanForgeUI = (function() {
             });
           }
           
+          return items;
+        };
+        
+        // Add context menu indicator (three dots icon)
+        const contextMenuIndicator = document.createElement('span');
+        contextMenuIndicator.className = 'context-menu-indicator material-icons';
+        contextMenuIndicator.textContent = 'more_vert';
+        contextMenuIndicator.title = 'Click for more options';
+        
+        // Add click event to indicator to open context menu
+        contextMenuIndicator.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const items = createScenarioMenuItems(e);
+          showContextMenu(e, items);
+        });
+        
+        row.appendChild(contextMenuIndicator);
+        
+        // Add right-click context menu for scenarios
+        row.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          const items = createScenarioMenuItems(e);
           showContextMenu(e, items);
         });
         
@@ -381,9 +402,8 @@ window.PlanForgeUI = (function() {
           window.dispatchEvent(new Event('pf-selection-change')); 
         });
         
-        // Add right-click context menu for initiatives
-        d.addEventListener('contextmenu', (e) => {
-          e.preventDefault();
+        // Function to create initiative context menu items
+        const createInitiativeMenuItems = (e) => {
           const isActiveScenario = item.scenarioId === state.activeScenarioId;
           const items = [];
           
@@ -414,10 +434,32 @@ window.PlanForgeUI = (function() {
             disabled: !isActiveScenario
           });
           
+          return items;
+        };
+        
+        // Add right-click context menu for initiatives
+        d.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          const items = createInitiativeMenuItems(e);
           showContextMenu(e, items);
         });
         
         d.appendChild(left);
+        
+        // Add context menu indicator (three dots icon)
+        const contextMenuIndicator = document.createElement('span');
+        contextMenuIndicator.className = 'context-menu-indicator material-icons';
+        contextMenuIndicator.textContent = 'more_vert';
+        contextMenuIndicator.title = 'Click for more options';
+        
+        // Add click event to indicator to open context menu
+        contextMenuIndicator.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const items = createInitiativeMenuItems(e);
+          showContextMenu(e, items);
+        });
+        
+        d.appendChild(contextMenuIndicator);
         const wrap = document.createElement('div'); wrap.appendChild(d);
         
         // Only render children if the item is expanded
