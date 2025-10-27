@@ -12,7 +12,12 @@ window.PlanForgeModel = (function() {
       scenarios: [{ id: 'default', name: 'Baseline', description: '', visible: true, data: emptyData() }],
       activeScenarioId: 'default',
       selection: null,
-      expandedItems: new Set() // Track which tree items are expanded
+      expandedItems: new Set(), // Track which tree items are expanded
+      levelNames: {
+        'Initiative': 'Initiative',
+        'Epic': 'Epic',
+        'Story': 'Story'
+      }
     };
   }
   function emptyData() {
@@ -326,6 +331,28 @@ window.PlanForgeModel = (function() {
     state.scenarios = next.scenarios;
     state.activeScenarioId = next.activeScenarioId;
     state.selection = null;
+    // Preserve level names if they exist in the loaded state
+    if (next.levelNames) {
+      state.levelNames = next.levelNames;
+    }
+  }
+  
+  function getLevelName(state, level) {
+    return state.levelNames[level] || level;
+  }
+  
+  function updateLevelName(state, level, name) {
+    if (state.levelNames.hasOwnProperty(level)) {
+      state.levelNames[level] = name.trim();
+    }
+  }
+  
+  function resetLevelNames(state) {
+    state.levelNames = {
+      'Initiative': 'Initiative',
+      'Epic': 'Epic',
+      'Story': 'Story'
+    };
   }
 
 
@@ -344,7 +371,8 @@ window.PlanForgeModel = (function() {
     setActiveScenario, cloneActiveScenario, renameActiveScenario,
     addInitiative, linkDependency, unlinkDependency, moveItem, moveSubtree, deleteInitiative, deleteScenario,
     loadState, seedDemo,
-    toggleExpanded, isExpanded, expandToShowItem
+    toggleExpanded, isExpanded, expandToShowItem,
+    getLevelName, updateLevelName, resetLevelNames
   };
 })();
 

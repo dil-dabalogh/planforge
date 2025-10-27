@@ -144,6 +144,9 @@ window.PlanForgeUI = (function() {
     
     // Wire up Info button
     el('btn-info').addEventListener('click', () => showInfoDialog());
+    
+    // Wire up Settings button
+    el('btn-settings').addEventListener('click', () => showSettingsDialog());
 
     function renderHierarchy(){
       const container = el('hierarchy-tree'); container.innerHTML = '';
@@ -245,10 +248,10 @@ window.PlanForgeUI = (function() {
             },
             'divider',
             {
-              label: 'Add Initiative',
+              label: `Add ${window.PlanForgeModel.getLevelName(state, 'Initiative')}`,
               icon: 'add',
               action: () => {
-                const id = window.PlanForgeModel.addInitiative(state, { name: 'New Initiative', start: window.PlanForgeModel.today(), end: window.PlanForgeModel.addDays(window.PlanForgeModel.today(), 7), level: 'Initiative', size: 'M' });
+                const id = window.PlanForgeModel.addInitiative(state, { name: 'New ' + window.PlanForgeModel.getLevelName(state, 'Initiative'), start: window.PlanForgeModel.today(), end: window.PlanForgeModel.addDays(window.PlanForgeModel.today(), 7), level: 'Initiative', size: 'M' });
                 state.selection = { type: 'initiative', id };
                 renderHierarchy();
                 renderDetails();
@@ -409,12 +412,13 @@ window.PlanForgeUI = (function() {
           
           // Only show add child option for non-Story and non-Milestone items
           if (item.level !== 'Story' && !item.isMilestone) {
+            const nextLevel = item.level === 'Initiative' ? 'Epic' : 'Story';
+            const nextLevelName = window.PlanForgeModel.getLevelName(state, nextLevel);
             items.push({
-              label: `Add Child ${item.level === 'Initiative' ? 'Epic' : 'Story'}`,
+              label: `Add Child ${nextLevelName}`,
               icon: 'add',
               action: () => {
-                const nextLevel = item.level === 'Initiative' ? 'Epic' : 'Story';
-                const id = window.PlanForgeModel.addInitiative(state, { name: nextLevel, start: item.start, end: item.end, parentId: item.id, level: nextLevel, size: 'M' });
+                const id = window.PlanForgeModel.addInitiative(state, { name: 'New ' + nextLevelName, start: item.start, end: item.end, parentId: item.id, level: nextLevel, size: 'M' });
                 renderHierarchy();
                 window.dispatchEvent(new Event('pf-refresh'));
               },
@@ -500,13 +504,14 @@ window.PlanForgeUI = (function() {
         sizeWrap.appendChild(sizeLabel); sizeWrap.appendChild(sizeSel); panel.appendChild(sizeWrap);
         // add child buttons (disabled for milestones)
         const nextLevel = item.level === 'Initiative' ? 'Epic' : item.level === 'Epic' ? 'Story' : null;
+        const nextLevelName = nextLevel ? window.PlanForgeModel.getLevelName(state, nextLevel) : null;
         const childWrap = document.createElement('div'); childWrap.className = 'details-field';
         const addChildBtn = document.createElement('button'); 
-        addChildBtn.textContent = item.isMilestone ? 'Milestones cannot have children' : (nextLevel ? ('Add Child '+nextLevel) : 'No child level'); 
+        addChildBtn.textContent = item.isMilestone ? 'Milestones cannot have children' : (nextLevel ? ('Add Child ' + nextLevelName) : 'No child level'); 
         addChildBtn.disabled = !nextLevel || item.isMilestone;
         addChildBtn.addEventListener('click', () => {
           if (!nextLevel || item.isMilestone) return;
-          const id = window.PlanForgeModel.addInitiative(state, { name: nextLevel, start: item.start, end: item.end, parentId: item.id, level: nextLevel, size: 'M' });
+          const id = window.PlanForgeModel.addInitiative(state, { name: 'New ' + nextLevelName, start: item.start, end: item.end, parentId: item.id, level: nextLevel, size: 'M' });
           state.selection = { type: 'initiative', id };
           renderHierarchy(); renderDetails(); window.dispatchEvent(new Event('pf-refresh')); window.dispatchEvent(new Event('pf-selection-change'));
         });
@@ -718,6 +723,83 @@ window.PlanForgeUI = (function() {
       });
     }
 
+    function showSettingsDialog() {
+      const dialog = el('settings-dialog');
+      const settingsContent = el('settings-content');
+      
+      // Level configuration with order, color, and name
+      const levels = [
+        { depth: 1, color: '#b8b8d4', name: 'Scenario', canEdit: false },
+        { depth: 2, color: '#ff8f8f', name: window.PlanForgeModel.getLevelName(state, 'Initiative'), canEdit: true, key: 'Initiative' },
+        { depth: 3, color: '#b7a3e3', name: window.PlanForgeModel.getLevelName(state, 'Epic'), canEdit: true, key: 'Epic' },
+        { depth: 4, color: '#8ad4e8', name: window.PlanForgeModel.getLevelName(state, 'Story'), canEdit: true, key: 'Story' }
+      ];
+      
+      let html = '<div style="max-width: 600px;">';
+      html += '<p style="margin-bottom: 1.5rem; color: var(--color-text-muted);">Customize the names used for each hierarchy level. Changes will be reflected throughout the application.</p>';
+      html += '<div style="display: grid; gap: 0.75rem;">';
+      
+      levels.forEach(level => {
+        html += `<div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-panel);">`;
+        html += `<div style="flex: 0 0 60px; text-align: center; font-weight: 600; color: var(--color-text-muted);">${level.depth}</div>`;
+        html += `<div style="flex: 0 0 40px; height: 20px; background: ${level.color}; border-radius: 4px; border: 1px solid var(--color-border);"></div>`;
+        html += `<input type="text" data-level-key="${level.key || ''}" value="${level.name}" style="flex: 1; padding: 6px 10px; background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px; ${level.canEdit ? '' : 'opacity: 0.5; cursor: not-allowed;'}" ${level.canEdit ? '' : 'disabled'}>`;
+        html += `</div>`;
+      });
+      
+      html += '</div>';
+      html += '<div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--color-border); display: flex; gap: 0.5rem; justify-content: flex-end;">';
+      html += '<button id="btn-reset-names" style="padding: 8px 16px; background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 6px; cursor: pointer;">Reset to Defaults</button>';
+      html += '</div>';
+      html += '</div>';
+      
+      settingsContent.innerHTML = html;
+      
+      // Wire up save functionality
+      const inputs = settingsContent.querySelectorAll('input[data-level-key]');
+      inputs.forEach(input => {
+        const levelKey = input.dataset.levelKey;
+        input.addEventListener('change', (e) => {
+          if (e.target.value.trim()) {
+            window.PlanForgeModel.updateLevelName(state, levelKey, e.target.value);
+            // Refresh the UI
+            renderHierarchy();
+            renderDetails();
+            window.dispatchEvent(new Event('pf-refresh'));
+          }
+        });
+      });
+      
+      // Reset button
+      const resetBtn = settingsContent.querySelector('#btn-reset-names');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          if (confirm('Reset all level names to default values?')) {
+            window.PlanForgeModel.resetLevelNames(state);
+            renderHierarchy();
+            renderDetails();
+            window.dispatchEvent(new Event('pf-refresh'));
+            // Close and reopen to show updated names
+            showSettingsDialog();
+          }
+        });
+      }
+      
+      dialog.style.display = 'flex';
+      
+      // Close dialog handlers
+      el('close-settings-dialog').addEventListener('click', () => {
+        dialog.style.display = 'none';
+      });
+      
+      // Close on overlay click
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) {
+          dialog.style.display = 'none';
+        }
+      });
+    }
+
 
 
 
@@ -774,7 +856,8 @@ window.PlanForgeUI = (function() {
       Object.keys(initiativesByLevel).forEach(level => {
         const levelInitiatives = initiativesByLevel[level];
         if (levelInitiatives.length > 0) {
-          mermaid += `    section ${level}s\n`;
+          const levelName = window.PlanForgeModel.getLevelName(state, level);
+          mermaid += `    section ${levelName}s\n`;
           levelInitiatives.forEach(initiative => {
             // Get the safe name from our map
             const safeName = initiativeIdMap.get(initiative.id);

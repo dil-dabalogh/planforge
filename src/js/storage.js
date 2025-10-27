@@ -1,6 +1,6 @@
 window.PlanForgeStorage = (function() {
   function serializeJSON(state){
-    return JSON.stringify({ scenarios: state.scenarios, activeScenarioId: state.activeScenarioId }, null, 2);
+    return JSON.stringify({ scenarios: state.scenarios, activeScenarioId: state.activeScenarioId, levelNames: state.levelNames || null }, null, 2);
   }
   
   function serializeActiveScenario(state){

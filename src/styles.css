@@ -111,8 +111,8 @@ button, select, input[type="range"] {
 }
 button:hover { border-color: var(--color-primary); }
 
-/* Info button styling */
-.info-button {
+/* Icon-only button styling (Info and Settings) */
+.icon-only-button {
   padding: 6px;
   min-width: 32px;
   width: 32px;
@@ -120,7 +120,7 @@ button:hover { border-color: var(--color-primary); }
   justify-content: center;
 }
 
-.info-button .material-symbols-outlined {
+.icon-only-button .material-icons {
   font-size: 20px;
 }
 
