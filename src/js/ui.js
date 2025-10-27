@@ -620,6 +620,47 @@ window.PlanForgeUI = (function() {
 
     function showInfoDialog() {
       const dialog = el('info-dialog');
+      
+      // Populate the dialog content
+      const infoContent = el('info-content');
+      infoContent.innerHTML = `
+        <div style="line-height: 1.8;">
+          <h2>About PlanForge</h2>
+          <p>A free, open-source Project Planner with interactive Gantt chart editing capabilities.</p>
+          
+          <h3>Your Data Is Yours</h3>
+          <p>Zero tracking. Zero cookies. Zero servers. PlanForge works completely offline - just save the HTML file and use it without any internet connection. Your data never leaves your device.</p>
+          
+          <h3>Key Features</h3>
+          <ul>
+            <li><strong>Easy to Use:</strong> Intuitive Gantt chart editor for project planning</li>
+            <li><strong>Completely Offline:</strong> No installation required, works from a single HTML file</li>
+            <li><strong>Your Data is Safe:</strong> No cookies, no 3rd or 2nd party data access, not even planforge.cc accesses your data</li>
+            <li><strong>Export to MermaidJS:</strong> Perfect for integrating Gantt charts into your markdown documentation</li>
+            <li><strong>Export to JSON:</strong> Easy integration with JIRA and other project management tools</li>
+            <li><strong>Scenario Planning:</strong> Create multiple planning scenarios without struggling with different files</li>
+            <li><strong>Free & Open Source:</strong> No subscriptions, no hidden costs</li>
+          </ul>
+          
+          <h3>What Makes PlanForge Different?</h3>
+          <p><strong>Scenario Planning:</strong> Unlike other Gantt chart tools, PlanForge makes it easy to create and switch between multiple project scenarios. No need to juggle different files or struggle with version management.</p>
+          
+          <h3>Export Options</h3>
+          <p>Export your project data to MermaidJS format for seamless integration into your markdown documentation, or export as JSON for easy import into JIRA and other project management platforms.</p>
+          
+          <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-panel); display: flex; gap: 1.5rem; align-items: center;">
+            <a href="https://github.com/dil-dabalogh/planforge" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+              <span class="material-symbols-outlined">code</span>
+              GitHub Repository
+            </a>
+            <a href="https://buymeacoffee.com/cinegemadar" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+              <span class="material-symbols-outlined">favorite</span>
+              Buy Me a Coffee
+            </a>
+          </div>
+        </div>
+      `;
+      
       dialog.style.display = 'flex';
       
       // Close dialog handlers
