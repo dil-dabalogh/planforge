@@ -1,7 +1,35 @@
 window.PlanForgeTimeline = (function() {
+  // Helper function to get CSS custom properties
+  function getCSSVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+  
+  // Cache commonly used color variables
+  function getColors() {
+    return {
+      bg: getCSSVar('--color-bg'),
+      panel: getCSSVar('--color-panel'),
+      text: getCSSVar('--color-text'),
+      textMuted: getCSSVar('--color-text-muted'),
+      primary: getCSSVar('--color-primary'),
+      accent: getCSSVar('--color-accent'),
+      highlight: getCSSVar('--color-highlight'),
+      danger: getCSSVar('--color-danger'),
+      border: getCSSVar('--color-border'),
+      grid: getCSSVar('--color-grid'),
+      scenario: getCSSVar('--color-content-scenario'),
+      initiative: getCSSVar('--color-content-initiative'),
+      milestone: getCSSVar('--color-content-milestone'),
+      epic: getCSSVar('--color-content-epic'),
+      story: getCSSVar('--color-content-story'),
+      selectionBg: getCSSVar('--color-selection-bg')
+    };
+  }
+  
   function create(state, canvas) {
     const ctx = canvas.getContext('2d');
     const layout = { rowHeight: 28, rowGap: 8, header: 60, leftPad: 120 };
+    const colors = getColors(); // Get cached colors
     
     // Timeline configuration
     let timelineConfig = {
@@ -109,7 +137,7 @@ window.PlanForgeTimeline = (function() {
     function renderGrid() {
       const { width, height } = canvas;
       ctx.clearRect(0,0,width,height);
-      ctx.fillStyle = '#0e1326';
+      ctx.fillStyle = colors.bg;
       ctx.fillRect(0,0,width,height);
       
       // Render timeline units based on granularity
@@ -117,7 +145,7 @@ window.PlanForgeTimeline = (function() {
       const timelineStart = new Date(timelineConfig.start + 'T00:00:00Z');
       const timelineEnd = new Date(timelineConfig.end + 'T00:00:00Z');
       
-      ctx.strokeStyle = '#2a3154';
+      ctx.strokeStyle = colors.grid;
       ctx.lineWidth = 1;
       
       // Draw vertical grid lines across the full canvas width
@@ -129,11 +157,11 @@ window.PlanForgeTimeline = (function() {
       }
       
       // header background
-      ctx.fillStyle = '#11162c';
+      ctx.fillStyle = colors.panel;
       ctx.fillRect(0, 0, width, layout.header);
       
       // left panel separator
-      ctx.strokeStyle = '#2a3154';
+      ctx.strokeStyle = colors.grid;
       ctx.beginPath(); 
       ctx.moveTo(layout.leftPad, 0); 
       ctx.lineTo(layout.leftPad, height); 
@@ -155,8 +183,8 @@ window.PlanForgeTimeline = (function() {
       if (today >= timelineConfig.start && today <= timelineConfig.end) {
         const todayX = dateToX(today);
         
-        // Draw thin red vertical line for today
-        ctx.strokeStyle = '#ef4444'; // Red color
+        // Draw thin vertical line for today
+        ctx.strokeStyle = colors.danger;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(todayX, 0);
@@ -164,7 +192,7 @@ window.PlanForgeTimeline = (function() {
         ctx.stroke();
         
         // Add a small "Today" label at the top
-        ctx.fillStyle = '#ef4444';
+        ctx.fillStyle = '#ff8f8f';
         ctx.font = 'bold 11px system-ui';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -208,7 +236,7 @@ window.PlanForgeTimeline = (function() {
     }
 
     function renderYearLabels(start, end, width) {
-      ctx.fillStyle = '#6aa4ff';
+      ctx.fillStyle = colors.text;
       ctx.font = 'bold 13px system-ui';
       
       const current = new Date(start);
@@ -221,7 +249,7 @@ window.PlanForgeTimeline = (function() {
           ctx.fillText(year.toString(), x, 12);
           
           // Draw year separator line
-          ctx.strokeStyle = '#6aa4ff';
+          ctx.strokeStyle = '#7a3e3e';
           ctx.lineWidth = 2;
           ctx.beginPath();
           ctx.moveTo(x, 0);
@@ -233,7 +261,7 @@ window.PlanForgeTimeline = (function() {
     }
 
     function renderQuarterLabels(start, end, width) {
-      ctx.fillStyle = '#8bd7a0';
+      ctx.fillStyle = colors.textMuted;
       ctx.font = '12px system-ui';
       
       const current = new Date(start);
@@ -248,7 +276,7 @@ window.PlanForgeTimeline = (function() {
           ctx.fillText(`Q${quarter}`, x, 25);
           
           // Draw quarter separator line
-          ctx.strokeStyle = '#8bd7a0';
+          ctx.strokeStyle = colors.primary;
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(x, 18);
@@ -260,7 +288,7 @@ window.PlanForgeTimeline = (function() {
     }
 
     function renderMonthLabels(start, end, width) {
-      ctx.fillStyle = '#ffb86c';
+      ctx.fillStyle = colors.textMuted;
       ctx.font = '11px system-ui';
       
       const current = new Date(start);
@@ -273,7 +301,7 @@ window.PlanForgeTimeline = (function() {
           ctx.fillText(monthName, x, 38);
           
           // Draw month separator line
-          ctx.strokeStyle = '#ffb86c';
+          ctx.strokeStyle = colors.primary;
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(x, 30);
@@ -285,7 +313,7 @@ window.PlanForgeTimeline = (function() {
     }
 
     function renderWeekLabels(start, end, width) {
-      ctx.fillStyle = '#ff79c6';
+      ctx.fillStyle = colors.textMuted;
       ctx.font = '10px system-ui';
       
       const current = new Date(start);
@@ -301,7 +329,7 @@ window.PlanForgeTimeline = (function() {
           ctx.fillText(`W${weekNum}`, x, 51);
           
           // Draw week separator line
-          ctx.strokeStyle = '#ff79c6';
+          ctx.strokeStyle = colors.accent;
           ctx.lineWidth = 0.5;
           ctx.beginPath();
           ctx.moveTo(x, 43);
@@ -313,7 +341,7 @@ window.PlanForgeTimeline = (function() {
     }
 
     function renderDayLabels(start, end, width) {
-      ctx.fillStyle = '#9aa4c3';
+      ctx.fillStyle = colors.textMuted;
       ctx.font = '9px system-ui';
       
       const current = new Date(start);
@@ -325,7 +353,7 @@ window.PlanForgeTimeline = (function() {
           ctx.fillText(day.toString(), x, 58);
           
           // Draw day separator line
-          ctx.strokeStyle = '#9aa4c3';
+          ctx.strokeStyle = colors.grid;
           ctx.lineWidth = 0.5;
           ctx.beginPath();
           ctx.moveTo(x, 50);
@@ -401,9 +429,9 @@ window.PlanForgeTimeline = (function() {
       ctx.font = '12px system-ui';
       rows.forEach(({ item, depth, scenarioId, isScenario }, idx) => {
         const y = layout.header + idx * (layout.rowHeight + layout.rowGap);
-        // row label - don't show text for milestones
+          // row label - don't show text for milestones
         if (!item.isMilestone) {
-          ctx.fillStyle = '#9aa4c3';
+          ctx.fillStyle = colors.text;
           ctx.fillText(''.padStart(depth*2, ' ') + item.name, 8, y + 14);
         }
         // bar
@@ -426,7 +454,7 @@ window.PlanForgeTimeline = (function() {
         
         // Draw selection highlight background if selected
         if (isSelected) {
-          ctx.fillStyle = 'rgba(106,164,255,0.15)';
+          ctx.fillStyle = colors.selectionBg;
           ctx.fillRect(x1 - 2, y + 2, w + 4, barHeight + 4);
         }
         
@@ -441,7 +469,7 @@ window.PlanForgeTimeline = (function() {
         
         // handles (only for non-scenario, non-milestone items) - draw first
         if (!isScenario && !item.isMilestone) {
-          ctx.fillStyle = '#d2e3ff';
+          ctx.fillStyle = colors.primary;
           ctx.fillRect(x1 - 2, y + 4, 4, barHeight);
           ctx.fillRect(x1 + w - 2, y + 4, 4, barHeight);
         }
@@ -449,15 +477,15 @@ window.PlanForgeTimeline = (function() {
         // Draw colored borders - left red, right green (drawn last to be visible)
         if (!isScenario && !item.isMilestone) {
           // Left border (red) - very thick and visible
-          ctx.strokeStyle = '#ff6a6a';
+          ctx.strokeStyle = colors.primary;
           ctx.lineWidth = 4;
           ctx.beginPath();
           ctx.moveTo(x1, y + 4);
           ctx.lineTo(x1, y + 4 + barHeight);
           ctx.stroke();
           
-          // Right border (green) - very thick and visible
-          ctx.strokeStyle = '#8bd7a0';
+          // Right border - very thick and visible
+          ctx.strokeStyle = colors.accent;
           ctx.lineWidth = 4;
           ctx.beginPath();
           ctx.moveTo(x1 + w, y + 4);
@@ -466,13 +494,13 @@ window.PlanForgeTimeline = (function() {
           
           // Draw selection border if selected
           if (isSelected) {
-            ctx.strokeStyle = '#6aa4ff';
+            ctx.strokeStyle = colors.primary;
             ctx.lineWidth = 3;
             ctx.strokeRect(x1 - 1, y + 3, w + 2, barHeight + 2);
           }
         } else if (item.isMilestone) {
           // For milestones, draw a simple border around the rhombus
-          ctx.strokeStyle = '#f59e0b'; // Darker yellow for border
+          ctx.strokeStyle = colors.milestone;
           ctx.lineWidth = 2;
           ctx.beginPath();
           ctx.moveTo(x1 + w/2, y + 4);
@@ -484,7 +512,7 @@ window.PlanForgeTimeline = (function() {
           
           // Draw selection border if selected
           if (isSelected) {
-            ctx.strokeStyle = '#6aa4ff';
+            ctx.strokeStyle = colors.primary;
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.moveTo(x1 + w/2, y + 3);
@@ -497,18 +525,18 @@ window.PlanForgeTimeline = (function() {
         } else {
           // For scenarios, use default border or selection border
           if (isSelected) {
-            ctx.strokeStyle = '#6aa4ff';
+            ctx.strokeStyle = colors.primary;
             ctx.lineWidth = 3;
             ctx.strokeRect(x1 - 1, y + 3, w + 2, barHeight + 2);
           } else {
-            ctx.strokeStyle = '#2a3154';
+            ctx.strokeStyle = colors.grid;
             ctx.lineWidth = 1;
             ctx.strokeRect(x1, y + 4, w, barHeight);
           }
         }
         // name on bar - don't show text for milestones
         if (!item.isMilestone) {
-          ctx.fillStyle = '#ffffff';
+          ctx.fillStyle = 'rgba(255,255,255,0.9)';
           ctx.font = '11px system-ui';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
@@ -557,7 +585,7 @@ window.PlanForgeTimeline = (function() {
           const x2 = dateToX(to.start);
           
           // Draw dependency line with enhanced styling
-          ctx.strokeStyle = '#8bd7a0';
+          ctx.strokeStyle = colors.highlight;
           ctx.lineWidth = 2;
           ctx.setLineDash([5, 3]); // Dashed line for better visibility
           ctx.beginPath();
@@ -569,7 +597,7 @@ window.PlanForgeTimeline = (function() {
           // Draw arrowhead at the end
           const arrowSize = 6;
           const angle = Math.atan2(y2 - y1, x2 - x1);
-          ctx.fillStyle = '#8bd7a0';
+          ctx.fillStyle = '#b7a3e3';
           ctx.beginPath();
           ctx.moveTo(x2, y2);
           ctx.lineTo(x2 - arrowSize * Math.cos(angle - Math.PI / 6), y2 - arrowSize * Math.sin(angle - Math.PI / 6));
@@ -578,7 +606,7 @@ window.PlanForgeTimeline = (function() {
           ctx.fill();
           
           // Draw connection points
-          ctx.fillStyle = '#8bd7a0';
+          ctx.fillStyle = '#b7a3e3';
           ctx.beginPath();
           ctx.arc(x1, y1, 3, 0, 2 * Math.PI);
           ctx.fill();
@@ -590,12 +618,12 @@ window.PlanForgeTimeline = (function() {
     }
 
     function barColor(level, scenarioId, isScenario, isMilestone = false) {
-      if (isScenario) return '#9aa4c3'; // grey for scenarios
-      if (isMilestone) return '#fbbf24'; // yellow for milestones
-      if (level === 'Initiative') return '#6aa4ff'; // blue
-      if (level === 'Epic') return '#a06aff'; // purple
-      if (level === 'Story') return '#67d38a'; // green
-      return '#6aa4ff';
+      if (isScenario) return colors.scenario;
+      if (isMilestone) return colors.milestone;
+      if (level === 'Initiative') return colors.initiative;
+      if (level === 'Epic') return colors.epic;
+      if (level === 'Story') return colors.story;
+      return colors.primary;
     }
 
     function render() {
