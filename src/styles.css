@@ -111,8 +111,8 @@ button, select, input[type="range"] {
 }
 button:hover { border-color: var(--color-primary); }
 
-/* Info button styling */
-.info-button {
+/* Icon-only button styling (Info and Settings) */
+.icon-only-button {
   padding: 6px;
   min-width: 32px;
   width: 32px;
@@ -120,7 +120,7 @@ button:hover { border-color: var(--color-primary); }
   justify-content: center;
 }
 
-.info-button .material-symbols-outlined {
+.icon-only-button .material-icons {
   font-size: 20px;
 }
 
@@ -396,11 +396,32 @@ button {
   border: 1px solid var(--color-border);
   border-radius: 6px;
   min-height: 32px;
+  position: relative;
 }
 .tree-item > div:first-child {
   flex: 1;
   min-width: 0;
   overflow: hidden;
+}
+
+/* Context menu indicator */
+.tree-item .context-menu-indicator {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: var(--color-text-muted);
+  font-size: 18px;
+  pointer-events: none;
+  z-index: 1;
+  cursor: pointer;
+}
+
+.tree-item:hover .context-menu-indicator {
+  opacity: 1;
+  pointer-events: auto;
 }
 .tag { font-size: 11px; padding: 2px 6px; border-radius: 10px; border: 1px solid var(--color-border); color: var(--color-text-muted); }
 .row-actions { 
