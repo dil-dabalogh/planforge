@@ -162,6 +162,15 @@ function buildHTML(includeFonts = true, obfuscate = false, minifyCSS = false) {
     }
   );
   
+  // Embed demo data if available
+  let embeddedDemoData = '';
+  const demoSource = path.join(SRC_DIR, 'data/demo-full-features.json');
+  if (fs.existsSync(demoSource)) {
+    const demoContent = fs.readFileSync(demoSource, 'utf8');
+    embeddedDemoData = `<script id="embedded-demo-data" type="application/json">${demoContent}</script>`;
+    console.log('Demo data embedded in HTML');
+  }
+  
   // Handle fonts if requested
   if (includeFonts) {
     // Replace font CSS with embedded fonts
@@ -225,6 +234,11 @@ ${embeddedMaterialSymbolsCSS}
     </style>`;
   }
   
+  // Embed demo data in body if available
+  if (embeddedDemoData) {
+    bodyContent = embeddedDemoData + '\n  ' + bodyContent;
+  }
+  
   // Construct the final HTML - keep all meta tags from source
   // headContent already has the meta tags, title, structured data, etc. from the original
   // It just had the external stylesheets replaced with inlined CSS
@@ -263,6 +277,14 @@ function createDistribution() {
   if (fs.existsSync(robotsSource)) {
     fs.copyFileSync(robotsSource, path.join(DIST_DIR, 'robots.txt'));
     console.log('Robots.txt copied to dist/');
+  }
+  
+  // Copy demo-full-features.json to dist as demo.json if it exists
+  const demoSource = path.join(SRC_DIR, 'data/demo-full-features.json');
+  if (fs.existsSync(demoSource)) {
+    // Copy to dist for production (app looks for ./demo.json)
+    fs.copyFileSync(demoSource, path.join(DIST_DIR, 'demo.json'));
+    console.log('Demo data copied to dist/demo.json');
   }
   
   console.log('Distribution package created successfully!');

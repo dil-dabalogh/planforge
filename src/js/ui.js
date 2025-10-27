@@ -111,7 +111,13 @@ window.PlanForgeUI = (function() {
   
   function createUI(state){
     const colors = getColors();
-    const bindings = { scenarioClone: [], exportJSON: [], importJSON: [], exportScenario: [], exportMermaid: [] };
+    const bindings = { scenarioClone: [], exportJSON: [], importJSON: [], exportScenario: [], exportMermaid: [], erase: [] };
+    
+    // Wire up Erase button
+    const btnErase = el('btn-erase');
+    if (btnErase) {
+      btnErase.addEventListener('click', () => bindings.erase.forEach(cb => cb()));
+    }
     
     // Wire up Import button
     el('btn-import').addEventListener('click', () => bindings.importJSON.forEach(cb => cb()));
@@ -917,7 +923,8 @@ window.PlanForgeUI = (function() {
       onExportJSON: (cb)=>bindings.exportJSON.push(cb),
       onImportJSON: (cb)=>bindings.importJSON.push(cb),
       onExportScenario: (cb)=>bindings.exportScenario.push(cb),
-      onExportMermaid: (cb)=>bindings.exportMermaid.push(cb)
+      onExportMermaid: (cb)=>bindings.exportMermaid.push(cb),
+      onErase: (cb)=>bindings.erase.push(cb)
     };
   }
 

@@ -16,6 +16,16 @@
     renderAll();
     window.dispatchEvent(new Event('pf-refresh'));
   });
+  
+  // Erase button handler
+  ui.onErase(() => {
+    const confirmed = confirm('Are you sure you want to clear all data? This action cannot be undone.');
+    if (confirmed) {
+      window.PlanForgeModel.clearAllData(state);
+      renderAll();
+      window.dispatchEvent(new Event('pf-refresh'));
+    }
+  });
 
   // Timeline interactions
   timeline.onSelect((selection) => { 
@@ -61,6 +71,7 @@
       const next = window.PlanForgeStorage.parseJSON(text);
       window.PlanForgeModel.loadState(state, next);
       renderAll();
+      timeline.zoomToContent(); // Fit to content after importing
       window.dispatchEvent(new Event('pf-refresh'));
     } catch (error) {
       alert('Error importing file: ' + error.message);
@@ -112,8 +123,61 @@
     }
   });
 
-  // Initial render without demo data
+  // Initial render
   renderAll();
+  
+  // Auto-load demo.json if available
+  (async function loadDemoIfAvailable() {
+    try {
+      console.log('Attempting to load demo...');
+      
+      // First, try to load from embedded demo data
+      const embeddedDemo = document.getElementById('embedded-demo-data');
+      if (embeddedDemo) {
+        console.log('Found embedded demo data');
+        const text = embeddedDemo.textContent;
+        const next = window.PlanForgeStorage.parseJSON(text);
+        window.PlanForgeModel.loadState(state, next);
+        console.log('Demo data loaded successfully from embedded content');
+        renderAll();
+        timeline.zoomToContent(); // Fit to content after loading
+        window.dispatchEvent(new Event('pf-refresh'));
+        return;
+      }
+      
+      // If no embedded data, try to fetch from files
+      let response = null;
+      const paths = ['./demo.json', './data/demo-full-features.json', '../data/demo-full-features.json'];
+      
+      for (const path of paths) {
+        try {
+          console.log('Trying path:', path);
+          response = await fetch(path);
+          if (response.ok) {
+            console.log('Successfully found demo at:', path);
+            break;
+          }
+        } catch (e) {
+          console.log('Failed to load from:', path);
+        }
+      }
+      
+      if (response && response.ok) {
+        const text = await response.text();
+        const next = window.PlanForgeStorage.parseJSON(text);
+        window.PlanForgeModel.loadState(state, next);
+        console.log('Demo data loaded successfully');
+        renderAll();
+        timeline.zoomToContent(); // Fit to content after loading
+        window.dispatchEvent(new Event('pf-refresh'));
+      } else {
+        console.log('No demo file found in any location');
+      }
+    } catch (error) {
+      // Demo file not found or other error - silent failure is OK
+      console.log('Demo file not available:', error.message);
+    }
+  })();
 })();
 
 
