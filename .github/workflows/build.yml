@@ -2,11 +2,13 @@ name: Build PlanForge Distribution
 
 on:
   push:
-    branches: [ main, staging ]
+    branches: [ staging ]
   workflow_dispatch:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   build:
@@ -16,7 +18,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
         
       - name: Setup Node.js
         uses: actions/setup-node@v4
