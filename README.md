@@ -1,6 +1,8 @@
-# PlanForge MVP
+# PlanForge - Free Gantt Chart Editor
 
-A lightweight project planning tool for visualizing initiatives, dependencies, and resource allocation with interactive timeline management.
+**Free, open-source Gantt chart editor for project planning. Works completely offline, exports to MermaidJS and JSON. No cookies, no tracking - your data stays private.**
+
+PlanForge is a lightweight project planning tool for visualizing initiatives, dependencies, and resource allocation with interactive timeline management. Perfect for project managers, developers, and teams who need a simple yet powerful Gantt chart tool without the complexity of enterprise project management software.
 
 ## Project Structure
 

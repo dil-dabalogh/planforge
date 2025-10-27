@@ -17,13 +17,133 @@ window.PlanForgeUI = (function() {
   }
   
   function el(id){ return document.getElementById(id); }
+  
+  // Context menu functionality
+  let currentContextTarget = null;
+  
+  function showContextMenu(event, items) {
+    event.preventDefault();
+    const menu = el('context-menu');
+    const menuItems = el('context-menu-items');
+    
+    menuItems.innerHTML = '';
+    
+    items.forEach(item => {
+      if (item === 'divider') {
+        const divider = document.createElement('div');
+        divider.className = 'context-menu-divider';
+        menuItems.appendChild(divider);
+      } else if (item && item.label) {
+        const menuItem = document.createElement('div');
+        menuItem.className = 'context-menu-item';
+        
+        // Create icon if provided
+        if (item.icon) {
+          const icon = document.createElement('span');
+          icon.className = item.iconClass || 'material-symbols-outlined';
+          icon.textContent = item.icon;
+          menuItem.appendChild(icon);
+        }
+        
+        // Add label text
+        const label = document.createElement('span');
+        label.textContent = item.label;
+        menuItem.appendChild(label);
+        
+        if (item.disabled) {
+          menuItem.classList.add('disabled');
+        } else {
+          menuItem.addEventListener('click', () => {
+            hideContextMenu();
+            if (item.action) item.action();
+          });
+        }
+        
+        menuItems.appendChild(menuItem);
+      }
+    });
+    
+    // Position the menu - adjust to stay on screen
+    const menuRect = menu.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    let left = event.pageX;
+    let top = event.pageY;
+    
+    // Adjust horizontal position if menu would go off right edge
+    if (left + 180 > viewportWidth) {
+      left = viewportWidth - 200; // Position to the left with some margin
+    }
+    
+    // Adjust vertical position if menu would go off bottom edge
+    const estimatedHeight = items.length * 40; // Rough estimate of menu height
+    if (top + estimatedHeight > viewportHeight) {
+      top = viewportHeight - estimatedHeight - 20; // Position above with some margin
+    }
+    
+    menu.style.left = left + 'px';
+    menu.style.top = top + 'px';
+    menu.classList.add('show');
+    
+    currentContextTarget = event.target;
+    
+    // Close on outside click
+    const closeHandler = (e) => {
+      if (!menu.contains(e.target)) {
+        hideContextMenu();
+        document.removeEventListener('click', closeHandler);
+        document.removeEventListener('contextmenu', closeHandler);
+      }
+    };
+    
+    setTimeout(() => {
+      document.addEventListener('click', closeHandler);
+      document.addEventListener('contextmenu', closeHandler);
+    }, 0);
+  }
+  
+  function hideContextMenu() {
+    const menu = el('context-menu');
+    menu.classList.remove('show');
+    currentContextTarget = null;
+  }
+  
   function createUI(state){
     const colors = getColors();
     const bindings = { scenarioClone: [], exportJSON: [], importJSON: [], exportScenario: [], exportMermaid: [] };
-    el('btn-export-json').addEventListener('click', () => bindings.exportJSON.forEach(cb => cb()));
-    el('btn-import-json').addEventListener('click', () => bindings.importJSON.forEach(cb => cb()));
-    el('btn-export-scenario').addEventListener('click', () => bindings.exportScenario.forEach(cb => cb()));
-    el('btn-export-mermaid').addEventListener('click', () => bindings.exportMermaid.forEach(cb => cb()));
+    
+    // Wire up Import button
+    el('btn-import').addEventListener('click', () => bindings.importJSON.forEach(cb => cb()));
+    
+    // Wire up Export button with context menu on both left and right click
+    const showExportMenu = (e) => {
+      e.preventDefault();
+      const items = [
+        {
+          label: 'Export Active Scenario',
+          icon: 'link',
+          action: () => bindings.exportScenario.forEach(cb => cb())
+        },
+        {
+          label: 'Export All Scenarios',
+          icon: 'save',
+          action: () => bindings.exportJSON.forEach(cb => cb())
+        },
+        {
+          label: 'Export MermaidJS',
+          icon: 'timeline',
+          action: () => bindings.exportMermaid.forEach(cb => cb())
+        }
+      ];
+      showContextMenu(e, items);
+    };
+    
+    el('btn-export').addEventListener('click', showExportMenu);
+    el('btn-export').addEventListener('contextmenu', showExportMenu);
+    
+    // Wire up Info button
+    el('btn-info').addEventListener('click', () => showInfoDialog());
 
     function renderHierarchy(){
       const container = el('hierarchy-tree'); container.innerHTML = '';
@@ -40,26 +160,16 @@ window.PlanForgeUI = (function() {
           row.style.borderWidth = '2px';
         }
         const left = document.createElement('div'); left.style.paddingLeft = '12px'; left.style.display = 'flex'; left.style.alignItems = 'center'; left.style.gap = '8px';
-        const toggle = document.createElement('button'); 
-        toggle.innerHTML = s.visible ? '<span class="material-icons">visibility</span>' : '<span class="material-icons">visibility_off</span>'; 
-        toggle.style.width = '24px'; 
-        toggle.style.height = '20px'; 
-        toggle.style.padding = '0'; 
-        toggle.style.fontSize = '18px'; 
-        toggle.style.color = s.visible ? colors.primary : colors.textMuted; 
-        toggle.style.display = 'flex'; 
-        toggle.style.alignItems = 'center'; 
-        toggle.style.justifyContent = 'center';
         
-        // Visibility toggle is always enabled for all scenarios
-        toggle.disabled = false;
+        // Add visibility indicator
+        const visibilityIndicator = document.createElement('span'); 
+        visibilityIndicator.innerHTML = s.visible ? '<span class="material-icons">visibility</span>' : '<span class="material-icons">visibility_off</span>'; 
+        visibilityIndicator.style.fontSize = '18px'; 
+        visibilityIndicator.style.color = s.visible ? colors.primary : colors.textMuted; 
+        visibilityIndicator.style.display = 'flex'; 
+        visibilityIndicator.style.alignItems = 'center'; 
+        visibilityIndicator.style.justifyContent = 'center';
         
-        toggle.addEventListener('click', (e)=>{ 
-          e.stopPropagation(); 
-          s.visible = !s.visible; 
-          renderHierarchy(); 
-          window.dispatchEvent(new Event('pf-refresh')); 
-        });
         const name = document.createElement('span'); name.textContent = s.name; name.className = 'link';
         if (s.id === state.activeScenarioId) { name.style.color = colors.primary; name.style.fontWeight = '600'; }
         
@@ -111,91 +221,82 @@ window.PlanForgeUI = (function() {
           window.dispatchEvent(new Event('pf-refresh')); 
           window.dispatchEvent(new Event('pf-selection-change')); 
         });
-        left.appendChild(toggle); left.appendChild(name);
+        left.appendChild(visibilityIndicator); left.appendChild(name);
         
-        const right = document.createElement('div'); right.className = 'row-actions';
-        
-        // Add clone button (only enabled for active scenario)
-        const cloneScenario = document.createElement('button'); 
-        cloneScenario.innerHTML = '<span class="material-symbols-outlined">content_copy</span>'; 
-        cloneScenario.title = 'Clone Scenario';
-        cloneScenario.disabled = !isActiveScenario;
-        if (!isActiveScenario) {
-          cloneScenario.style.opacity = '0.5';
-          cloneScenario.style.cursor = 'not-allowed';
-        }
-        cloneScenario.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if (isActiveScenario) {
-            bindings.scenarioClone.forEach(cb => cb());
-          }
-        });
-        right.appendChild(cloneScenario);
-        
-        // Add initiative button (only enabled for active scenario)
-        const addInitiative = document.createElement('button'); 
-        addInitiative.innerHTML = '<span class="material-symbols-outlined">add</span>'; 
-        addInitiative.title = 'Add Initiative';
-        addInitiative.disabled = !isActiveScenario;
-        if (!isActiveScenario) {
-          addInitiative.style.opacity = '0.5';
-          addInitiative.style.cursor = 'not-allowed';
-        }
-        addInitiative.addEventListener('click', () => {
-          if (isActiveScenario) {
-            const id = window.PlanForgeModel.addInitiative(state, { name: 'New Initiative', start: window.PlanForgeModel.today(), end: window.PlanForgeModel.addDays(window.PlanForgeModel.today(), 7), level: 'Initiative', size: 'M' });
-            state.selection = { type: 'initiative', id };
-            renderHierarchy();
-            renderDetails();
-            window.dispatchEvent(new Event('pf-refresh'));
-            window.dispatchEvent(new Event('pf-selection-change'));
-          }
-        });
-        right.appendChild(addInitiative);
-        
-        // Add milestone button (only enabled for active scenario)
-        const addMilestone = document.createElement('button'); 
-        addMilestone.innerHTML = '<span class="material-symbols-outlined">flag</span>'; 
-        addMilestone.title = 'Add Milestone';
-        addMilestone.disabled = !isActiveScenario;
-        if (!isActiveScenario) {
-          addMilestone.style.opacity = '0.5';
-          addMilestone.style.cursor = 'not-allowed';
-        }
-        addMilestone.addEventListener('click', () => {
-          if (isActiveScenario) {
-            const today = window.PlanForgeModel.today();
-            const id = window.PlanForgeModel.addInitiative(state, { name: 'New Milestone', start: today, end: today, level: 'Initiative', size: 'M', isMilestone: true });
-            state.selection = { type: 'initiative', id };
-            renderHierarchy();
-            renderDetails();
-            window.dispatchEvent(new Event('pf-refresh'));
-            window.dispatchEvent(new Event('pf-selection-change'));
-          }
-        });
-        right.appendChild(addMilestone);
-        
-        // Add delete scenario button (only show if there's more than one scenario)
-        if (state.scenarios.length > 1) {
-          const deleteScenario = document.createElement('button'); 
-          deleteScenario.innerHTML = '<span class="material-symbols-outlined">remove</span>'; 
-          deleteScenario.title = 'Delete Scenario';
-          deleteScenario.addEventListener('click', (e) => {
-            e.stopPropagation();
-            try {
-              window.PlanForgeModel.deleteScenario(state, s.id);
-              renderHierarchy();
-              renderDetails();
-              window.dispatchEvent(new Event('pf-refresh'));
-              window.dispatchEvent(new Event('pf-selection-change'));
-            } catch (error) {
-              alert(error.message);
+        // Add right-click context menu for scenarios
+        row.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          const isActiveScenario = s.id === state.activeScenarioId;
+          const items = [
+            {
+              label: s.visible ? 'Hide Timeline' : 'Show Timeline',
+              icon: s.visible ? 'visibility_off' : 'visibility',
+              action: () => {
+                s.visible = !s.visible; 
+                renderHierarchy(); 
+                window.dispatchEvent(new Event('pf-refresh'));
+              }
+            },
+            'divider',
+            {
+              label: 'Clone Scenario',
+              icon: 'content_copy',
+              action: () => bindings.scenarioClone.forEach(cb => cb()),
+              disabled: !isActiveScenario
+            },
+            'divider',
+            {
+              label: 'Add Initiative',
+              icon: 'add',
+              action: () => {
+                const id = window.PlanForgeModel.addInitiative(state, { name: 'New Initiative', start: window.PlanForgeModel.today(), end: window.PlanForgeModel.addDays(window.PlanForgeModel.today(), 7), level: 'Initiative', size: 'M' });
+                state.selection = { type: 'initiative', id };
+                renderHierarchy();
+                renderDetails();
+                window.dispatchEvent(new Event('pf-refresh'));
+                window.dispatchEvent(new Event('pf-selection-change'));
+              },
+              disabled: !isActiveScenario
+            },
+            {
+              label: 'Add Milestone',
+              icon: 'flag',
+              action: () => {
+                const today = window.PlanForgeModel.today();
+                const id = window.PlanForgeModel.addInitiative(state, { name: 'New Milestone', start: today, end: today, level: 'Initiative', size: 'M', isMilestone: true });
+                state.selection = { type: 'initiative', id };
+                renderHierarchy();
+                renderDetails();
+                window.dispatchEvent(new Event('pf-refresh'));
+                window.dispatchEvent(new Event('pf-selection-change'));
+              },
+              disabled: !isActiveScenario
             }
-          });
-          right.appendChild(deleteScenario);
-        }
+          ];
+          
+          if (state.scenarios.length > 1) {
+            items.push('divider');
+            items.push({
+              label: 'Delete Scenario',
+              icon: 'delete',
+              action: () => {
+                try {
+                  window.PlanForgeModel.deleteScenario(state, s.id);
+                  renderHierarchy();
+                  renderDetails();
+                  window.dispatchEvent(new Event('pf-refresh'));
+                  window.dispatchEvent(new Event('pf-selection-change'));
+                } catch (error) {
+                  alert(error.message);
+                }
+              }
+            });
+          }
+          
+          showContextMenu(e, items);
+        });
         
-        row.appendChild(left); row.appendChild(right);
+        row.appendChild(left);
         container.appendChild(row);
       });
       // initiatives
@@ -279,50 +380,44 @@ window.PlanForgeUI = (function() {
           window.dispatchEvent(new Event('pf-refresh')); 
           window.dispatchEvent(new Event('pf-selection-change')); 
         });
-        const right = document.createElement('div'); right.className = 'row-actions';
         
-        // Check if this initiative belongs to the active scenario
-        const isActiveScenario = item.scenarioId === state.activeScenarioId;
-        
-        if (item.level !== 'Story' && !item.isMilestone) {
-          const addEpic = document.createElement('button'); 
-          addEpic.innerHTML = '<span class="material-symbols-outlined">add</span>'; 
-          addEpic.title = 'Add child';
-          addEpic.disabled = !isActiveScenario;
-          if (!isActiveScenario) {
-            addEpic.style.opacity = '0.5';
-            addEpic.style.cursor = 'not-allowed';
+        // Add right-click context menu for initiatives
+        d.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          const isActiveScenario = item.scenarioId === state.activeScenarioId;
+          const items = [];
+          
+          // Only show add child option for non-Story and non-Milestone items
+          if (item.level !== 'Story' && !item.isMilestone) {
+            items.push({
+              label: `Add Child ${item.level === 'Initiative' ? 'Epic' : 'Story'}`,
+              icon: 'add',
+              action: () => {
+                const nextLevel = item.level === 'Initiative' ? 'Epic' : 'Story';
+                const id = window.PlanForgeModel.addInitiative(state, { name: nextLevel, start: item.start, end: item.end, parentId: item.id, level: nextLevel, size: 'M' });
+                renderHierarchy();
+                window.dispatchEvent(new Event('pf-refresh'));
+              },
+              disabled: !isActiveScenario
+            });
           }
-          addEpic.addEventListener('click', () => {
-            if (isActiveScenario) {
-              const nextLevel = item.level==='Initiative'?'Epic':'Story';
-              const id = window.PlanForgeModel.addInitiative(state, { name: nextLevel, start: item.start, end: item.end, parentId: item.id, level: nextLevel, size: 'M' });
+          
+          items.push({
+            label: 'Delete',
+            icon: 'remove',
+            action: () => {
+              window.PlanForgeModel.deleteInitiative(state, item.id);
               renderHierarchy();
-              // re-render timeline and details so child appears immediately
+              renderDetails();
               window.dispatchEvent(new Event('pf-refresh'));
-            }
+            },
+            disabled: !isActiveScenario
           });
-          right.appendChild(addEpic);
-        }
-        
-        const delBtn = document.createElement('button'); 
-        delBtn.innerHTML = '<span class="material-symbols-outlined">remove</span>'; 
-        delBtn.title = 'Delete';
-        delBtn.disabled = !isActiveScenario;
-        if (!isActiveScenario) {
-          delBtn.style.opacity = '0.5';
-          delBtn.style.cursor = 'not-allowed';
-        }
-        delBtn.addEventListener('click', () => {
-          if (isActiveScenario) {
-            window.PlanForgeModel.deleteInitiative(state, item.id);
-            renderHierarchy();
-            renderDetails(); window.dispatchEvent(new Event('pf-refresh'));
-            window.dispatchEvent(new Event('pf-refresh'));
-          }
+          
+          showContextMenu(e, items);
         });
-        right.appendChild(delBtn);
-        d.appendChild(left); d.appendChild(right);
+        
+        d.appendChild(left);
         const wrap = document.createElement('div'); wrap.appendChild(d);
         
         // Only render children if the item is expanded
@@ -523,6 +618,64 @@ window.PlanForgeUI = (function() {
       });
     }
 
+    function showInfoDialog() {
+      const dialog = el('info-dialog');
+      
+      // Populate the dialog content
+      const infoContent = el('info-content');
+      infoContent.innerHTML = `
+        <div style="line-height: 1.8;">
+          <h2>About PlanForge</h2>
+          <p>A free, open-source Project Planner with interactive Gantt chart editing capabilities.</p>
+          
+          <h3>Your Data Is Yours</h3>
+          <p>Zero tracking. Zero cookies. Zero servers. PlanForge works completely offline - just save the HTML file and use it without any internet connection. Your data never leaves your device.</p>
+          
+          <h3>Key Features</h3>
+          <ul>
+            <li><strong>Easy to Use:</strong> Intuitive Gantt chart editor for project planning</li>
+            <li><strong>Completely Offline:</strong> No installation required, works from a single HTML file</li>
+            <li><strong>Your Data is Safe:</strong> No cookies, no 3rd or 2nd party data access, not even planforge.cc accesses your data</li>
+            <li><strong>Export to MermaidJS:</strong> Perfect for integrating Gantt charts into your markdown documentation</li>
+            <li><strong>Export to JSON:</strong> Easy integration with JIRA and other project management tools</li>
+            <li><strong>Scenario Planning:</strong> Create multiple planning scenarios without struggling with different files</li>
+            <li><strong>Free & Open Source:</strong> No subscriptions, no hidden costs</li>
+          </ul>
+          
+          <h3>What Makes PlanForge Different?</h3>
+          <p><strong>Scenario Planning:</strong> Unlike other Gantt chart tools, PlanForge makes it easy to create and switch between multiple project scenarios. No need to juggle different files or struggle with version management.</p>
+          
+          <h3>Export Options</h3>
+          <p>Export your project data to MermaidJS format for seamless integration into your markdown documentation, or export as JSON for easy import into JIRA and other project management platforms.</p>
+          
+          <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-panel); display: flex; gap: 1.5rem; align-items: center;">
+            <a href="https://github.com/dil-dabalogh/planforge" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+              <span class="material-symbols-outlined">code</span>
+              GitHub Repository
+            </a>
+            <a href="https://buymeacoffee.com/cinegemadar" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+              <span class="material-symbols-outlined">favorite</span>
+              Buy Me a Coffee
+            </a>
+          </div>
+        </div>
+      `;
+      
+      dialog.style.display = 'flex';
+      
+      // Close dialog handlers
+      el('close-info-dialog').addEventListener('click', () => {
+        dialog.style.display = 'none';
+      });
+      
+      // Close on overlay click
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) {
+          dialog.style.display = 'none';
+        }
+      });
+    }
+
 
 
 
@@ -630,6 +783,7 @@ window.PlanForgeUI = (function() {
     return {
       renderHierarchy, renderDetails,
       showMermaidDialog, generateMermaidGantt,
+      showInfoDialog,
       onScenarioClone: (cb)=>bindings.scenarioClone.push(cb),
       onExportJSON: (cb)=>bindings.exportJSON.push(cb),
       onImportJSON: (cb)=>bindings.importJSON.push(cb),
