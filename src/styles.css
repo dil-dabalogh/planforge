@@ -1,12 +1,83 @@
+/**
+ * PlanForge Color Palette System
+ * 
+ * This file defines the color palette using CSS custom properties for easy customization.
+ * Colors are organized into two main groups:
+ * 1. UI Colors - Used for interface elements, backgrounds, text, and controls
+ * 2. Content Colors - Used for timeline content hierarchy (scenarios, initiatives, epics, stories, milestones)
+ * 
+ * To customize: Simply update the hex color values below while keeping the structure intact.
+ */
+
+/**
+ * Sigmar Font Face Declaration
+ */
+@font-face {
+  font-family: 'Sigmar';
+  src: url('../assets/fonts/woff2/sigmar.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --bg: #0a0b0f;
-  --panel: #1a1d23;
-  --text: #f8fafc;
-  --muted: #94a3b8;
-  --accent: #f59e0b;
-  --accent-2: #10b981;
-  --danger: #ef4444;
-  --grid: #374151;
+  /* ========================================
+     UI COLOR PALETTE
+     Primary interface colors
+     ======================================== */
+  
+  /* Background Colors */
+  --color-bg: #fff1cb;                  /* Main background - cream */
+  --color-panel: #ffe3d6;                /* Panel/sidebar background - warm cream */
+  --color-surface: #ffffff;              /* Elevated surfaces (buttons, inputs) */
+  
+  /* Text Colors */
+  --color-text: #2c1f1f;                 /* Primary text */
+  --color-text-muted: #6b4e4e;           /* Secondary/muted text */
+  --color-text-light: #94a3b8;           /* Light/disabled text */
+  
+  /* UI Accent Colors */
+  --color-primary: #ff8f8f;              /* Main accent - salmon */
+  --color-secondary: #fff1cb;             /* Secondary accent - cream */
+  --color-accent: #c2e2fa;               /* Accent highlight - light blue */
+  --color-highlight: #b7a3e3;            /* Highlight - lavender */
+  --color-danger: #7a3e3e;               /* Danger/warning - dark red-brown */
+  
+  /* Borders & Dividers */
+  --color-border: #ffc4b8;               /* Standard border */
+  --color-grid: #ffc4b8;                 /* Grid lines */
+  --color-border-light: #fff;            /* Light borders for contrast */
+  
+  /* ========================================
+     CONTENT COLOR PALETTE
+     Timeline content hierarchy colors
+     ======================================== */
+  
+  --color-content-scenario: #b8b8d4;     /* Scenarios - muted purple-grey */
+  --color-content-initiative: #ff8f8f;    /* Initiatives - salmon */
+  --color-content-milestone: #ffd89b;    /* Milestones - warm gold */
+  --color-content-epic: #b7a3e3;         /* Epics - lavender */
+  --color-content-story: #8ad4e8;        /* Stories - light blue */
+  
+  /* ========================================
+     SEMANTIC COLORS
+     Used for specific UI states
+     ======================================== */
+  
+  --color-selection-bg: rgba(255, 143, 143, 0.15);  /* Selection background */
+  --color-hover-bg: rgba(255, 143, 143, 0.08);       /* Hover state */
+  
+  /* Legacy variable names for backward compatibility */
+  --bg: var(--color-bg);
+  --panel: var(--color-panel);
+  --text: var(--color-text);
+  --muted: var(--color-text-muted);
+  --primary: var(--color-primary);
+  --secondary: var(--color-secondary);
+  --accent: var(--color-accent);
+  --highlights: var(--color-highlight);
+  --danger: var(--color-danger);
+  --grid: var(--color-grid);
 }
 
 * { box-sizing: border-box; }
@@ -14,9 +85,9 @@
 html, body { height: 100%; }
 body {
   margin: 0;
-  font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  color: var(--text);
-  background: var(--bg);
+  font-family: 'Sigmar', -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  color: var(--color-text);
+  background: var(--color-bg);
 }
 
 .app-header {
@@ -24,21 +95,21 @@ body {
   display: flex;
   align-items: center;
   padding: 0 12px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--grid);
+  background: var(--color-panel);
+  border-bottom: 1px solid var(--color-border);
 }
 .brand { font-weight: 700; letter-spacing: 0.3px; }
 .toolbar { display: flex; gap: 8px; align-items: center; margin-left: 16px; width: 100%; }
 .toolbar .spacer { flex: 1; }
 
 button, select, input[type="range"] {
-  background: #2d3748;
-  color: var(--text);
-  border: 1px solid var(--grid);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 6px 10px;
 }
-button:hover { border-color: var(--accent); }
+button:hover { border-color: var(--color-primary); }
 
 /* Button styling */
 button {
@@ -77,14 +148,14 @@ button {
 }
 
 .sidebar {
-  background: var(--panel);
-  border-right: 1px solid var(--grid);
+  background: var(--color-panel);
+  border-right: 1px solid var(--color-border);
   overflow: auto;
   position: relative;
   transition: width 0.3s ease;
 }
 #right-sidebar { 
-  border-left: 1px solid var(--grid); 
+  border-left: 1px solid var(--color-border); 
   border-right: none; 
 }
 
@@ -106,8 +177,8 @@ button {
 }
 
 .sidebar-toggle button {
-  background: var(--panel);
-  border: 1px solid var(--grid);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -119,9 +190,9 @@ button {
 }
 
 .sidebar-toggle button:hover {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--bg);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-bg);
 }
 
 .sidebar-toggle button .material-symbols-outlined {
@@ -134,8 +205,8 @@ button {
   overflow: auto;
 }
 
-.pane { padding: 12px; border-bottom: 1px solid var(--grid); }
-.pane h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 600; }
+.pane { padding: 12px; border-bottom: 1px solid var(--color-border); }
+.pane h3 { margin: 0 0 8px; font-size: 14px; color: var(--color-text-muted); font-weight: 600; }
 .tree, .list { display: flex; flex-direction: column; gap: 6px; }
 
 .workspace { 
@@ -151,8 +222,8 @@ button {
   align-items: center;
   gap: 20px; 
   padding: 12px 16px; 
-  border-top: 1px solid var(--grid); 
-  background: #1f2937;
+  border-top: 1px solid var(--color-border); 
+  background: var(--color-panel);
   flex-shrink: 0;
 }
 
@@ -167,14 +238,14 @@ button {
   flex-direction: column;
   gap: 4px;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .timeline-controls input[type="date"] {
   padding: 6px 8px;
-  background: #2d3748;
-  color: var(--text);
-  border: 1px solid var(--grid);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 13px;
 }
@@ -195,23 +266,23 @@ button {
   padding: 6px 12px;
   font-size: 12px;
   font-weight: 500;
-  background: #2d3748;
-  color: var(--muted);
-  border: 1px solid var(--grid);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .zoom-preset:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .zoom-preset.active {
-  background: var(--accent);
-  color: #ffffff;
-  border-color: var(--accent);
+  background: var(--color-primary);
+  color: var(--color-border-light);
+  border-color: var(--color-primary);
 }
 
 .zoom-slider-container {
@@ -229,7 +300,7 @@ button {
 #zoom-slider {
   width: 120px;
   height: 6px;
-  background: #374151;
+  background: var(--color-grid);
   border-radius: 3px;
   outline: none;
   cursor: pointer;
@@ -239,26 +310,26 @@ button {
   appearance: none;
   width: 16px;
   height: 16px;
-  background: var(--accent);
+  background: var(--color-primary);
   border-radius: 50%;
   cursor: pointer;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--color-border-light);
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 #zoom-slider::-moz-range-thumb {
   width: 16px;
   height: 16px;
-  background: var(--accent);
+  background: var(--color-primary);
   border-radius: 50%;
   cursor: pointer;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--color-border-light);
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .zoom-level {
   font-size: 12px;
-  color: var(--accent);
+  color: var(--color-primary);
   font-weight: 600;
   min-width: 50px;
   text-align: center;
@@ -268,9 +339,9 @@ button {
   padding: 6px;
   min-width: 32px;
   height: 32px;
-  background: #2d3748;
-  color: var(--muted);
-  border: 1px solid var(--grid);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -281,8 +352,8 @@ button {
 }
 
 .zoom-to-content-btn:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .zoom-to-content-btn:disabled {
@@ -300,7 +371,7 @@ button {
   flex: 1;
   overflow: auto; 
 }
-#timeline-canvas { width: 100%; height: 100%; display: block; background: #0f172a; }
+#timeline-canvas { width: 100%; height: 100%; display: block; background: var(--color-bg); }
 
 .tree-item, .resource-item {
   display: flex;
@@ -308,7 +379,8 @@ button {
   justify-content: space-between;
   gap: 8px;
   padding: 6px 8px;
-  border: 1px solid var(--grid);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   min-height: 32px;
 }
@@ -317,7 +389,7 @@ button {
   min-width: 0;
   overflow: hidden;
 }
-.tag { font-size: 11px; padding: 2px 6px; border-radius: 10px; border: 1px solid var(--grid); color: var(--muted); }
+.tag { font-size: 11px; padding: 2px 6px; border-radius: 10px; border: 1px solid var(--color-border); color: var(--color-text-muted); }
 .row-actions { 
   display: flex; 
   gap: 4px; 
@@ -342,17 +414,17 @@ button {
   padding: 3px 8px;
   border-radius: 999px;
   font-size: 11px;
-  border: 1px solid var(--grid);
+  border: 1px solid var(--color-border);
 }
-.pill.engineer { background: rgba(245,158,11,0.12); color: #fbbf24; }
-.pill.qa { background: rgba(239,68,68,0.12); color: #fca5a5; }
-.pill.pm { background: rgba(16,185,129,0.12); color: #6ee7b7; }
+.pill.engineer { background: rgba(255,143,143,0.12); color: var(--color-content-initiative); }
+.pill.qa { background: rgba(122,62,62,0.12); color: var(--color-danger); }
+.pill.pm { background: rgba(183,163,227,0.12); color: var(--color-content-epic); }
 
 .details-field { margin-bottom: 8px; }
-.details-field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-.details-field input, .details-field select { width: 100%; padding: 6px 8px; background: #1f2937; color: var(--text); border: 1px solid var(--grid); border-radius: 6px; }
+.details-field label { display: block; font-size: 12px; color: var(--color-text-muted); margin-bottom: 4px; }
+.details-field input, .details-field select { width: 100%; padding: 6px 8px; background: var(--color-panel); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 6px; }
 
-.link { color: var(--accent); cursor: pointer; }
+.link { color: var(--color-primary); cursor: pointer; }
 
 /* Dialog Styles */
 .dialog-overlay {
@@ -369,8 +441,8 @@ button {
 }
 
 .dialog-content {
-  background: var(--panel);
-  border: 1px solid var(--grid);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   width: 90%;
   max-width: 800px;
@@ -385,20 +457,20 @@ button {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--grid);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .dialog-header h3 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--color-text);
 }
 
 .dialog-close {
   background: none;
   border: none;
-  color: var(--muted);
+  color: var(--color-text-muted);
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
@@ -408,8 +480,8 @@ button {
 }
 
 .dialog-close:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text);
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-text);
 }
 
 .dialog-body {
@@ -420,16 +492,16 @@ button {
 
 .dialog-body p {
   margin: 0 0 16px 0;
-  color: var(--muted);
+  color: var(--color-text-muted);
   font-size: 14px;
 }
 
 #mermaid-code {
   width: 100%;
   height: 300px;
-  background: #0f172a;
-  color: var(--text);
-  border: 1px solid var(--grid);
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 12px;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
@@ -446,8 +518,8 @@ button {
 }
 
 .btn-primary {
-  background: var(--accent);
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-border-light);
   border: none;
   padding: 8px 16px;
   border-radius: 6px;
@@ -459,7 +531,7 @@ button {
 }
 
 .btn-primary:hover {
-  background: #d97706;
+  background: #ff7474;
 }
 
 /* Material Design 3 Switch Component */
@@ -503,18 +575,18 @@ button {
 }
 
 .m3-switch input:checked + .m3-switch-slider {
-  background-color: var(--accent);
-  border-color: var(--accent);
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .m3-switch input:checked + .m3-switch-slider:before {
   transform: translateX(20px);
-  background-color: #ffffff;
+  background-color: var(--color-border-light);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .m3-switch input:focus + .m3-switch-slider {
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 0 0 2px rgba(182, 163, 227, 0.3);
 }
 
 .m3-switch input:disabled + .m3-switch-slider {
@@ -534,7 +606,7 @@ button {
   gap: 16px;
   cursor: pointer;
   font-size: 14px;
-  color: var(--text);
+  color: var(--color-text);
   margin-bottom: 8px;
   padding: 8px 0;
   min-height: 40px;
@@ -548,7 +620,7 @@ button {
 .switch-label-text {
   flex: 1;
   font-weight: 500;
-  color: var(--text);
+  color: var(--color-text);
   user-select: none;
 }
 

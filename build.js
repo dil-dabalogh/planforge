@@ -26,9 +26,24 @@ if (!fs.existsSync(DIST_DIR)) {
 /**
  * Read and inline CSS file
  */
-function inlineCSS(filePath, minify = false) {
+function inlineCSS(filePath, minify = false, embedFonts = false) {
   try {
     let content = fs.readFileSync(filePath, 'utf8');
+    
+    // If embedding fonts, convert font references to base64 data URIs
+    if (embedFonts) {
+      // Handle Sigmar font
+      if (content.includes('sigmar.ttf')) {
+        const sigmarFont = fontToDataURI(
+          path.join(SRC_DIR, 'assets/fonts/woff2/sigmar.ttf'),
+          'font/ttf'
+        );
+        content = content.replace(
+          /url\(['"]?[^)]*sigmar\.ttf[^)]*['"]?\)/g,
+          `url(${sigmarFont})`
+        );
+      }
+    }
     
     if (minify) {
       const cleanCSS = new CleanCSS({
@@ -134,7 +149,7 @@ function buildHTML(includeFonts = true, obfuscate = false, minifyCSS = false) {
     /<link rel="stylesheet" href="([^"]+)"[^>]*>/g,
     (match, href) => {
       const cssPath = path.join(SRC_DIR, href);
-      return inlineCSS(cssPath, minifyCSS);
+      return inlineCSS(cssPath, minifyCSS, includeFonts);
     }
   );
   
@@ -162,6 +177,10 @@ function buildHTML(includeFonts = true, obfuscate = false, minifyCSS = false) {
       path.join(SRC_DIR, 'assets/fonts/woff2/material-symbols-400.ttf'),
       'font/ttf'
     );
+    const sigmarFont = fontToDataURI(
+      path.join(SRC_DIR, 'assets/fonts/woff2/sigmar.ttf'),
+      'font/ttf'
+    );
     
     // Replace font URLs in CSS with data URIs
     const embeddedMaterialIconsCSS = materialIconsCSS.replace(
@@ -174,8 +193,17 @@ function buildHTML(includeFonts = true, obfuscate = false, minifyCSS = false) {
     );
     
     // Add embedded font CSS to head
-    headContent += `<style>\n${embeddedMaterialIconsCSS}\n</style>`;
-    headContent += `<style>\n${embeddedMaterialSymbolsCSS}\n</style>`;
+    headContent += `<style>
+@font-face {
+  font-family: 'Sigmar';
+  src: url(${sigmarFont});
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+${embeddedMaterialIconsCSS}
+${embeddedMaterialSymbolsCSS}
+</style>`;
   } else {
     // For minimal version, use system fonts as fallback
     headContent += `<style>

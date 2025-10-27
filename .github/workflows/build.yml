@@ -2,11 +2,13 @@ name: Build PlanForge Distribution
 
 on:
   push:
-    branches: [ main, staging ]
+    branches: [ staging ]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  pages: write
+  id-token: write
 
 jobs:
   build:
@@ -15,6 +17,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
         
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -34,6 +40,20 @@ jobs:
           name: planforge-distribution
           path: dist/
           retention-days: 30
+          
+      - name: Commit and push built files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Check if there are any changes in dist/
+          if [ -n "$(git status --porcelain dist/)" ]; then
+            git add dist/
+            git commit -m "chore: Auto-build distribution files [skip ci]"
+            git push
+          else
+            echo "No changes to commit in dist/"
+          fi
           
       - name: Display build info
         run: |

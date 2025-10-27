@@ -1,6 +1,24 @@
 window.PlanForgeUI = (function() {
+  // Helper function to get CSS custom properties
+  function getCSSVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+  
+  // Get color palette
+  function getColors() {
+    return {
+      panel: getCSSVar('--color-panel'),
+      text: getCSSVar('--color-text'),
+      textMuted: getCSSVar('--color-text-muted'),
+      primary: getCSSVar('--color-primary'),
+      accent: getCSSVar('--color-accent'),
+      highlight: getCSSVar('--color-highlight')
+    };
+  }
+  
   function el(id){ return document.getElementById(id); }
   function createUI(state){
+    const colors = getColors();
     const bindings = { scenarioClone: [], exportJSON: [], importJSON: [], exportScenario: [], exportMermaid: [] };
     el('btn-export-json').addEventListener('click', () => bindings.exportJSON.forEach(cb => cb()));
     el('btn-import-json').addEventListener('click', () => bindings.importJSON.forEach(cb => cb()));
@@ -17,8 +35,8 @@ window.PlanForgeUI = (function() {
       state.scenarios.forEach(s => {
         const row = document.createElement('div'); row.className = 'tree-item';
         if (s.id === state.activeScenarioId) {
-          row.style.backgroundColor = 'rgba(245,158,11,0.15)';
-          row.style.borderColor = '#f59e0b';
+          row.style.backgroundColor = getCSSVar('--color-selection-bg');
+          row.style.borderColor = colors.primary;
           row.style.borderWidth = '2px';
         }
         const left = document.createElement('div'); left.style.paddingLeft = '12px'; left.style.display = 'flex'; left.style.alignItems = 'center'; left.style.gap = '8px';
@@ -28,7 +46,7 @@ window.PlanForgeUI = (function() {
         toggle.style.height = '20px'; 
         toggle.style.padding = '0'; 
         toggle.style.fontSize = '18px'; 
-        toggle.style.color = s.visible ? '#f59e0b' : '#94a3b8'; 
+        toggle.style.color = s.visible ? colors.primary : colors.textMuted; 
         toggle.style.display = 'flex'; 
         toggle.style.alignItems = 'center'; 
         toggle.style.justifyContent = 'center';
@@ -43,7 +61,7 @@ window.PlanForgeUI = (function() {
           window.dispatchEvent(new Event('pf-refresh')); 
         });
         const name = document.createElement('span'); name.textContent = s.name; name.className = 'link';
-        if (s.id === state.activeScenarioId) { name.style.color = '#f59e0b'; name.style.fontWeight = '600'; }
+        if (s.id === state.activeScenarioId) { name.style.color = colors.primary; name.style.fontWeight = '600'; }
         
         // Check if this is the active scenario for button states
         const isActiveScenario = s.id === state.activeScenarioId;
@@ -54,9 +72,9 @@ window.PlanForgeUI = (function() {
           const input = document.createElement('input');
           input.type = 'text';
           input.value = s.name;
-          input.style.background = '#1a2040';
-          input.style.color = '#f59e0b';
-          input.style.border = '1px solid #f59e0b';
+          input.style.background = colors.panel;
+          input.style.color = colors.primary;
+          input.style.border = `1px solid ${colors.primary}`;
           input.style.padding = '2px 4px';
           input.style.fontSize = 'inherit';
           input.style.fontWeight = 'inherit';
@@ -202,8 +220,8 @@ window.PlanForgeUI = (function() {
         
         // Apply highlighting for selected element
         if (isSelected) {
-          d.style.backgroundColor = 'rgba(106,164,255,0.15)';
-          d.style.borderColor = '#6aa4ff';
+          d.style.backgroundColor = getCSSVar('--color-selection-bg');
+          d.style.borderColor = colors.primary;
           d.style.borderWidth = '2px';
         }
         
@@ -249,7 +267,7 @@ window.PlanForgeUI = (function() {
         // Add dependency indicator if this item has dependencies
         const hasDeps = data.dependencies.some(d => d.fromId === item.id || d.toId === item.id);
         if (hasDeps) {
-          const depIcon = document.createElement('span'); depIcon.textContent = '↗'; depIcon.title = 'Has dependencies'; depIcon.style.color = '#10b981'; depIcon.style.fontSize = '12px';
+          const depIcon = document.createElement('span'); depIcon.textContent = '↗'; depIcon.title = 'Has dependencies'; depIcon.style.color = colors.highlight; depIcon.style.fontSize = '12px';
           left.appendChild(depIcon);
         }
         
@@ -366,9 +384,9 @@ window.PlanForgeUI = (function() {
         if (existingDeps.length > 0) {
           const existingList = document.createElement('div'); existingList.style.marginBottom = '12px';
           existingDeps.forEach(dep => {
-            const depRow = document.createElement('div'); depRow.style.display = 'flex'; depRow.style.alignItems = 'center'; depRow.style.justifyContent = 'space-between'; depRow.style.padding = '4px 0'; depRow.style.borderBottom = '1px solid #2a3154';
+            const depRow = document.createElement('div'); depRow.style.display = 'flex'; depRow.style.alignItems = 'center'; depRow.style.justifyContent = 'space-between'; depRow.style.padding = '4px 0'; depRow.style.borderBottom = `1px solid ${getCSSVar('--color-grid')}`;
             const depItem = data.initiatives.find(i => i.id === (dep.fromId === item.id ? dep.toId : dep.fromId));
-            const depText = document.createElement('span'); depText.textContent = `${dep.fromId === item.id ? '→' : '←'} ${depItem ? depItem.name : 'Unknown'}`; depText.style.color = '#8bd7a0';
+            const depText = document.createElement('span'); depText.textContent = `${dep.fromId === item.id ? '→' : '←'} ${depItem ? depItem.name : 'Unknown'}`; depText.style.color = colors.highlight;
             const removeBtn = document.createElement('button'); removeBtn.innerHTML = '<span class="material-symbols-outlined">remove</span>'; removeBtn.title = 'Remove dependency'; removeBtn.style.width = '20px'; removeBtn.style.height = '20px'; removeBtn.style.fontSize = '12px';
             removeBtn.addEventListener('click', () => {
               window.PlanForgeModel.unlinkDependency(state, dep.fromId, dep.toId);
@@ -461,8 +479,8 @@ window.PlanForgeUI = (function() {
         const input = document.createElement('input'); input.type = type; input.value = value; 
         if (disabled) {
           input.disabled = true;
-          input.style.backgroundColor = '#1a2040';
-          input.style.color = '#9aa4c3';
+          input.style.backgroundColor = colors.panel;
+          input.style.color = colors.accent;
         } else {
           input.addEventListener('input', ()=>onChange(input.value));
         }
