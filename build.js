@@ -251,6 +251,20 @@ function createDistribution() {
   const fullHTML = buildHTML(true, true, true);
   fs.writeFileSync(path.join(DIST_DIR, 'index.html'), fullHTML);
   
+  // Copy sitemap.xml to dist if it exists
+  const sitemapSource = './sitemap.xml';
+  if (fs.existsSync(sitemapSource)) {
+    fs.copyFileSync(sitemapSource, path.join(DIST_DIR, 'sitemap.xml'));
+    console.log('Sitemap copied to dist/');
+  }
+  
+  // Copy robots.txt to dist if it exists
+  const robotsSource = './robots.txt';
+  if (fs.existsSync(robotsSource)) {
+    fs.copyFileSync(robotsSource, path.join(DIST_DIR, 'robots.txt'));
+    console.log('Robots.txt copied to dist/');
+  }
+  
   console.log('Distribution package created successfully!');
 }
 
