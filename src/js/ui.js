@@ -25,6 +25,7 @@ window.WhatIfDeliveredUI = (function() {
     event.preventDefault();
     const menu = el('context-menu');
     const menuItems = el('context-menu-items');
+    menuItems.setAttribute('role', 'menu');
     
     menuItems.innerHTML = '';
     
@@ -36,6 +37,7 @@ window.WhatIfDeliveredUI = (function() {
       } else if (item && item.label) {
         const menuItem = document.createElement('div');
         menuItem.className = 'context-menu-item';
+        menuItem.setAttribute('role', 'menuitem');
         
         // Create icon if provided
         if (item.icon) {
@@ -570,187 +572,113 @@ window.WhatIfDeliveredUI = (function() {
       if (sel.type === 'initiative'){
         const data = window.WhatIfDeliveredModel.getActiveData(state);
         const item = data.initiatives.find(i => i.id === sel.id); if (!item) return;
-        panel.appendChild(field('Name', item.name, (v)=>{ item.name=v; renderHierarchy(); window.dispatchEvent(new Event('pf-refresh')); }));
-        
-        if (item.isMilestone) {
-          // Milestone: single target date
-          panel.appendChild(field('Target Date', item.start, (v)=>{ window.WhatIfDeliveredModel.moveItem(state, item.id, { start: v, end: v }); window.dispatchEvent(new Event('pf-refresh')); } ,'date'));
-          panel.appendChild(field('Length (days)', '1', ()=>{}, 'number', true));
-        } else {
-          // Regular initiative: start and end dates
-          panel.appendChild(field('Start', item.start, (v)=>{ window.WhatIfDeliveredModel.moveItem(state, item.id, { start: v, end: item.end }); window.dispatchEvent(new Event('pf-refresh')); } ,'date'));
-          panel.appendChild(field('End', item.end, (v)=>{ window.WhatIfDeliveredModel.moveItem(state, item.id, { start: item.start, end: v }); window.dispatchEvent(new Event('pf-refresh')); } ,'date'));
-          panel.appendChild(field('Length (days)', item.length || '', ()=>{}, 'number', true));
-        }
-        
-        // Description field with textarea
-        const descWrap = document.createElement('div'); descWrap.className = 'details-field';
-        const descLabel = document.createElement('label'); descLabel.textContent = 'Description'; descWrap.appendChild(descLabel);
-        const descTextarea = document.createElement('textarea'); 
-        descTextarea.value = item.description || '';
-        descTextarea.rows = 4;
-        descTextarea.addEventListener('input', () => { item.description = descTextarea.value; window.dispatchEvent(new Event('pf-refresh')); });
-        descWrap.appendChild(descTextarea);
-        panel.appendChild(descWrap);
-        // size dropdown
+
+        // helpers
+        const group = (title) => { const g = document.createElement('div'); g.className = 'details-group'; if (title){ const h = document.createElement('div'); h.className = 'group-title'; h.textContent = title; g.appendChild(h);} return g; };
+        const grid = () => { const wrap = document.createElement('div'); wrap.className = 'field-grid'; return wrap; };
+
+        // Basic section
+        const basic = group('Basic');
+        const basicGrid = grid();
+        basicGrid.appendChild(field('Name', item.name, (v)=>{ item.name=v; renderHierarchy(); window.dispatchEvent(new Event('pf-refresh')); }));
+        basic.appendChild(basicGrid);
+
+        // Type segmented and Size
+        const typeSizeGrid = grid();
+        const typeWrap = document.createElement('div'); typeWrap.className = 'details-field';
+        const typeLabel = document.createElement('label'); typeLabel.textContent = 'Type';
+        const seg = document.createElement('div'); seg.className = 'segmented';
+        const btnTask = document.createElement('button'); btnTask.type = 'button'; btnTask.textContent = 'Task';
+        const btnMilestone = document.createElement('button'); btnMilestone.type = 'button'; btnMilestone.textContent = 'Milestone';
+        const setTypeUI = () => { btnTask.classList.toggle('active', !item.isMilestone); btnMilestone.classList.toggle('active', !!item.isMilestone); };
+        setTypeUI();
+        btnTask.addEventListener('click', () => { if (item.isMilestone){ item.isMilestone = false; if (item.end < item.start) item.end = item.start; window.dispatchEvent(new Event('pf-refresh')); renderDetails(); } });
+        btnMilestone.addEventListener('click', () => { if (!item.isMilestone){ item.isMilestone = true; item.end = item.start; item.length = 1; window.dispatchEvent(new Event('pf-refresh')); renderDetails(); } });
+        seg.appendChild(btnTask); seg.appendChild(btnMilestone);
+        typeWrap.appendChild(typeLabel); typeWrap.appendChild(seg);
+
         const sizeWrap = document.createElement('div'); sizeWrap.className = 'details-field';
-        const sizeLabel = document.createElement('label'); sizeLabel.textContent = 'T-Shirt Size';
+        const sizeLabel = document.createElement('label'); sizeLabel.textContent = 'Size';
         const sizeSel = document.createElement('select');
         ;['XS','S','M','L','XL','XXL','infinit'].forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; if (item.size===s) o.selected=true; sizeSel.appendChild(o); });
         sizeSel.addEventListener('change', ()=>{ item.size=sizeSel.value; window.dispatchEvent(new Event('pf-refresh')); });
-        sizeWrap.appendChild(sizeLabel); sizeWrap.appendChild(sizeSel); panel.appendChild(sizeWrap);
-        // add child buttons (disabled for milestones)
-        const nextLevel = item.level === 'Initiative' ? 'Epic' : item.level === 'Epic' ? 'Story' : null;
-        const nextLevelName = nextLevel ? window.WhatIfDeliveredModel.getLevelName(state, nextLevel) : null;
-        const childWrap = document.createElement('div'); childWrap.className = 'details-field';
-        const addChildBtn = document.createElement('button'); 
-        addChildBtn.textContent = item.isMilestone ? 'Milestones cannot have children' : (nextLevel ? ('Add Child ' + nextLevelName) : 'No child level'); 
-        addChildBtn.disabled = !nextLevel || item.isMilestone;
-        addChildBtn.addEventListener('click', () => {
-          if (!nextLevel || item.isMilestone) return;
-          const id = window.WhatIfDeliveredModel.addInitiative(state, { name: 'New ' + nextLevelName, start: item.start, end: item.end, parentId: item.id, level: nextLevel, size: 'M' });
-          state.selection = { type: 'initiative', id };
-          renderHierarchy(); renderDetails(); window.dispatchEvent(new Event('pf-refresh')); window.dispatchEvent(new Event('pf-selection-change'));
-        });
-        childWrap.appendChild(addChildBtn); panel.appendChild(childWrap);
-        
-        // dependencies section
-        const depWrap = document.createElement('div'); depWrap.className = 'details-field';
-        const depLabel = document.createElement('label'); depLabel.textContent = 'Dependencies'; depWrap.appendChild(depLabel);
-        
-        // existing dependencies
-        const existingDeps = data.dependencies.filter(d => d.fromId === item.id || d.toId === item.id);
-        if (existingDeps.length > 0) {
-          const existingList = document.createElement('div'); existingList.style.marginBottom = '12px';
-          existingDeps.forEach(dep => {
-            const depRow = document.createElement('div'); depRow.style.display = 'flex'; depRow.style.alignItems = 'center'; depRow.style.justifyContent = 'space-between'; depRow.style.padding = '4px 0'; depRow.style.borderBottom = `1px solid ${getCSSVar('--color-grid')}`;
-            const depItem = data.initiatives.find(i => i.id === (dep.fromId === item.id ? dep.toId : dep.fromId));
-            
-            // Create dependency text with elegant icon
-            const depText = document.createElement('span'); 
-            depText.style.color = colors.highlight;
-            depText.style.display = 'flex';
-            depText.style.alignItems = 'center';
-            depText.style.gap = '4px';
-            
-            // Add elegant icon
-            const depIcon = document.createElement('span');
-            depIcon.className = 'material-symbols-outlined';
-            depIcon.style.fontSize = '16px';
-            depIcon.style.opacity = '0.8';
-            
-            if (dep.fromId === item.id) {
-              depIcon.textContent = 'call_made';
-              depIcon.title = 'Depends on';
-              depText.appendChild(depIcon);
-              depText.appendChild(document.createTextNode(depItem ? depItem.name : 'Unknown'));
-            } else {
-              depIcon.textContent = 'call_received';
-              depIcon.title = 'Dependency source';
-              depText.appendChild(depIcon);
-              depText.appendChild(document.createTextNode(depItem ? depItem.name : 'Unknown'));
-            }
-            const removeBtn = document.createElement('button'); 
-            removeBtn.innerHTML = '<span class="material-icons">remove</span>'; 
-            removeBtn.title = 'Remove dependency'; 
-            removeBtn.style.width = '24px'; 
-            removeBtn.style.height = '24px'; 
-            removeBtn.style.display = 'flex';
-            removeBtn.style.alignItems = 'center';
-            removeBtn.style.justifyContent = 'center';
-            removeBtn.style.background = 'none';
-            removeBtn.style.border = '1px solid ' + colors.border;
-            removeBtn.style.borderRadius = '4px';
-            removeBtn.style.cursor = 'pointer';
-            removeBtn.style.color = colors.danger;
-            removeBtn.style.fontSize = '16px';
-            removeBtn.style.padding = '2px';
-            removeBtn.style.transition = 'all 0.2s ease';
-            removeBtn.addEventListener('mouseenter', () => {
-              removeBtn.style.background = colors.selectionBg;
-              removeBtn.style.borderColor = colors.danger;
-            });
-            removeBtn.addEventListener('mouseleave', () => {
-              removeBtn.style.background = 'none';
-              removeBtn.style.borderColor = colors.border;
-            });
-            removeBtn.addEventListener('click', () => {
-              window.WhatIfDeliveredModel.unlinkDependency(state, dep.fromId, dep.toId);
-              window.dispatchEvent(new Event('pf-refresh'));
-              renderDetails(); window.dispatchEvent(new Event('pf-refresh'));
-            });
-            depRow.appendChild(depText); depRow.appendChild(removeBtn); existingList.appendChild(depRow);
-          });
-          depWrap.appendChild(existingList);
+        sizeWrap.appendChild(sizeLabel); sizeWrap.appendChild(sizeSel);
+
+        typeSizeGrid.appendChild(typeWrap);
+        typeSizeGrid.appendChild(sizeWrap);
+        basic.appendChild(typeSizeGrid);
+        panel.appendChild(basic);
+
+        // Schedule section
+        const schedule = group('Schedule');
+        const scheduleGrid = grid();
+        if (item.isMilestone) {
+          scheduleGrid.appendChild(field('Target Date', item.start, (v)=>{ window.WhatIfDeliveredModel.moveItem(state, item.id, { start: v, end: v }); window.dispatchEvent(new Event('pf-refresh')); }, 'date'));
+        } else {
+          scheduleGrid.appendChild(field('Start', item.start, (v)=>{ window.WhatIfDeliveredModel.moveItem(state, item.id, { start: v, end: item.end }); window.dispatchEvent(new Event('pf-refresh')); }, 'date'));
+          scheduleGrid.appendChild(field('End', item.end, (v)=>{ window.WhatIfDeliveredModel.moveItem(state, item.id, { start: item.start, end: v }); window.dispatchEvent(new Event('pf-refresh')); }, 'date'));
         }
-        
-        // add new dependency
-        const addDepWrap = document.createElement('div'); addDepWrap.style.display = 'flex'; addDepWrap.style.gap = '8px'; addDepWrap.style.alignItems = 'center';
-        const depSelect = document.createElement('select'); depSelect.style.flex = '1';
-        const depOption = document.createElement('option'); depOption.value = ''; depOption.textContent = 'Depends on...'; depSelect.appendChild(depOption);
-        
-        // Add all other initiatives as options (excluding self and children)
+        const lengthPill = document.createElement('div'); lengthPill.className = 'pill'; lengthPill.textContent = (item.isMilestone ? '1 day' : ((item.length || 1) + ' days'));
+        const lengthWrap = document.createElement('div'); lengthWrap.className = 'details-field';
+        const lengthLabel = document.createElement('label'); lengthLabel.textContent = 'Length';
+        lengthWrap.appendChild(lengthLabel); lengthWrap.appendChild(lengthPill);
+        schedule.appendChild(scheduleGrid);
+        schedule.appendChild(lengthWrap);
+        panel.appendChild(schedule);
+
+        // Structure section
+        const nextLevel = item.level === 'Initiative' ? 'Epic' : item.level === 'Epic' ? 'Story' : null;
+        if (!item.isMilestone && nextLevel) {
+          const structure = group('Structure');
+          const addChildBtn = document.createElement('button'); addChildBtn.innerHTML = '<span class="material-icons">add</span>Add Child';
+          addChildBtn.addEventListener('click', () => {
+            const id = window.WhatIfDeliveredModel.addInitiative(state, { name: 'New ' + window.WhatIfDeliveredModel.getLevelName(state, nextLevel), start: item.start, end: item.end, parentId: item.id, level: nextLevel, size: 'M' });
+            state.selection = { type: 'initiative', id };
+            renderHierarchy(); renderDetails(); window.dispatchEvent(new Event('pf-refresh')); window.dispatchEvent(new Event('pf-selection-change'));
+          });
+          structure.appendChild(addChildBtn);
+          panel.appendChild(structure);
+        }
+
+        // Dependencies section
+        const deps = group('Dependencies');
+        const existingDeps = data.dependencies.filter(d => d.fromId === item.id || d.toId === item.id);
+        const chipsRow = document.createElement('div'); chipsRow.className = 'chips';
+        existingDeps.forEach(dep => {
+          const otherId = dep.fromId === item.id ? dep.toId : dep.fromId;
+          const depItem = data.initiatives.find(i => i.id === otherId);
+          const chip = document.createElement('span'); chip.className = 'chip';
+          const icon = document.createElement('span'); icon.className = 'material-symbols-outlined'; icon.textContent = dep.fromId === item.id ? 'call_made' : 'call_received';
+          const label = document.createElement('span'); label.textContent = depItem ? depItem.name : 'Unknown';
+          const remove = document.createElement('button'); remove.className = 'chip-remove'; remove.type = 'button'; remove.textContent = '×'; remove.title = 'Remove';
+          remove.addEventListener('click', () => { window.WhatIfDeliveredModel.unlinkDependency(state, dep.fromId, dep.toId); window.dispatchEvent(new Event('pf-refresh')); renderDetails(); });
+          chip.appendChild(icon); chip.appendChild(label); chip.appendChild(remove); chipsRow.appendChild(chip);
+        });
+        deps.appendChild(chipsRow);
+        const addDepWrap = document.createElement('div'); addDepWrap.className = 'dep-add';
+        const depSelect = document.createElement('select'); depSelect.className = 'dep-select';
+        const opt0 = document.createElement('option'); opt0.value = ''; opt0.textContent = 'Depends on…'; depSelect.appendChild(opt0);
         const allItems = data.initiatives.filter(i => i.id !== item.id && i.scenarioId === state.activeScenarioId);
         const children = data.initiatives.filter(i => i.parentId === item.id);
         const availableItems = allItems.filter(i => !children.some(c => c.id === i.id));
-        
-        availableItems.forEach(otherItem => {
-          const option = document.createElement('option'); option.value = otherItem.id; option.textContent = otherItem.name; depSelect.appendChild(option);
-        });
-        
-        const addDepBtn = document.createElement('button'); addDepBtn.textContent = 'Add Dependency'; addDepBtn.disabled = true;
-        addDepBtn.addEventListener('click', () => {
-          if (depSelect.value) {
-            window.WhatIfDeliveredModel.linkDependency(state, item.id, depSelect.value);
-            window.dispatchEvent(new Event('pf-refresh'));
-            renderDetails(); window.dispatchEvent(new Event('pf-refresh'));
-          }
-        });
-        
-        depSelect.addEventListener('change', () => {
-          addDepBtn.disabled = !depSelect.value;
-        });
-        
-        addDepWrap.appendChild(depSelect); addDepWrap.appendChild(addDepBtn); depWrap.appendChild(addDepWrap); panel.appendChild(depWrap);
-        
-        // Milestone toggle - moved to bottom for less crowded UI
-        const milestoneWrap = document.createElement('div'); milestoneWrap.className = 'details-field';
-        const milestoneLabel = document.createElement('label'); milestoneLabel.className = 'm3-switch-label';
-        
-        const labelText = document.createElement('span'); 
-        labelText.textContent = 'Milestone';
-        labelText.className = 'switch-label-text';
-        
-        const switchContainer = document.createElement('div'); switchContainer.className = 'm3-switch';
-        const milestoneSwitch = document.createElement('input'); 
-        milestoneSwitch.type = 'checkbox'; 
-        milestoneSwitch.checked = item.isMilestone || false;
-        const switchSlider = document.createElement('span'); switchSlider.className = 'm3-switch-slider';
-        
-        milestoneSwitch.addEventListener('change', ()=>{
-          item.isMilestone = milestoneSwitch.checked;
-          // If converting to milestone, set end date to start date
-          if (item.isMilestone) {
-            item.end = item.start;
-            item.length = 1;
-          }
-          renderDetails(); // Re-render to show/hide appropriate fields
-          window.dispatchEvent(new Event('pf-refresh'));
-        });
-        
-        switchContainer.appendChild(milestoneSwitch);
-        switchContainer.appendChild(switchSlider);
-        milestoneLabel.appendChild(labelText);
-        milestoneLabel.appendChild(switchContainer);
-        milestoneWrap.appendChild(milestoneLabel);
-        panel.appendChild(milestoneWrap);
-        
+        availableItems.forEach(otherItem => { const option = document.createElement('option'); option.value = otherItem.id; option.textContent = otherItem.name; depSelect.appendChild(option); });
+        const addBtn = document.createElement('button'); addBtn.type = 'button'; addBtn.className = 'icon'; addBtn.innerHTML = '<span class="material-icons">add</span>';
+        addBtn.disabled = true;
+        depSelect.addEventListener('change', () => { addBtn.disabled = !depSelect.value; });
+        addBtn.addEventListener('click', () => { if (depSelect.value){ window.WhatIfDeliveredModel.linkDependency(state, item.id, depSelect.value); window.dispatchEvent(new Event('pf-refresh')); renderDetails(); }});
+        addDepWrap.appendChild(depSelect); addDepWrap.appendChild(addBtn); deps.appendChild(addDepWrap);
+        panel.appendChild(deps);
+
+        // More: Description (collapsed)
+        const more = document.createElement('details'); more.className = 'details-collapse';
+        const sum = document.createElement('summary'); sum.textContent = 'Description'; more.appendChild(sum);
+        const descWrap = document.createElement('div'); descWrap.className = 'details-field';
+        const descTextarea = document.createElement('textarea'); descTextarea.value = item.description || ''; descTextarea.rows = 4; descTextarea.addEventListener('input', () => { item.description = descTextarea.value; window.dispatchEvent(new Event('pf-refresh')); });
+        descWrap.appendChild(descTextarea); more.appendChild(descWrap); panel.appendChild(more);
       }
       if (sel.type === 'scenario'){
         const s = state.scenarios.find(x => x.id === sel.id); if (!s) return;
         panel.appendChild(field('Scenario Name', s.name, (v)=>{ s.name=v; renderHierarchy(); window.dispatchEvent(new Event('pf-refresh')); }));
-        
-        // Description field with textarea
         const descWrap = document.createElement('div'); descWrap.className = 'details-field';
         const descLabel = document.createElement('label'); descLabel.textContent = 'Description'; descWrap.appendChild(descLabel);
         const descTextarea = document.createElement('textarea'); 
@@ -759,11 +687,10 @@ window.WhatIfDeliveredUI = (function() {
         descTextarea.addEventListener('input', () => { s.description = descTextarea.value; window.dispatchEvent(new Event('pf-refresh')); });
         descWrap.appendChild(descTextarea);
         panel.appendChild(descWrap);
-        // Calculate scenario length from its initiatives
-        const data = s.data;
-        if (data.initiatives.length > 0) {
-          const start = data.initiatives.reduce((min, i) => i.start < min ? i.start : min, data.initiatives[0].start);
-          const end = data.initiatives.reduce((max, i) => i.end > max ? i.end : max, data.initiatives[0].end);
+        const dataS = s.data;
+        if (dataS.initiatives.length > 0) {
+          const start = dataS.initiatives.reduce((min, i) => i.start < min ? i.start : min, dataS.initiatives[0].start);
+          const end = dataS.initiatives.reduce((max, i) => i.end > max ? i.end : max, dataS.initiatives[0].end);
           const length = Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000));
           panel.appendChild(field('Length (days)', length, ()=>{}, 'number', true));
         }
@@ -1146,7 +1073,18 @@ window.WhatIfDeliveredUI = (function() {
     setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 
-  return { createUI, pickFile, saveFile };
+  // Tiny toast helper
+  function showToast(message) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = message;
+    container.appendChild(t);
+    setTimeout(() => { t.remove(); }, 2000);
+  }
+
+  return { createUI, pickFile, saveFile, showToast };
 })();
 
 

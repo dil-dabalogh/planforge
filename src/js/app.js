@@ -54,6 +54,7 @@
     const activeScenario = state.scenarios.find(s => s.id === state.activeScenarioId);
     const defaultFilename = activeScenario ? `whatifdelivered-${activeScenario.name.replace(/[^a-zA-Z0-9]/g, '_')}.json` : 'whatifdelivered.json';
     window.WhatIfDeliveredUI.saveFile(json, defaultFilename, 'application/json');
+    if (window.WhatIfDeliveredUI.showToast) window.WhatIfDeliveredUI.showToast('All scenarios exported');
   });
   
   ui.onImportJSON(async () => {
@@ -84,6 +85,7 @@
       const activeScenario = state.scenarios.find(s => s.id === state.activeScenarioId);
       const defaultFilename = activeScenario ? `scenario-${activeScenario.name.replace(/[^a-zA-Z0-9]/g, '_')}.json` : 'scenario.json';
       window.WhatIfDeliveredUI.saveFile(scenarioJson, defaultFilename, 'application/json');
+      if (window.WhatIfDeliveredUI.showToast) window.WhatIfDeliveredUI.showToast('Active scenario exported');
     } catch (error) {
       alert('Error exporting scenario: ' + error.message);
     }
@@ -93,6 +95,7 @@
     try {
       const mermaidCode = ui.generateMermaidGantt(state);
       ui.showMermaidDialog(mermaidCode);
+      if (window.WhatIfDeliveredUI.showToast) window.WhatIfDeliveredUI.showToast('Mermaid code generated');
     } catch (error) {
       alert('Error generating MermaidJS: ' + error.message);
     }
