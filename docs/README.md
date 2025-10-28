@@ -1,4 +1,4 @@
-# PlanForge MVP
+# What If Delivered MVP
 
 A lightweight project planning tool for visualizing initiatives, dependencies, and resource allocation with interactive timeline management.
 

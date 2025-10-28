@@ -1,7 +1,7 @@
 {
   "name": "planforge",
   "version": "1.0.0",
-  "description": "PlanForge - Project Planning and JIRA Integration Tool",
+  "description": "What If Delivered - Project Planning and JIRA Integration Tool",
   "main": "src/index.html",
   "scripts": {
     "start": "npx http-server src -p 8080 -o",
@@ -21,7 +21,7 @@
     "timeline",
     "gantt"
   ],
-  "author": "PlanForge Team",
+  "author": "What If Delivered Team",
   "license": "MIT",
   "dependencies": {
     "concurrently": "^8.2.2",

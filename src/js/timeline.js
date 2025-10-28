@@ -1,4 +1,4 @@
-window.PlanForgeTimeline = (function() {
+window.WhatIfDeliveredTimeline = (function() {
   // Helper function to get CSS custom properties
   function getCSSVar(name) {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -33,8 +33,8 @@ window.PlanForgeTimeline = (function() {
     
     // Timeline configuration
     let timelineConfig = {
-      start: window.PlanForgeModel.addDays(window.PlanForgeModel.today(), -180), // 6 months ago
-      end: window.PlanForgeModel.addDays(window.PlanForgeModel.today(), 180), // 6 months from now
+      start: window.WhatIfDeliveredModel.addDays(window.WhatIfDeliveredModel.today(), -180), // 6 months ago
+      end: window.WhatIfDeliveredModel.addDays(window.WhatIfDeliveredModel.today(), 180), // 6 months from now
       zoomLevel: 2 // 0=Year, 1=Quarter, 2=Month, 3=Week, 4=Day
     };
 
@@ -181,7 +181,7 @@ window.PlanForgeTimeline = (function() {
 
     function renderTodayIndicator() {
       const { width, height } = canvas;
-      const today = window.PlanForgeModel.today();
+      const today = window.WhatIfDeliveredModel.today();
       const timelineStart = new Date(timelineConfig.start + 'T00:00:00Z');
       const timelineEnd = new Date(timelineConfig.end + 'T00:00:00Z');
       
@@ -449,7 +449,7 @@ window.PlanForgeTimeline = (function() {
         let isSelected = false;
         if (state.selection) {
           if (state.selection.type === 'initiative') {
-            const data = window.PlanForgeModel.getActiveData(state);
+            const data = window.WhatIfDeliveredModel.getActiveData(state);
             const selectedItem = data.initiatives.find(i => i.id === state.selection.id);
             isSelected = selectedItem && selectedItem.id === item.id;
           } else if (state.selection.type === 'scenario') {
@@ -819,7 +819,7 @@ window.PlanForgeTimeline = (function() {
           dragging = { id: hit.id, mode: 'move', offsetX: px - hit.x1, startDateAtDown: scenario ? scenario.data.initiatives.reduce((min, i) => i.start < min ? i.start : min, scenario.data.initiatives[0].start) : hit.startDateAtDown, endDateAtDown: scenario ? scenario.data.initiatives.reduce((max, i) => i.end > max ? i.end : max, scenario.data.initiatives[0].end) : hit.endDateAtDown, appliedDelta: 0, isScenario: true };
           emitSelect({ type: 'scenario', id: hit.id });
         } else {
-          const data = window.PlanForgeModel.getActiveData(state);
+          const data = window.WhatIfDeliveredModel.getActiveData(state);
           const item = data.initiatives.find(i => i.id === hit.id);
           dragging = { id: hit.id, mode: hit.mode, offsetX: px - hit.x1, startDateAtDown: item.start, endDateAtDown: item.end, appliedDelta: 0, isScenario: false };
           emitSelect({ type: 'initiative', id: hit.id });
@@ -852,8 +852,8 @@ window.PlanForgeTimeline = (function() {
         if (incremental !== 0) {
           // Move all initiatives in this scenario
           scenario.data.initiatives.forEach(initiative => {
-            const newInitiativeStart = window.PlanForgeModel.addDays(initiative.start, incremental);
-            const newInitiativeEnd = window.PlanForgeModel.addDays(initiative.end, incremental);
+            const newInitiativeStart = window.WhatIfDeliveredModel.addDays(initiative.start, incremental);
+            const newInitiativeEnd = window.WhatIfDeliveredModel.addDays(initiative.end, incremental);
             initiative.start = newInitiativeStart;
             initiative.end = newInitiativeEnd;
             initiative.length = Math.max(1, Math.round((new Date(newInitiativeEnd) - new Date(newInitiativeStart)) / 86400000));
@@ -862,7 +862,7 @@ window.PlanForgeTimeline = (function() {
         }
       } else {
         // Regular initiative movement
-        const data = window.PlanForgeModel.getActiveData(state);
+        const data = window.WhatIfDeliveredModel.getActiveData(state);
         const item = data.initiatives.find(i => i.id === dragging.id);
         if (!item) return;
         
@@ -872,21 +872,21 @@ window.PlanForgeTimeline = (function() {
           const incremental = wantedDelta - dragging.appliedDelta;
           if (incremental !== 0) {
             // move subtree by incremental delta; model clamps as needed
-            const appliedInc = window.PlanForgeModel.moveSubtree(state, item.id, incremental);
+            const appliedInc = window.WhatIfDeliveredModel.moveSubtree(state, item.id, incremental);
             dragging.appliedDelta += appliedInc;
             if (appliedInc !== incremental) {
               // adjust offset so pointer stays anchored to bar start after clamping
-              const correctedStart = window.PlanForgeModel.addDays(dragging.startDateAtDown, dragging.appliedDelta);
+              const correctedStart = window.WhatIfDeliveredModel.addDays(dragging.startDateAtDown, dragging.appliedDelta);
               const correctedX = dateToX(correctedStart);
               dragging.offsetX = constrainedPx - correctedX;
             }
           }
         } else if (dragging.mode === 'start') {
           const newStart = xToDate(constrainedPx);
-          window.PlanForgeModel.moveItem(state, item.id, { start: newStart, end: item.end });
+          window.WhatIfDeliveredModel.moveItem(state, item.id, { start: newStart, end: item.end });
         } else if (dragging.mode === 'end') {
           const newEnd = xToDate(constrainedPx);
-          window.PlanForgeModel.moveItem(state, item.id, { start: item.start, end: newEnd });
+          window.WhatIfDeliveredModel.moveItem(state, item.id, { start: item.start, end: newEnd });
         }
       }
       render();

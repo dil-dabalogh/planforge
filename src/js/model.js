@@ -1,4 +1,4 @@
-window.PlanForgeModel = (function() {
+window.WhatIfDeliveredModel = (function() {
   function today() { return new Date().toISOString().slice(0,10); }
   function addDays(isoDate, days) {
     const d = new Date(isoDate + 'T00:00:00Z');

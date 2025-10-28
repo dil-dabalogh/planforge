@@ -1,8 +1,8 @@
 /* Entry point: wires UI, storage, model, and timeline */
 (function() {
-  const state = window.PlanForgeModel.createInitialState();
-  const ui = window.PlanForgeUI.createUI(state);
-  const timeline = window.PlanForgeTimeline.create(state, document.getElementById('timeline-canvas'));
+  const state = window.WhatIfDeliveredModel.createInitialState();
+  const ui = window.WhatIfDeliveredUI.createUI(state);
+  const timeline = window.WhatIfDeliveredTimeline.create(state, document.getElementById('timeline-canvas'));
 
   function renderAll() {
     ui.renderHierarchy();
@@ -12,7 +12,7 @@
 
   // UI event bindings
   ui.onScenarioClone(() => {
-    window.PlanForgeModel.cloneActiveScenario(state);
+    window.WhatIfDeliveredModel.cloneActiveScenario(state);
     renderAll();
     window.dispatchEvent(new Event('pf-refresh'));
   });
@@ -21,7 +21,7 @@
   ui.onErase(() => {
     const confirmed = confirm('Are you sure you want to clear all data? This action cannot be undone.');
     if (confirmed) {
-      window.PlanForgeModel.clearAllData(state);
+      window.WhatIfDeliveredModel.clearAllData(state);
       renderAll();
       window.dispatchEvent(new Event('pf-refresh'));
     }
@@ -38,7 +38,7 @@
     
     // If selecting an initiative, expand tree to show it
     if (selection.type === 'initiative') {
-      window.PlanForgeModel.expandToShowItem(state, selection.id);
+      window.WhatIfDeliveredModel.expandToShowItem(state, selection.id);
     }
     
     ui.renderHierarchy(); // Update sidebar highlighting
@@ -50,14 +50,14 @@
 
   // Import/Export
   ui.onExportJSON(() => {
-    const json = window.PlanForgeStorage.serializeJSON(state);
+    const json = window.WhatIfDeliveredStorage.serializeJSON(state);
     const activeScenario = state.scenarios.find(s => s.id === state.activeScenarioId);
-    const defaultFilename = activeScenario ? `planforge-${activeScenario.name.replace(/[^a-zA-Z0-9]/g, '_')}.json` : 'planforge.json';
-    window.PlanForgeUI.saveFile(json, defaultFilename, 'application/json');
+    const defaultFilename = activeScenario ? `whatifdelivered-${activeScenario.name.replace(/[^a-zA-Z0-9]/g, '_')}.json` : 'whatifdelivered.json';
+    window.WhatIfDeliveredUI.saveFile(json, defaultFilename, 'application/json');
   });
   
   ui.onImportJSON(async () => {
-    const text = await window.PlanForgeUI.pickFile(['.json','application/json']);
+    const text = await window.WhatIfDeliveredUI.pickFile(['.json','application/json']);
     if (!text) return;
     
     // Confirm overwrite if there's existing data
@@ -68,8 +68,8 @@
     }
     
     try {
-      const next = window.PlanForgeStorage.parseJSON(text);
-      window.PlanForgeModel.loadState(state, next);
+      const next = window.WhatIfDeliveredStorage.parseJSON(text);
+      window.WhatIfDeliveredModel.loadState(state, next);
       renderAll();
       timeline.zoomToContent(); // Fit to content after importing
       window.dispatchEvent(new Event('pf-refresh'));
@@ -80,10 +80,10 @@
   
   ui.onExportScenario(() => {
     try {
-      const scenarioJson = window.PlanForgeStorage.serializeActiveScenario(state);
+      const scenarioJson = window.WhatIfDeliveredStorage.serializeActiveScenario(state);
       const activeScenario = state.scenarios.find(s => s.id === state.activeScenarioId);
       const defaultFilename = activeScenario ? `scenario-${activeScenario.name.replace(/[^a-zA-Z0-9]/g, '_')}.json` : 'scenario.json';
-      window.PlanForgeUI.saveFile(scenarioJson, defaultFilename, 'application/json');
+      window.WhatIfDeliveredUI.saveFile(scenarioJson, defaultFilename, 'application/json');
     } catch (error) {
       alert('Error exporting scenario: ' + error.message);
     }
@@ -136,8 +136,8 @@
       if (embeddedDemo) {
         console.log('Found embedded demo data');
         const text = embeddedDemo.textContent;
-        const next = window.PlanForgeStorage.parseJSON(text);
-        window.PlanForgeModel.loadState(state, next);
+        const next = window.WhatIfDeliveredStorage.parseJSON(text);
+        window.WhatIfDeliveredModel.loadState(state, next);
         console.log('Demo data loaded successfully from embedded content');
         renderAll();
         timeline.zoomToContent(); // Fit to content after loading
@@ -164,8 +164,8 @@
       
       if (response && response.ok) {
         const text = await response.text();
-        const next = window.PlanForgeStorage.parseJSON(text);
-        window.PlanForgeModel.loadState(state, next);
+        const next = window.WhatIfDeliveredStorage.parseJSON(text);
+        window.WhatIfDeliveredModel.loadState(state, next);
         console.log('Demo data loaded successfully');
         renderAll();
         timeline.zoomToContent(); // Fit to content after loading
