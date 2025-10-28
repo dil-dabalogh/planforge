@@ -146,8 +146,8 @@ window.WhatIfDeliveredTimeline = (function() {
       ctx.fillStyle = colors.bg;
       ctx.fillRect(0,0,width,height);
       
-      // header background
-      ctx.fillStyle = colors.panel;
+      // header background - cleaner, lighter
+      ctx.fillStyle = '#faf7f5';
       ctx.fillRect(0, 0, width, layout.header);
       
       // left panel separator
@@ -164,12 +164,18 @@ window.WhatIfDeliveredTimeline = (function() {
       renderHeaderLabels();
       
       // Draw separator line between header and content
-      ctx.strokeStyle = '#999999';
+      ctx.strokeStyle = '#e6d2cc';
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(0, layout.header);
       ctx.lineTo(width, layout.header);
       ctx.stroke();
+      // Soft drop shadow under header
+      const shadowGrad = ctx.createLinearGradient(0, layout.header, 0, layout.header + 12);
+      shadowGrad.addColorStop(0, 'rgba(0,0,0,0.08)');
+      shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = shadowGrad;
+      ctx.fillRect(0, layout.header, width, 12);
       
       renderVerticalLines();
     }
@@ -180,7 +186,7 @@ window.WhatIfDeliveredTimeline = (function() {
       
       if (currentZoom.granularity === 'year') {
         // Major lines for years
-        ctx.strokeStyle = '#999999';
+        ctx.strokeStyle = '#e6d2cc';
         ctx.lineWidth = 1;
         const current = new Date(timelineConfig.start + 'T00:00:00Z');
         current.setUTCMonth(0, 1);
@@ -196,7 +202,7 @@ window.WhatIfDeliveredTimeline = (function() {
         }
       } else if (currentZoom.granularity === 'quarter') {
         // Major lines for quarters
-        ctx.strokeStyle = '#999999';
+        ctx.strokeStyle = '#e6d2cc';
         ctx.lineWidth = 1;
         const current = new Date(timelineConfig.start + 'T00:00:00Z');
         const quarterStart = Math.floor(current.getUTCMonth() / 3) * 3;
@@ -229,7 +235,7 @@ window.WhatIfDeliveredTimeline = (function() {
         }
       } else if (currentZoom.granularity === 'week') {
         // Major lines for weeks
-        ctx.strokeStyle = '#d0d0d0';
+        ctx.strokeStyle = '#efe1dc';
         ctx.lineWidth = 1;
         const current = new Date(timelineConfig.start + 'T00:00:00Z');
         const dayOfWeek = current.getUTCDay();
@@ -325,8 +331,8 @@ window.WhatIfDeliveredTimeline = (function() {
     }
 
     function renderYearLabels(start, end, width) {
-      const yearFont = 'bold 16px system-ui';
-      const yearColor = '#4a4a4a';
+      const yearFont = 'bold 17px system-ui';
+      const yearColor = colors.text;
       const bgColor = '#f5f5f5';
       
       ctx.font = yearFont;
@@ -431,8 +437,8 @@ window.WhatIfDeliveredTimeline = (function() {
         current.setUTCMonth(current.getUTCMonth() + 1);
       }
       
-      ctx.fillStyle = '#5a5a5a';
-      ctx.font = '600 12px system-ui';
+      ctx.fillStyle = colors.text;
+      ctx.font = '600 13px system-ui';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
       
@@ -532,6 +538,8 @@ window.WhatIfDeliveredTimeline = (function() {
       let dayIndex = 0;
       const currentBg = new Date(start);
       const pixelWidth = getPixelsPerUnit() / getDaysPerUnit();
+      // Determine label density based on available pixels per day
+      const labelStep = pixelWidth >= 28 ? 1 : pixelWidth >= 18 ? 2 : pixelWidth >= 12 ? 3 : pixelWidth >= 8 ? 5 : 7;
       
       while (currentBg <= end) {
         const x = dateToX(currentBg.toISOString().slice(0,10));
@@ -564,20 +572,26 @@ window.WhatIfDeliveredTimeline = (function() {
           const dayOfWeek = current.getUTCDay();
           const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
           
-          // Draw day number
-          ctx.fillStyle = isWeekend ? '#999999' : '#4a4a4a';
-          ctx.font = 'bold 12px system-ui';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(day.toString(), x, 78);
+          // Draw day number (skip some to reduce clutter)
+          if (dayIndex % labelStep === 0) {
+            ctx.fillStyle = isWeekend ? '#999999' : '#4a4a4a';
+            ctx.font = 'bold 12px system-ui';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(day.toString(), x, 78);
+          }
           
-          // Draw day of week label (Mon, Tue, etc.) at the top
-          ctx.fillStyle = '#7a7a7a';
-          ctx.font = '500 9px system-ui';
-          const dayName = current.toLocaleDateString('en', { weekday: 'short' });
-          ctx.fillText(dayName, x, 71);
+          // Draw day of week label occasionally (or on Mondays) for readability
+          const showDayName = (dayOfWeek === 1 && pixelWidth >= 10) || (dayIndex % (labelStep * 2) === 0 && pixelWidth >= 16);
+          if (showDayName) {
+            ctx.fillStyle = '#7a7a7a';
+            ctx.font = '500 9px system-ui';
+            const dayName = current.toLocaleDateString('en', { weekday: 'short' });
+            ctx.fillText(dayName, x, 71);
+          }
         }
         current.setUTCDate(current.getUTCDate() + 1);
+        dayIndex++;
       }
       
       ctx.textAlign = 'left';
