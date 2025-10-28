@@ -163,6 +163,7 @@ window.WhatIfDeliveredUI = (function() {
       container.appendChild(scWrap);
       state.scenarios.forEach(s => {
         const row = document.createElement('div'); row.className = 'tree-item';
+        row.setAttribute('data-type', 'scenario');
         if (s.id === state.activeScenarioId) {
           row.style.backgroundColor = getCSSVar('--color-selection-bg');
           row.style.borderColor = colors.primary;
@@ -335,6 +336,12 @@ window.WhatIfDeliveredUI = (function() {
       top.forEach(i => container.appendChild(row(i, 0)));
       function row(item, depth){
         const d = document.createElement('div'); d.className = 'tree-item';
+        // Add data-type attribute for styling
+        if (item.isMilestone) {
+          d.setAttribute('data-type', 'milestone');
+        } else if (item.level) {
+          d.setAttribute('data-type', item.level.toLowerCase());
+        }
         
         // Check if this item is currently selected (active element)
         let isSelected = false;
@@ -351,9 +358,11 @@ window.WhatIfDeliveredUI = (function() {
         
         // Apply highlighting for selected element
         if (isSelected) {
-          d.style.backgroundColor = getCSSVar('--color-selection-bg');
+          d.style.backgroundColor = 'linear-gradient(to bottom, rgba(217, 89, 89, 0.18), rgba(217, 89, 89, 0.12))';
           d.style.borderColor = colors.primary;
           d.style.borderWidth = '2px';
+          d.style.boxShadow = '0 2px 8px rgba(217, 89, 89, 0.15)';
+          d.style.background = 'linear-gradient(to bottom, rgba(217, 89, 89, 0.12), rgba(217, 89, 89, 0.08))';
         }
         
         const left = document.createElement('div'); left.style.paddingLeft = (depth*12)+'px'; left.className = 'link'; left.style.display = 'flex'; left.style.alignItems = 'center'; left.style.gap = '6px';
