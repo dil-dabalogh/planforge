@@ -327,6 +327,50 @@ window.WhatIfDeliveredModel = (function() {
     state.scenarios = state.scenarios.filter(s => s.id !== scenarioId);
   }
 
+  // Move and/or reparent an initiative within the same scenario.
+  // newParentId can be null to move to root level. SiblingOrder: insertBeforeId optional.
+  function moveInitiativeWithinScenario(state, movedId, newParentId, insertBeforeId = null) {
+    const data = getActiveData(state);
+    const items = data.initiatives;
+    const movedIndex = items.findIndex(i => i.id === movedId);
+    if (movedIndex < 0) return false;
+    const moved = items[movedIndex];
+    if (moved.scenarioId !== state.activeScenarioId) return false;
+    // validate parent
+    if (newParentId) {
+      const p = items.find(i => i.id === newParentId);
+      if (!p || p.scenarioId !== state.activeScenarioId) return false;
+      if (p.level === 'Story') return false; // cannot add children under Story
+      // prevent cycles
+      let cur = newParentId;
+      while (cur) {
+        if (cur === movedId) return false;
+        const next = items.find(i => i.id === cur)?.parentId || null;
+        cur = next;
+      }
+    }
+    if (insertBeforeId === movedId) insertBeforeId = null;
+    // remove from current position
+    items.splice(movedIndex, 1);
+    moved.parentId = newParentId || null;
+    // compute target insert index
+    let targetIndex = -1;
+    if (insertBeforeId) {
+      targetIndex = items.findIndex(i => i.id === insertBeforeId);
+    }
+    if (targetIndex < 0) {
+      // append to end of the sibling group within same scenario
+      let last = -1;
+      for (let idx = 0; idx < items.length; idx++) {
+        const it = items[idx];
+        if (it.scenarioId === state.activeScenarioId && ((it.parentId || null) === (moved.parentId || null))) last = idx;
+      }
+      targetIndex = last >= 0 ? last + 1 : items.length;
+    }
+    items.splice(targetIndex, 0, moved);
+    return true;
+  }
+
   function loadState(state, next) {
     state.scenarios = next.scenarios;
     state.activeScenarioId = next.activeScenarioId;
@@ -380,7 +424,8 @@ window.WhatIfDeliveredModel = (function() {
     addInitiative, linkDependency, unlinkDependency, moveItem, moveSubtree, deleteInitiative, deleteScenario,
     loadState, seedDemo, clearAllData,
     toggleExpanded, isExpanded, expandToShowItem,
-    getLevelName, updateLevelName, resetLevelNames
+    getLevelName, updateLevelName, resetLevelNames,
+    moveInitiativeWithinScenario
   };
 })();
 

@@ -42,9 +42,9 @@ window.WhatIfDeliveredTimeline = (function() {
     const zoomLevels = [
       { name: 'Year', granularity: 'year', pixelsPerUnit: 200, daysPerUnit: 365 },
       { name: 'Quarter', granularity: 'quarter', pixelsPerUnit: 150, daysPerUnit: 90 },
-      { name: 'Month', granularity: 'month', pixelsPerUnit: 100, daysPerUnit: 30 },
-      { name: 'Week', granularity: 'week', pixelsPerUnit: 80, daysPerUnit: 7 },
-      { name: 'Day', granularity: 'day', pixelsPerUnit: 40, daysPerUnit: 1 }
+      { name: 'Month', granularity: 'month', pixelsPerUnit: 120, daysPerUnit: 30 },
+      { name: 'Week', granularity: 'week', pixelsPerUnit: 90, daysPerUnit: 7 },
+      { name: 'Day', granularity: 'day', pixelsPerUnit: 50, daysPerUnit: 1 }
     ];
 
     function resizeCanvas() {
@@ -158,10 +158,8 @@ window.WhatIfDeliveredTimeline = (function() {
       ctx.lineTo(layout.leftPad, height); 
       ctx.stroke();
       
-      // Draw today indicator line
+      // Draw today indicator line (background layer)
       renderTodayIndicator();
-      
-      renderHeaderLabels();
       
       // Draw separator line between header and content
       ctx.strokeStyle = '#e6d2cc';
@@ -303,8 +301,17 @@ window.WhatIfDeliveredTimeline = (function() {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       
-      // Render hierarchical time labels based on zoom level
+      // Period label (big, left-aligned)
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = '#3a2f2f';
+      ctx.font = '600 18px system-ui';
       const currentZoom = getCurrentZoomLevel();
+      const periodText = getPeriodLabel(timelineStart, timelineEnd, currentZoom.granularity);
+      ctx.fillText(periodText, 8, 6);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // Render hierarchical time labels based on zoom level
       
       // Always show years (top level)
       renderYearLabels(timelineStart, timelineEnd, width);
@@ -327,6 +334,29 @@ window.WhatIfDeliveredTimeline = (function() {
       // Show days if zoomed in enough
       if (timelineConfig.zoomLevel >= 4) {
         renderDayLabels(timelineStart, timelineEnd, width);
+      }
+    }
+
+    function getPeriodLabel(start, end, granularity) {
+      const monthName = (d) => d.toLocaleDateString('en', { month: 'long' });
+      switch (granularity) {
+        case 'year':
+          return `${start.getUTCFullYear()}`;
+        case 'quarter': {
+          const q = Math.floor(start.getUTCMonth() / 3) + 1;
+          return `Q${q} ${start.getUTCFullYear()}`;
+        }
+        case 'month':
+          return `${monthName(start)} ${start.getUTCFullYear()}`;
+        case 'week': {
+          const weekStart = new Date(start);
+          const weekEnd = new Date(end);
+          return `Week ${getWeekNumber(weekStart)} · ${monthName(weekStart).slice(0,3)} ${weekStart.getUTCDate()}–${monthName(weekEnd).slice(0,3)} ${weekEnd.getUTCDate()}`;
+        }
+        case 'day':
+          return start.toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        default:
+          return '';
       }
     }
 
@@ -962,6 +992,8 @@ window.WhatIfDeliveredTimeline = (function() {
       renderDependencies();
       renderDragConstraints();
       updateZoomToContentButton();
+      // Draw header labels last to ensure they are always on top of chart
+      renderHeaderLabels();
     }
     
     function renderDragConstraints() {
@@ -1250,8 +1282,10 @@ window.WhatIfDeliveredTimeline = (function() {
         year: document.getElementById('zoom-year'),
         quarter: document.getElementById('zoom-quarter'),
         month: document.getElementById('zoom-month'),
+        week: document.getElementById('zoom-week'),
         day: document.getElementById('zoom-day')
       };
+      const todayBtn = document.getElementById('zoom-today');
       
       // Initialize with current config
       startInput.value = timelineConfig.start;
@@ -1273,8 +1307,11 @@ window.WhatIfDeliveredTimeline = (function() {
         render();
       });
       
+      // Snap slider to discrete zoom levels and align knob under active preset
       zoomSlider.addEventListener('input', (e) => {
-        timelineConfig.zoomLevel = parseInt(e.target.value);
+        const nearest = Math.round(parseFloat(e.target.value));
+        if (zoomSlider.value != nearest) zoomSlider.value = nearest;
+        timelineConfig.zoomLevel = nearest;
         ensureMinimumTimelineSpan();
         updateZoomLevelDisplay();
         updateZoomPresetButtons();
@@ -1308,6 +1345,14 @@ window.WhatIfDeliveredTimeline = (function() {
         updateZoomPresetButtons();
         render();
       });
+      zoomPresets.week.addEventListener('click', () => {
+        timelineConfig.zoomLevel = 3;
+        zoomSlider.value = 3;
+        ensureMinimumTimelineSpan();
+        updateZoomLevelDisplay();
+        updateZoomPresetButtons();
+        render();
+      });
       
       zoomPresets.day.addEventListener('click', () => {
         timelineConfig.zoomLevel = 4;
@@ -1325,12 +1370,46 @@ window.WhatIfDeliveredTimeline = (function() {
           zoomToContent();
         });
       }
+
+      if (todayBtn) {
+        todayBtn.addEventListener('click', () => centerOnDate(window.WhatIfDeliveredModel.today()));
+      }
+
+      // Keyboard shortcuts
+      window.addEventListener('keydown', (e) => {
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+        if (e.key === '1') zoomPresets.year.click();
+        if (e.key === '2') zoomPresets.quarter.click();
+        if (e.key === '3') zoomPresets.month.click();
+        if (e.key === '4') zoomPresets.week.click();
+        if (e.key === '5') zoomPresets.day.click();
+        if (e.key === 't' || e.key === 'T') todayBtn && todayBtn.click();
+        if (e.key === 'f' || e.key === 'F') document.getElementById('zoom-to-content')?.click();
+        if (e.key === '+') zoomSlider.stepUp();
+        if (e.key === '-') zoomSlider.stepDown();
+      });
     }
 
-    function updateZoomLevelDisplay() {
+      function updateZoomLevelDisplay() {
       const zoomLevelElement = document.getElementById('zoom-level');
       const currentZoom = getCurrentZoomLevel();
       zoomLevelElement.textContent = currentZoom.name;
+        // Align slider knob under the active preset by setting max and value
+        const slider = document.getElementById('zoom-slider');
+        if (slider) {
+          const maxIndex = zoomLevels.length - 1;
+          slider.max = String(maxIndex);
+          slider.step = '1';
+          slider.value = String(timelineConfig.zoomLevel);
+          // Match slider visual width to the combined width of presets
+          const presets = document.querySelector('.zoom-presets');
+          const container = document.querySelector('.zoom-slider-container');
+          if (presets && container) {
+            const rect = presets.getBoundingClientRect();
+            container.style.width = rect.width + 'px';
+            slider.style.width = '100%';
+          }
+        }
     }
 
     function updateZoomPresetButtons() {
@@ -1338,6 +1417,7 @@ window.WhatIfDeliveredTimeline = (function() {
         year: document.getElementById('zoom-year'),
         quarter: document.getElementById('zoom-quarter'),
         month: document.getElementById('zoom-month'),
+        week: document.getElementById('zoom-week'),
         day: document.getElementById('zoom-day')
       };
       
@@ -1356,10 +1436,29 @@ window.WhatIfDeliveredTimeline = (function() {
         case 'month':
           zoomPresets.month.classList.add('active');
           break;
+        case 'week':
+          zoomPresets.week.classList.add('active');
+          break;
         case 'day':
           zoomPresets.day.classList.add('active');
           break;
       }
+    }
+
+    function centerOnDate(iso) {
+      // choose a span around the given date based on current zoom
+      const gran = getCurrentZoomLevel().granularity;
+      let start = new Date(iso + 'T00:00:00Z');
+      let end = new Date(iso + 'T00:00:00Z');
+      if (gran === 'year') { start.setUTCMonth(0,1); end = new Date(start); end.setUTCFullYear(end.getUTCFullYear()+1); }
+      if (gran === 'quarter') { const q = Math.floor(start.getUTCMonth()/3)*3; start.setUTCMonth(q,1); end = new Date(start); end.setUTCMonth(end.getUTCMonth()+3); }
+      if (gran === 'month') { start.setUTCDate(1); end = new Date(start); end.setUTCMonth(end.getUTCMonth()+1); }
+      if (gran === 'week') { const dw = start.getUTCDay(); const dmon = dw===0?6:dw-1; start.setUTCDate(start.getUTCDate()-dmon); end = new Date(start); end.setUTCDate(end.getUTCDate()+7); }
+      if (gran === 'day') { end = new Date(start); end.setUTCDate(end.getUTCDate()+1); }
+      timelineConfig.start = start.toISOString().slice(0,10);
+      timelineConfig.end = end.toISOString().slice(0,10);
+      ensureMinimumTimelineSpan();
+      render();
     }
 
     function zoomToContent() {
