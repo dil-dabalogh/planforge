@@ -1,4 +1,4 @@
-window.PlanForgeStorage = (function() {
+window.WhatIfDeliveredStorage = (function() {
   function serializeJSON(state){
     return JSON.stringify({ scenarios: state.scenarios, activeScenarioId: state.activeScenarioId, levelNames: state.levelNames || null }, null, 2);
   }
@@ -13,14 +13,14 @@ window.PlanForgeStorage = (function() {
     const projectKey = activeScenario.name.replace(/[^A-Z0-9]/g, '').substring(0, 10) || 'SCENARIO';
     const now = new Date().toISOString();
     
-    // Map PlanForge levels to JIRA issue types
+    // Map What If Delivered levels to JIRA issue types
     const levelToIssueType = {
       'Initiative': 'Epic',
       'Epic': 'Story', 
       'Story': 'Task'
     };
     
-    // Map PlanForge sizes to JIRA priorities
+    // Map What If Delivered sizes to JIRA priorities
     const sizeToPriority = {
       'XS': 'Lowest',
       'S': 'Low', 
@@ -87,7 +87,7 @@ window.PlanForgeStorage = (function() {
         }
       ],
       exportDate: now,
-      exportedBy: 'PlanForge',
+      exportedBy: 'What If Delivered',
       version: '1.0'
     };
     

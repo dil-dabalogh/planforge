@@ -1,4 +1,4 @@
-# PlanForge MVP - Project Retrospective  
+# What If Delivered MVP - Project Retrospective  
 **Completed:** A lightweight SPA for visual capacity and initiative planning with drag‑and‑drop timeline, dependencies, resource management, and JSON/YAML export.
 
 ---

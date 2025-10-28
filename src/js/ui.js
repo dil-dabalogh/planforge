@@ -1,4 +1,4 @@
-window.PlanForgeUI = (function() {
+window.WhatIfDeliveredUI = (function() {
   // Helper function to get CSS custom properties
   function getCSSVar(name) {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -254,10 +254,10 @@ window.PlanForgeUI = (function() {
             },
             'divider',
             {
-              label: `Add ${window.PlanForgeModel.getLevelName(state, 'Initiative')}`,
+              label: `Add ${window.WhatIfDeliveredModel.getLevelName(state, 'Initiative')}`,
               icon: 'add',
               action: () => {
-                const id = window.PlanForgeModel.addInitiative(state, { name: 'New ' + window.PlanForgeModel.getLevelName(state, 'Initiative'), start: window.PlanForgeModel.today(), end: window.PlanForgeModel.addDays(window.PlanForgeModel.today(), 7), level: 'Initiative', size: 'M' });
+                const id = window.WhatIfDeliveredModel.addInitiative(state, { name: 'New ' + window.WhatIfDeliveredModel.getLevelName(state, 'Initiative'), start: window.WhatIfDeliveredModel.today(), end: window.WhatIfDeliveredModel.addDays(window.WhatIfDeliveredModel.today(), 7), level: 'Initiative', size: 'M' });
                 state.selection = { type: 'initiative', id };
                 renderHierarchy();
                 renderDetails();
@@ -270,8 +270,8 @@ window.PlanForgeUI = (function() {
               label: 'Add Milestone',
               icon: 'flag',
               action: () => {
-                const today = window.PlanForgeModel.today();
-                const id = window.PlanForgeModel.addInitiative(state, { name: 'New Milestone', start: today, end: today, level: 'Initiative', size: 'M', isMilestone: true });
+                const today = window.WhatIfDeliveredModel.today();
+                const id = window.WhatIfDeliveredModel.addInitiative(state, { name: 'New Milestone', start: today, end: today, level: 'Initiative', size: 'M', isMilestone: true });
                 state.selection = { type: 'initiative', id };
                 renderHierarchy();
                 renderDetails();
@@ -289,7 +289,7 @@ window.PlanForgeUI = (function() {
               icon: 'delete',
               action: () => {
                 try {
-                  window.PlanForgeModel.deleteScenario(state, s.id);
+                  window.WhatIfDeliveredModel.deleteScenario(state, s.id);
                   renderHierarchy();
                   renderDetails();
                   window.dispatchEvent(new Event('pf-refresh'));
@@ -330,7 +330,7 @@ window.PlanForgeUI = (function() {
         container.appendChild(row);
       });
       // initiatives
-      const data = window.PlanForgeModel.getActiveData(state);
+      const data = window.WhatIfDeliveredModel.getActiveData(state);
       const top = data.initiatives.filter(i => !i.parentId && i.scenarioId === state.activeScenarioId);
       top.forEach(i => container.appendChild(row(i, 0)));
       function row(item, depth){
@@ -340,7 +340,7 @@ window.PlanForgeUI = (function() {
         let isSelected = false;
         if (state.selection) {
           if (state.selection.type === 'initiative') {
-            const data = window.PlanForgeModel.getActiveData(state);
+            const data = window.WhatIfDeliveredModel.getActiveData(state);
             const selectedItem = data.initiatives.find(i => i.id === state.selection.id);
             isSelected = selectedItem && selectedItem.id === item.id;
           } else if (state.selection.type === 'scenario') {
@@ -374,13 +374,13 @@ window.PlanForgeUI = (function() {
           expandBtn.style.color = 'var(--muted)';
           expandBtn.style.fontSize = '16px';
           
-          const isExpanded = window.PlanForgeModel.isExpanded(state, item.id);
+          const isExpanded = window.WhatIfDeliveredModel.isExpanded(state, item.id);
           expandBtn.innerHTML = isExpanded ? '<span class="material-symbols-outlined">expand_circle_up</span>' : '<span class="material-symbols-outlined">expand_circle_down</span>';
           expandBtn.title = isExpanded ? 'Collapse' : 'Expand';
           
           expandBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            window.PlanForgeModel.toggleExpanded(state, item.id);
+            window.WhatIfDeliveredModel.toggleExpanded(state, item.id);
             renderHierarchy();
           });
           
@@ -419,12 +419,12 @@ window.PlanForgeUI = (function() {
           // Only show add child option for non-Story and non-Milestone items
           if (item.level !== 'Story' && !item.isMilestone) {
             const nextLevel = item.level === 'Initiative' ? 'Epic' : 'Story';
-            const nextLevelName = window.PlanForgeModel.getLevelName(state, nextLevel);
+            const nextLevelName = window.WhatIfDeliveredModel.getLevelName(state, nextLevel);
             items.push({
               label: `Add Child ${nextLevelName}`,
               icon: 'add',
               action: () => {
-                const id = window.PlanForgeModel.addInitiative(state, { name: 'New ' + nextLevelName, start: item.start, end: item.end, parentId: item.id, level: nextLevel, size: 'M' });
+                const id = window.WhatIfDeliveredModel.addInitiative(state, { name: 'New ' + nextLevelName, start: item.start, end: item.end, parentId: item.id, level: nextLevel, size: 'M' });
                 renderHierarchy();
                 window.dispatchEvent(new Event('pf-refresh'));
               },
@@ -436,7 +436,7 @@ window.PlanForgeUI = (function() {
             label: 'Delete',
             icon: 'remove',
             action: () => {
-              window.PlanForgeModel.deleteInitiative(state, item.id);
+              window.WhatIfDeliveredModel.deleteInitiative(state, item.id);
               renderHierarchy();
               renderDetails();
               window.dispatchEvent(new Event('pf-refresh'));
@@ -473,7 +473,7 @@ window.PlanForgeUI = (function() {
         const wrap = document.createElement('div'); wrap.appendChild(d);
         
         // Only render children if the item is expanded
-        const isExpanded = window.PlanForgeModel.isExpanded(state, item.id);
+        const isExpanded = window.WhatIfDeliveredModel.isExpanded(state, item.id);
         if (isExpanded) {
           const children = data.initiatives.filter(i => i.parentId === item.id);
           children.forEach(c => wrap.appendChild(row(c, depth+1)));
@@ -485,18 +485,18 @@ window.PlanForgeUI = (function() {
       const panel = el('details'); panel.innerHTML = '';
       const sel = state.selection; if (!sel) { panel.textContent = 'Select an item…'; return; }
       if (sel.type === 'initiative'){
-        const data = window.PlanForgeModel.getActiveData(state);
+        const data = window.WhatIfDeliveredModel.getActiveData(state);
         const item = data.initiatives.find(i => i.id === sel.id); if (!item) return;
         panel.appendChild(field('Name', item.name, (v)=>{ item.name=v; renderHierarchy(); window.dispatchEvent(new Event('pf-refresh')); }));
         
         if (item.isMilestone) {
           // Milestone: single target date
-          panel.appendChild(field('Target Date', item.start, (v)=>{ window.PlanForgeModel.moveItem(state, item.id, { start: v, end: v }); window.dispatchEvent(new Event('pf-refresh')); } ,'date'));
+          panel.appendChild(field('Target Date', item.start, (v)=>{ window.WhatIfDeliveredModel.moveItem(state, item.id, { start: v, end: v }); window.dispatchEvent(new Event('pf-refresh')); } ,'date'));
           panel.appendChild(field('Length (days)', '1', ()=>{}, 'number', true));
         } else {
           // Regular initiative: start and end dates
-          panel.appendChild(field('Start', item.start, (v)=>{ window.PlanForgeModel.moveItem(state, item.id, { start: v, end: item.end }); window.dispatchEvent(new Event('pf-refresh')); } ,'date'));
-          panel.appendChild(field('End', item.end, (v)=>{ window.PlanForgeModel.moveItem(state, item.id, { start: item.start, end: v }); window.dispatchEvent(new Event('pf-refresh')); } ,'date'));
+          panel.appendChild(field('Start', item.start, (v)=>{ window.WhatIfDeliveredModel.moveItem(state, item.id, { start: v, end: item.end }); window.dispatchEvent(new Event('pf-refresh')); } ,'date'));
+          panel.appendChild(field('End', item.end, (v)=>{ window.WhatIfDeliveredModel.moveItem(state, item.id, { start: item.start, end: v }); window.dispatchEvent(new Event('pf-refresh')); } ,'date'));
           panel.appendChild(field('Length (days)', item.length || '', ()=>{}, 'number', true));
         }
         
@@ -510,14 +510,14 @@ window.PlanForgeUI = (function() {
         sizeWrap.appendChild(sizeLabel); sizeWrap.appendChild(sizeSel); panel.appendChild(sizeWrap);
         // add child buttons (disabled for milestones)
         const nextLevel = item.level === 'Initiative' ? 'Epic' : item.level === 'Epic' ? 'Story' : null;
-        const nextLevelName = nextLevel ? window.PlanForgeModel.getLevelName(state, nextLevel) : null;
+        const nextLevelName = nextLevel ? window.WhatIfDeliveredModel.getLevelName(state, nextLevel) : null;
         const childWrap = document.createElement('div'); childWrap.className = 'details-field';
         const addChildBtn = document.createElement('button'); 
         addChildBtn.textContent = item.isMilestone ? 'Milestones cannot have children' : (nextLevel ? ('Add Child ' + nextLevelName) : 'No child level'); 
         addChildBtn.disabled = !nextLevel || item.isMilestone;
         addChildBtn.addEventListener('click', () => {
           if (!nextLevel || item.isMilestone) return;
-          const id = window.PlanForgeModel.addInitiative(state, { name: 'New ' + nextLevelName, start: item.start, end: item.end, parentId: item.id, level: nextLevel, size: 'M' });
+          const id = window.WhatIfDeliveredModel.addInitiative(state, { name: 'New ' + nextLevelName, start: item.start, end: item.end, parentId: item.id, level: nextLevel, size: 'M' });
           state.selection = { type: 'initiative', id };
           renderHierarchy(); renderDetails(); window.dispatchEvent(new Event('pf-refresh')); window.dispatchEvent(new Event('pf-selection-change'));
         });
@@ -537,7 +537,7 @@ window.PlanForgeUI = (function() {
             const depText = document.createElement('span'); depText.textContent = `${dep.fromId === item.id ? '→' : '←'} ${depItem ? depItem.name : 'Unknown'}`; depText.style.color = colors.highlight;
             const removeBtn = document.createElement('button'); removeBtn.innerHTML = '<span class="material-symbols-outlined">remove</span>'; removeBtn.title = 'Remove dependency'; removeBtn.style.width = '20px'; removeBtn.style.height = '20px'; removeBtn.style.fontSize = '12px';
             removeBtn.addEventListener('click', () => {
-              window.PlanForgeModel.unlinkDependency(state, dep.fromId, dep.toId);
+              window.WhatIfDeliveredModel.unlinkDependency(state, dep.fromId, dep.toId);
               window.dispatchEvent(new Event('pf-refresh'));
               renderDetails(); window.dispatchEvent(new Event('pf-refresh'));
             });
@@ -563,7 +563,7 @@ window.PlanForgeUI = (function() {
         const addDepBtn = document.createElement('button'); addDepBtn.textContent = 'Add Dependency'; addDepBtn.disabled = true;
         addDepBtn.addEventListener('click', () => {
           if (depSelect.value) {
-            window.PlanForgeModel.linkDependency(state, item.id, depSelect.value);
+            window.WhatIfDeliveredModel.linkDependency(state, item.id, depSelect.value);
             window.dispatchEvent(new Event('pf-refresh'));
             renderDetails(); window.dispatchEvent(new Event('pf-refresh'));
           }
@@ -678,11 +678,11 @@ window.PlanForgeUI = (function() {
       const infoContent = el('info-content');
       infoContent.innerHTML = `
         <div style="line-height: 1.8;">
-          <h2>About PlanForge</h2>
+          <h2>About What If Delivered</h2>
           <p>A free, open-source Project Planner with interactive Gantt chart editing capabilities.</p>
           
           <h3>Your Data Is Yours</h3>
-          <p>Zero tracking. Zero cookies. Zero servers. PlanForge works completely offline - just save the HTML file and use it without any internet connection. Your data never leaves your device.</p>
+          <p>Zero tracking. Zero cookies. Zero servers. What If Delivered works completely offline - just save the HTML file and use it without any internet connection. Your data never leaves your device.</p>
           
           <h3>Key Features</h3>
           <ul>
@@ -695,8 +695,8 @@ window.PlanForgeUI = (function() {
             <li><strong>Free & Open Source:</strong> No subscriptions, no hidden costs</li>
           </ul>
           
-          <h3>What Makes PlanForge Different?</h3>
-          <p><strong>Scenario Planning:</strong> Unlike other Gantt chart tools, PlanForge makes it easy to create and switch between multiple project scenarios. No need to juggle different files or struggle with version management.</p>
+          <h3>What Makes What If Delivered Different?</h3>
+          <p><strong>Scenario Planning:</strong> Unlike other Gantt chart tools, What If Delivered makes it easy to create and switch between multiple project scenarios. No need to juggle different files or struggle with version management.</p>
           
           <h3>Export Options</h3>
           <p>Export your project data to MermaidJS format for seamless integration into your markdown documentation, or export as JSON for easy import into JIRA and other project management platforms.</p>
@@ -740,9 +740,9 @@ window.PlanForgeUI = (function() {
       // Level configuration with order, color, and name
       const levels = [
         { depth: 1, color: '#b8b8d4', name: 'Scenario', canEdit: false },
-        { depth: 2, color: '#ff8f8f', name: window.PlanForgeModel.getLevelName(state, 'Initiative'), canEdit: true, key: 'Initiative' },
-        { depth: 3, color: '#b7a3e3', name: window.PlanForgeModel.getLevelName(state, 'Epic'), canEdit: true, key: 'Epic' },
-        { depth: 4, color: '#8ad4e8', name: window.PlanForgeModel.getLevelName(state, 'Story'), canEdit: true, key: 'Story' }
+        { depth: 2, color: '#ff8f8f', name: window.WhatIfDeliveredModel.getLevelName(state, 'Initiative'), canEdit: true, key: 'Initiative' },
+        { depth: 3, color: '#b7a3e3', name: window.WhatIfDeliveredModel.getLevelName(state, 'Epic'), canEdit: true, key: 'Epic' },
+        { depth: 4, color: '#8ad4e8', name: window.WhatIfDeliveredModel.getLevelName(state, 'Story'), canEdit: true, key: 'Story' }
       ];
       
       let html = '<div style="max-width: 600px;">';
@@ -771,7 +771,7 @@ window.PlanForgeUI = (function() {
         const levelKey = input.dataset.levelKey;
         input.addEventListener('change', (e) => {
           if (e.target.value.trim()) {
-            window.PlanForgeModel.updateLevelName(state, levelKey, e.target.value);
+            window.WhatIfDeliveredModel.updateLevelName(state, levelKey, e.target.value);
             // Refresh the UI
             renderHierarchy();
             renderDetails();
@@ -785,7 +785,7 @@ window.PlanForgeUI = (function() {
       if (resetBtn) {
         resetBtn.addEventListener('click', () => {
           if (confirm('Reset all level names to default values?')) {
-            window.PlanForgeModel.resetLevelNames(state);
+            window.WhatIfDeliveredModel.resetLevelNames(state);
             renderHierarchy();
             renderDetails();
             window.dispatchEvent(new Event('pf-refresh'));
@@ -814,7 +814,7 @@ window.PlanForgeUI = (function() {
 
 
     function generateMermaidGantt(state) {
-      const data = window.PlanForgeModel.getActiveData(state);
+      const data = window.WhatIfDeliveredModel.getActiveData(state);
       const activeScenario = state.scenarios.find(s => s.id === state.activeScenarioId);
       
       if (!data.initiatives.length) {
@@ -866,7 +866,7 @@ window.PlanForgeUI = (function() {
       Object.keys(initiativesByLevel).forEach(level => {
         const levelInitiatives = initiativesByLevel[level];
         if (levelInitiatives.length > 0) {
-          const levelName = window.PlanForgeModel.getLevelName(state, level);
+          const levelName = window.WhatIfDeliveredModel.getLevelName(state, level);
           mermaid += `    section ${levelName}s\n`;
           levelInitiatives.forEach(initiative => {
             // Get the safe name from our map

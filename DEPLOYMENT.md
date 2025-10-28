@@ -1,6 +1,6 @@
-# PlanForge Deployment Guide
+# What If Delivered Deployment Guide
 
-This guide covers multiple deployment options for PlanForge, from local distribution to cloud hosting.
+This guide covers multiple deployment options for What If Delivered, from local distribution to cloud hosting.
 
 ## Quick Start
 

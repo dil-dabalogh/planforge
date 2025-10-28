@@ -1,4 +1,4 @@
-# SEO Improvements for PlanForge
+# SEO Improvements for What If Delivered
 
 ## Summary of Changes
 
@@ -6,7 +6,7 @@
 
 **Added comprehensive SEO meta tags:**
 
-- **Optimized Title**: Changed from "PlanForge MVP" to "PlanForge - Free Gantt Chart Editor | Offline Project Planner with MermaidJS Export"
+- **Optimized Title**: Changed from "What If Delivered MVP" to "What If Delivered - Free Gantt Chart Editor | Offline Project Planner with MermaidJS Export"
   - Includes primary keywords: gantt chart, offline project planner, MermaidJS export
   - Character count: ~68 (optimal for SEO)
 
@@ -26,14 +26,14 @@
 - **Canonical URL**: Added to prevent duplicate content issues
 
 - **Schema.org Structured Data**: Added JSON-LD markup
-  - Defines PlanForge as WebApplication
+  - Defines What If Delivered as WebApplication
   - Includes: features, pricing (free), creator, license
   - Helps Google understand what the application does
 
 ### 2. Updated README.md
 
 - Added compelling description emphasizing key differentiators
-- Updated title to "PlanForge - Free Gantt Chart Editor"
+- Updated title to "What If Delivered - Free Gantt Chart Editor"
 - Added tagline: "Free, open-source Gantt chart editor for project planning"
 - Better positioning for GitHub page ranking
 
