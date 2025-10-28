@@ -158,7 +158,7 @@ window.WhatIfDeliveredUI = (function() {
       const container = el('hierarchy-tree'); container.innerHTML = '';
       // scenarios header
       const scWrap = document.createElement('div'); scWrap.className = 'tree-item';
-      const scLeft = document.createElement('div'); scLeft.textContent = 'Scenarios'; scLeft.style.fontWeight = '600';
+      const scLeft = document.createElement('div'); scLeft.textContent = 'Scenarios'; scLeft.style.fontWeight = '500';
       scWrap.appendChild(scLeft); scWrap.appendChild(document.createElement('div'));
       container.appendChild(scWrap);
       state.scenarios.forEach(s => {
@@ -169,9 +169,9 @@ window.WhatIfDeliveredUI = (function() {
           row.style.borderColor = colors.primary;
           row.style.borderWidth = '2px';
         }
-        const left = document.createElement('div'); left.style.paddingLeft = '12px'; left.style.display = 'flex'; left.style.alignItems = 'center'; left.style.gap = '8px';
+        const left = document.createElement('div'); left.style.paddingLeft = '4px'; left.style.display = 'flex'; left.style.alignItems = 'center'; left.style.gap = '6px';
         
-        // Add visibility indicator
+        // Add visibility indicator (clickable)
         const visibilityIndicator = document.createElement('span'); 
         visibilityIndicator.innerHTML = s.visible ? '<span class="material-icons">visibility</span>' : '<span class="material-icons">visibility_off</span>'; 
         visibilityIndicator.style.fontSize = '18px'; 
@@ -179,9 +179,29 @@ window.WhatIfDeliveredUI = (function() {
         visibilityIndicator.style.display = 'flex'; 
         visibilityIndicator.style.alignItems = 'center'; 
         visibilityIndicator.style.justifyContent = 'center';
+        visibilityIndicator.style.cursor = 'pointer';
+        visibilityIndicator.style.padding = '2px';
+        visibilityIndicator.style.borderRadius = '4px';
+        visibilityIndicator.style.transition = 'background-color 0.2s ease';
+        
+        // Make it clickable to toggle visibility
+        visibilityIndicator.addEventListener('click', (e) => {
+          e.stopPropagation();
+          s.visible = !s.visible;
+          renderHierarchy();
+          window.dispatchEvent(new Event('pf-refresh'));
+        });
+        
+        // Add hover effect
+        visibilityIndicator.addEventListener('mouseenter', () => {
+          visibilityIndicator.style.backgroundColor = 'rgba(217, 89, 89, 0.1)';
+        });
+        visibilityIndicator.addEventListener('mouseleave', () => {
+          visibilityIndicator.style.backgroundColor = 'transparent';
+        });
         
         const name = document.createElement('span'); name.textContent = s.name; name.className = 'link';
-        if (s.id === state.activeScenarioId) { name.style.color = colors.primary; name.style.fontWeight = '600'; }
+        if (s.id === state.activeScenarioId) { name.style.color = colors.primary; name.style.fontWeight = '500'; }
         
         // Check if this is the active scenario for button states
         const isActiveScenario = s.id === state.activeScenarioId;
@@ -384,7 +404,7 @@ window.WhatIfDeliveredUI = (function() {
           expandBtn.style.fontSize = '16px';
           
           const isExpanded = window.WhatIfDeliveredModel.isExpanded(state, item.id);
-          expandBtn.innerHTML = isExpanded ? '<span class="material-symbols-outlined">expand_circle_up</span>' : '<span class="material-symbols-outlined">expand_circle_down</span>';
+          expandBtn.innerHTML = isExpanded ? '<span class="material-icons">remove_circle</span>' : '<span class="material-icons">add_circle</span>';
           expandBtn.title = isExpanded ? 'Collapse' : 'Expand';
           
           expandBtn.addEventListener('click', (e) => {
@@ -544,7 +564,30 @@ window.WhatIfDeliveredUI = (function() {
             const depRow = document.createElement('div'); depRow.style.display = 'flex'; depRow.style.alignItems = 'center'; depRow.style.justifyContent = 'space-between'; depRow.style.padding = '4px 0'; depRow.style.borderBottom = `1px solid ${getCSSVar('--color-grid')}`;
             const depItem = data.initiatives.find(i => i.id === (dep.fromId === item.id ? dep.toId : dep.fromId));
             const depText = document.createElement('span'); depText.textContent = `${dep.fromId === item.id ? '→' : '←'} ${depItem ? depItem.name : 'Unknown'}`; depText.style.color = colors.highlight;
-            const removeBtn = document.createElement('button'); removeBtn.innerHTML = '<span class="material-symbols-outlined">remove</span>'; removeBtn.title = 'Remove dependency'; removeBtn.style.width = '20px'; removeBtn.style.height = '20px'; removeBtn.style.fontSize = '12px';
+            const removeBtn = document.createElement('button'); 
+            removeBtn.innerHTML = '<span class="material-icons">remove</span>'; 
+            removeBtn.title = 'Remove dependency'; 
+            removeBtn.style.width = '24px'; 
+            removeBtn.style.height = '24px'; 
+            removeBtn.style.display = 'flex';
+            removeBtn.style.alignItems = 'center';
+            removeBtn.style.justifyContent = 'center';
+            removeBtn.style.background = 'none';
+            removeBtn.style.border = '1px solid ' + colors.border;
+            removeBtn.style.borderRadius = '4px';
+            removeBtn.style.cursor = 'pointer';
+            removeBtn.style.color = colors.danger;
+            removeBtn.style.fontSize = '16px';
+            removeBtn.style.padding = '2px';
+            removeBtn.style.transition = 'all 0.2s ease';
+            removeBtn.addEventListener('mouseenter', () => {
+              removeBtn.style.background = colors.selectionBg;
+              removeBtn.style.borderColor = colors.danger;
+            });
+            removeBtn.addEventListener('mouseleave', () => {
+              removeBtn.style.background = 'none';
+              removeBtn.style.borderColor = colors.border;
+            });
             removeBtn.addEventListener('click', () => {
               window.WhatIfDeliveredModel.unlinkDependency(state, dep.fromId, dep.toId);
               window.dispatchEvent(new Event('pf-refresh'));

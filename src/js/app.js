@@ -99,28 +99,63 @@
   });
 
 
+  // Left sidebar toggle functionality
+  const appMain = document.querySelector('.app-main');
+  const leftSidebar = document.getElementById('left-sidebar');
+  const leftToggleButton = document.getElementById('toggle-left-panel');
+  const leftToggleIcon = leftToggleButton.querySelector('.material-icons');
+  
+  let isLeftSidebarCollapsed = false;
+  
+  leftToggleButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    isLeftSidebarCollapsed = !isLeftSidebarCollapsed;
+    
+    if (isLeftSidebarCollapsed) {
+      leftSidebar.classList.add('collapsed');
+      appMain.classList.add('left-sidebar-collapsed');
+      leftToggleIcon.textContent = 'chevron_right'; // Point right to expand
+      leftToggleButton.title = 'Expand Hierarchy Panel';
+    } else {
+      leftSidebar.classList.remove('collapsed');
+      appMain.classList.remove('left-sidebar-collapsed');
+      leftToggleIcon.textContent = 'chevron_left'; // Point left to collapse
+      leftToggleButton.title = 'Collapse Hierarchy Panel';
+    }
+    // Re-render timeline after panel toggle
+    setTimeout(() => {
+      timeline.render();
+      renderAll();
+    }, 100);
+  });
+
   // Right sidebar toggle functionality
   const rightSidebar = document.getElementById('right-sidebar');
-  const toggleButton = document.getElementById('toggle-right-panel');
-  const toggleIcon = toggleButton.querySelector('.material-symbols-outlined');
-  const appMain = document.querySelector('.app-main');
+  const rightToggleButton = document.getElementById('toggle-right-panel');
+  const rightToggleIcon = rightToggleButton.querySelector('.material-icons');
   
   let isRightSidebarCollapsed = false;
   
-  toggleButton.addEventListener('click', () => {
+  rightToggleButton.addEventListener('click', (e) => {
+    e.stopPropagation();
     isRightSidebarCollapsed = !isRightSidebarCollapsed;
     
     if (isRightSidebarCollapsed) {
       rightSidebar.classList.add('collapsed');
       appMain.classList.add('right-sidebar-collapsed');
-      toggleIcon.textContent = 'keyboard_double_arrow_right';
-      toggleButton.title = 'Expand Details Panel';
+      rightToggleIcon.textContent = 'chevron_left'; // Point left to expand
+      rightToggleButton.title = 'Expand Details Panel';
     } else {
       rightSidebar.classList.remove('collapsed');
       appMain.classList.remove('right-sidebar-collapsed');
-      toggleIcon.textContent = 'keyboard_double_arrow_left';
-      toggleButton.title = 'Collapse Details Panel';
+      rightToggleIcon.textContent = 'chevron_right'; // Point right to collapse
+      rightToggleButton.title = 'Collapse Details Panel';
     }
+    // Re-render timeline after panel toggle
+    setTimeout(() => {
+      timeline.render();
+      renderAll();
+    }, 100);
   });
 
   // Initial render

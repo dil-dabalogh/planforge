@@ -1,17 +1,3 @@
-/**
- * What If Delivered Color Palette System
- * 
- * This file defines the color palette using CSS custom properties for easy customization.
- * Colors are organized into two main groups:
- * 1. UI Colors - Used for interface elements, backgrounds, text, and controls
- * 2. Content Colors - Used for timeline content hierarchy (scenarios, initiatives, epics, stories, milestones)
- * 
- * To customize: Simply update the hex color values below while keeping the structure intact.
- */
-
-/**
- * Sigmar Font Face Declaration
- */
 @font-face {
   font-family: 'Sigmar';
   src: url('../assets/fonts/woff2/sigmar.ttf') format('truetype');
@@ -20,7 +6,41 @@
   font-display: swap;
 }
 
-/* Visually hidden for SEO purposes */
+:root {
+  --color-bg: #fff1cb;
+  --color-panel: #ffe3d6;
+  --color-surface: #ffffff;
+  --color-text: #2c1f1f;
+  --color-text-muted: #6b4e4e;
+  --color-text-light: #94a3b8;
+  --color-primary: #d95959;
+  --color-secondary: #fff1cb;
+  --color-accent: #c2e2fa;
+  --color-highlight: #b7a3e3;
+  --color-danger: #7a3e3e;
+  --color-border: #ffc4b8;
+  --color-grid: #ffc4b8;
+  --color-border-light: #fff;
+  --color-content-scenario: #b8b8d4;
+  --color-content-initiative: #d95959;
+  --color-content-milestone: #1e40af;
+  --color-content-epic: #b7a3e3;
+  --color-content-story: #8ad4e8;
+  --color-selection-bg: rgba(217, 89, 89, 0.15);
+  --color-hover-bg: rgba(217, 89, 89, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: 'Sigmar', -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -33,76 +53,6 @@
   border-width: 0;
 }
 
-:root {
-  /* ========================================
-     UI COLOR PALETTE
-     Primary interface colors
-     ======================================== */
-  
-  /* Background Colors */
-  --color-bg: #fff1cb;                  /* Main background - cream */
-  --color-panel: #ffe3d6;                /* Panel/sidebar background - warm cream */
-  --color-surface: #ffffff;              /* Elevated surfaces (buttons, inputs) */
-  
-  /* Text Colors */
-  --color-text: #2c1f1f;                 /* Primary text */
-  --color-text-muted: #6b4e4e;           /* Secondary/muted text */
-  --color-text-light: #94a3b8;           /* Light/disabled text */
-  
-  /* UI Accent Colors */
-  --color-primary: #d95959;              /* Main accent - salmon (darkened for better contrast) */
-  --color-secondary: #fff1cb;             /* Secondary accent - cream */
-  --color-accent: #c2e2fa;               /* Accent highlight - light blue */
-  --color-highlight: #b7a3e3;            /* Highlight - lavender */
-  --color-danger: #7a3e3e;               /* Danger/warning - dark red-brown */
-  
-  /* Borders & Dividers */
-  --color-border: #ffc4b8;               /* Standard border */
-  --color-grid: #ffc4b8;                 /* Grid lines */
-  --color-border-light: #fff;            /* Light borders for contrast */
-  
-  /* ========================================
-     CONTENT COLOR PALETTE
-     Timeline content hierarchy colors
-     ======================================== */
-  
-  --color-content-scenario: #b8b8d4;     /* Scenarios - muted purple-grey */
-  --color-content-initiative: #d95959;    /* Initiatives - salmon (darkened for better contrast) */
-  --color-content-milestone: #ffd89b;    /* Milestones - warm gold */
-  --color-content-epic: #b7a3e3;         /* Epics - lavender */
-  --color-content-story: #8ad4e8;        /* Stories - light blue */
-  
-  /* ========================================
-     SEMANTIC COLORS
-     Used for specific UI states
-     ======================================== */
-  
-  --color-selection-bg: rgba(217, 89, 89, 0.15);  /* Selection background (darkened) */
-  --color-hover-bg: rgba(217, 89, 89, 0.08);       /* Hover state (darkened) */
-  
-  /* Legacy variable names for backward compatibility */
-  --bg: var(--color-bg);
-  --panel: var(--color-panel);
-  --text: var(--color-text);
-  --muted: var(--color-text-muted);
-  --primary: var(--color-primary);
-  --secondary: var(--color-secondary);
-  --accent: var(--color-accent);
-  --highlights: var(--color-highlight);
-  --danger: var(--color-danger);
-  --grid: var(--color-grid);
-}
-
-* { box-sizing: border-box; }
-
-html, body { height: 100%; }
-body {
-  margin: 0;
-  font-family: 'Sigmar', -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  color: var(--color-text);
-  background: var(--color-bg);
-}
-
 .app-header {
   height: 52px;
   display: flex;
@@ -111,9 +61,23 @@ body {
   background: var(--color-panel);
   border-bottom: 1px solid var(--color-border);
 }
-.brand { font-weight: 700; letter-spacing: 0.3px; }
-.toolbar { display: flex; gap: 8px; align-items: center; margin-left: 16px; width: 100%; }
-.toolbar .spacer { flex: 1; }
+
+.brand {
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: 16px;
+  width: 100%;
+}
+
+.toolbar .spacer {
+  flex: 1;
+}
 
 button, select, input[type="range"] {
   background: var(--color-surface);
@@ -122,16 +86,24 @@ button, select, input[type="range"] {
   border-radius: 6px;
   padding: 6px 10px;
 }
-button:hover { border-color: var(--color-primary); }
 
-/* Icon-only button styling (Info and Settings) */
+button:hover {
+  border-color: var(--color-primary);
+}
+
+button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
 .icon-only-button {
   padding: 6px;
   min-width: 32px;
-  width: 32px !important;
-  height: 32px !important;
-  min-height: 32px !important;
-  max-height: 32px !important;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -146,15 +118,6 @@ button:hover { border-color: var(--color-primary); }
   color: var(--color-danger);
 }
 
-/* Button styling */
-button {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-}
-
-/* Material Icons styling */
 .material-icons {
   font-family: 'Material Icons';
   font-weight: normal;
@@ -167,6 +130,7 @@ button {
   white-space: nowrap;
   word-wrap: normal;
   direction: ltr;
+  font-feature-settings: 'liga';
   -webkit-font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
 }
@@ -182,50 +146,97 @@ button {
   grid-template-columns: 280px 1fr 40px;
 }
 
+.app-main.left-sidebar-collapsed {
+  grid-template-columns: 40px 1fr 320px;
+}
+
+.app-main.left-sidebar-collapsed.right-sidebar-collapsed {
+  grid-template-columns: 40px 1fr 40px;
+}
+
 .sidebar {
   background: linear-gradient(135deg, #FDF7F5 0%, #faf8f7 100%);
+  background-image: 
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%),
+    linear-gradient(135deg, #FDF7F5 0%, #faf8f7 100%);
   border-right: 1px solid var(--color-border);
   overflow: auto;
   position: relative;
   transition: width 0.3s ease;
-  /* Add subtle texture */
-  background-image: 
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%),
-    linear-gradient(135deg, #FDF7F5 0%, #faf8f7 100%);
-}
-#right-sidebar { 
-  border-left: 1px solid var(--color-border); 
-  border-right: none; 
 }
 
-/* Collapsible sidebar styles */
+#right-sidebar {
+  border-left: 1px solid var(--color-border);
+  border-right: none;
+}
+
+#left-sidebar.collapsed,
+#right-sidebar.collapsed {
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent;
+  border: none;
+  width: 40px;
+}
+
+#left-sidebar.collapsed .sidebar-content,
 #right-sidebar.collapsed .sidebar-content {
+  display: none;
+}
+
+#left-sidebar.collapsed > *:not(.sidebar-toggle),
+#right-sidebar.collapsed > *:not(.sidebar-toggle) {
   display: none;
 }
 
 .sidebar-toggle {
   position: absolute;
-  top: 50%;
-  left: -20px;
-  transform: translateY(-50%);
+  bottom: 20px;
   z-index: 10;
 }
 
+#left-sidebar.collapsed .sidebar-toggle,
 #right-sidebar.collapsed .sidebar-toggle {
-  left: -20px;
+  display: block;
+}
+
+#left-sidebar .sidebar-toggle {
+  right: 10px;
+  left: auto;
+}
+
+#left-sidebar.collapsed .sidebar-toggle {
+  left: 4px;
+  right: auto;
+}
+
+#right-sidebar .sidebar-toggle {
+  left: 10px;
+  right: auto;
+}
+
+#right-sidebar.collapsed .sidebar-toggle {
+  right: 4px;
+  left: auto;
 }
 
 .sidebar-toggle button {
   background: var(--color-panel);
   border: 1px solid var(--color-border);
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  pointer-events: auto;
+  position: relative;
+  z-index: 100;
 }
 
 .sidebar-toggle button:hover {
@@ -234,7 +245,7 @@ button {
   color: var(--color-bg);
 }
 
-.sidebar-toggle button .material-symbols-outlined {
+.sidebar-toggle button .material-icons {
   font-size: 20px;
 }
 
@@ -244,9 +255,9 @@ button {
   overflow: auto;
 }
 
-.pane { 
-  padding: 16px; 
-  border-bottom: 1px solid var(--color-border); 
+.pane {
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .pane h2 {
@@ -258,37 +269,36 @@ button {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.pane h3 { 
-  margin: 0 0 12px; 
-  font-size: 13px; 
-  color: var(--color-text-muted); 
-  font-weight: 600; 
+.pane h3 {
+  margin: 0 0 12px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-size: 11px;
 }
 
-.tree, .list { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 8px; 
+.tree, .list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.workspace { 
-  position: relative; 
-  overflow: auto; 
+.workspace {
+  position: relative;
+  overflow: auto;
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
 .timeline-controls-bottom {
-  display: flex; 
-  justify-content: space-between; 
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 20px; 
-  padding: 12px 16px; 
-  border-top: 1px solid var(--color-border); 
+  gap: 20px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--color-border);
   background: var(--color-panel);
   flex-shrink: 0;
 }
@@ -359,7 +369,7 @@ button {
 
 .zoom-label {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
@@ -431,21 +441,28 @@ button {
   font-size: 18px;
 }
 
-#timeline-container { 
-  position: relative; 
-  width: 100%; 
+#timeline-container {
+  position: relative;
+  width: 100%;
   flex: 1;
   overflow: auto;
   min-height: 0;
 }
-#timeline-canvas { width: 100%; height: auto; min-height: 100%; display: block; background: var(--color-bg); }
 
-.tree-item, .resource-item {
+#timeline-canvas {
+  width: 100%;
+  height: auto;
+  min-height: 100%;
+  display: block;
+  background: var(--color-bg);
+}
+
+.tree-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 10px 40px 10px 12px;
   background: linear-gradient(to bottom, var(--color-surface), #fefefe);
   border: 1px solid rgba(217, 89, 89, 0.12);
   border-radius: 8px;
@@ -454,29 +471,28 @@ button {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.02);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  /* Add subtle glass morphism effect */
   backdrop-filter: blur(10px);
 }
 
-.tree-item:hover, .resource-item:hover {
+.tree-item:hover {
   background: linear-gradient(to bottom, #ffffff, #fafafa);
   border-color: rgba(217, 89, 89, 0.25);
   box-shadow: 0 4px 12px rgba(217, 89, 89, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
   transform: translateY(-1px);
 }
 
-/* Add active/selected state */
-.tree-item:active, .resource-item:active {
+.tree-item:active {
   transform: translateY(0);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
+
 .tree-item > div:first-child {
   flex: 1;
   min-width: 0;
   overflow: hidden;
+  padding-right: 8px;
 }
 
-/* Visual indicators for different item types */
 .tree-item[data-type="scenario"] {
   border-left: 4px solid var(--color-content-scenario);
   background: linear-gradient(to bottom, rgba(184, 184, 212, 0.06), var(--color-surface));
@@ -502,7 +518,6 @@ button {
   border-left: 4px solid var(--color-content-milestone);
 }
 
-/* Context menu indicator */
 .tree-item .context-menu-indicator {
   position: absolute;
   right: 8px;
@@ -528,15 +543,16 @@ button {
   pointer-events: auto;
   background: rgba(217, 89, 89, 0.12);
 }
-.tag { font-size: 11px; padding: 2px 6px; border-radius: 10px; border: 1px solid var(--color-border); color: var(--color-text-muted); }
-.row-actions { 
-  display: flex; 
-  gap: 4px; 
+
+.row-actions {
+  display: flex;
+  gap: 4px;
   flex-shrink: 0;
   align-items: center;
 }
-.row-actions button { 
-  padding: 2px 4px; 
+
+.row-actions button {
+  padding: 2px 4px;
   min-width: 24px;
   height: 24px;
   display: flex;
@@ -544,36 +560,44 @@ button {
   justify-content: center;
   flex-shrink: 0;
 }
+
 .row-actions button .material-symbols-outlined,
 .row-actions button .material-icons {
   font-size: 16px;
 }
 
-.pill {
-  padding: 3px 8px;
-  border-radius: 999px;
-  font-size: 11px;
-  border: 1px solid var(--color-border);
+.details-field {
+  margin-bottom: 8px;
 }
-.pill.engineer { background: rgba(255,143,143,0.12); color: var(--color-content-initiative); }
-.pill.qa { background: rgba(122,62,62,0.12); color: var(--color-danger); }
-.pill.pm { background: rgba(183,163,227,0.12); color: var(--color-content-epic); }
 
-.details-field { margin-bottom: 8px; }
-.details-field label { display: block; font-size: 12px; color: var(--color-text-muted); margin-bottom: 4px; }
-.details-field input, .details-field select { width: 100%; padding: 6px 8px; background: var(--color-panel); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 6px; }
+.details-field label {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
 
-.link { 
-  color: var(--color-text); 
-  cursor: pointer; 
+.details-field input,
+.details-field select {
+  width: 100%;
+  padding: 6px 8px;
+  background: var(--color-panel);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
+.link {
+  color: var(--color-text);
+  cursor: pointer;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.4;
   transition: color 0.15s ease;
 }
 
 .link span:last-child {
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-text);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -581,7 +605,6 @@ button {
   flex: 1;
 }
 
-/* Enhanced icon styling in tree items */
 .tree-item .material-symbols-outlined,
 .tree-item .material-icons {
   font-size: 18px;
@@ -594,7 +617,6 @@ button {
   opacity: 1;
 }
 
-/* Better expand/collapse button */
 .tree-item button {
   transition: all 0.2s ease;
   border-radius: 4px;
@@ -604,7 +626,6 @@ button {
   background: rgba(217, 89, 89, 0.08);
 }
 
-/* Dialog Styles */
 .dialog-overlay {
   position: fixed;
   top: 0;
@@ -712,7 +733,6 @@ button {
   background: #ff7474;
 }
 
-/* Material Design 3 Switch Component */
 .m3-switch {
   position: relative;
   display: inline-block;
@@ -776,7 +796,6 @@ button {
   background-color: #938f99;
 }
 
-/* Switch label styling */
 .m3-switch-label {
   display: flex;
   align-items: center;
@@ -802,7 +821,6 @@ button {
   user-select: none;
 }
 
-/* Context Menu Styles */
 .context-menu {
   position: fixed;
   display: none;
@@ -858,7 +876,6 @@ button {
   margin: 4px 0;
 }
 
-/* Info Dialog specific styling */
 .info-dialog-content {
   max-width: 600px;
 }
@@ -888,4 +905,3 @@ button {
 #info-content li {
   margin: 4px 0;
 }
-

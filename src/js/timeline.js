@@ -28,7 +28,7 @@ window.WhatIfDeliveredTimeline = (function() {
   
   function create(state, canvas) {
     const ctx = canvas.getContext('2d');
-    const layout = { rowHeight: 28, rowGap: 8, header: 60, leftPad: 120 };
+    const layout = { rowHeight: 28, rowGap: 6, header: 60, leftPad: 280 };
     const colors = getColors(); // Get cached colors
     
     // Timeline configuration
@@ -432,14 +432,55 @@ window.WhatIfDeliveredTimeline = (function() {
     function renderItems() {
       const rows = getRows();
       const barHeight = 18;
-      ctx.font = '12px system-ui';
+      ctx.font = '14px system-ui';
       rows.forEach(({ item, depth, scenarioId, isScenario }, idx) => {
         const y = layout.header + idx * (layout.rowHeight + layout.rowGap);
-          // row label - don't show text for milestones
-        if (!item.isMilestone) {
-          ctx.fillStyle = colors.text;
-          ctx.fillText(''.padStart(depth*2, ' ') + item.name, 8, y + 14);
+        
+        // Simplified approach: no glass boxes, just clean text with colored indicators
+        const startX = 60; // More left padding from canvas edge to avoid drawer overlap
+        
+        // Draw colored indent bar based on item type (matching timeline bar colors)
+        const levelColors = {
+          'Initiative': colors.initiative,      // Red
+          'Epic': colors.epic,                   // Lavender
+          'Story': colors.story,                 // Light blue
+          'Milestone': colors.milestone,        // Dark blue
+          'Scenario': colors.scenario            // Purple-grey
+        };
+        const itemColor = item.isMilestone ? colors.milestone : (levelColors[item.level] || colors.initiative);
+        ctx.fillStyle = itemColor + '40'; // More subtle transparency
+        const indentWidth = 3;
+        const indentX = startX + 20 + (depth * 20); // 20px padding before first indent
+        ctx.fillRect(indentX, y - 2, indentWidth, layout.rowHeight);
+        
+        // row label - show text for all items including milestones
+        // Set font for measuring
+        ctx.font = 'bold 14px system-ui';
+        ctx.textBaseline = 'middle';
+        const textY = y + layout.rowHeight / 2;
+        // Add extra padding for depth 0 to avoid cutoff
+        const textX = indentX + (depth === 0 ? 15 : 10);
+        
+        // Calculate available width for text (use most of the available space)
+        const maxTextWidth = layout.leftPad - textX - 20; // Only 20px padding on right
+        
+        // Measure and truncate text if needed
+        const fullText = item.name;
+        const textWidth = ctx.measureText(fullText).width;
+        let displayText = fullText;
+        
+        if (textWidth > maxTextWidth) {
+          // Truncate text to fit with ellipsis
+          let truncated = fullText;
+          while (ctx.measureText(truncated + '...').width > maxTextWidth && truncated.length > 0) {
+            truncated = truncated.slice(0, -1);
+          }
+          displayText = truncated + '...';
         }
+        
+        // Draw text with strong color
+        ctx.fillStyle = '#2c1f1f';
+        ctx.fillText(displayText, textX, textY);
         // bar
         const x1 = dateToX(item.start);
         const x2 = dateToX(item.end);
