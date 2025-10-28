@@ -148,6 +148,41 @@ window.WhatIfDeliveredUI = (function() {
     el('btn-export').addEventListener('click', showExportMenu);
     el('btn-export').addEventListener('contextmenu', showExportMenu);
     
+    // Wire up Share button with context menu
+    const showShareMenu = (e) => {
+      e.preventDefault();
+      const shareUrl = encodeURIComponent('https://planforge.cc/');
+      const shareText = encodeURIComponent('Check out WHAT IF delivered - A free, open-source Gantt chart editor that works completely offline!');
+      
+      const items = [
+        {
+          label: 'Share on Twitter',
+          icon: 'share',
+          action: () => {
+            window.open(`https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`, '_blank', 'width=550,height=420');
+          }
+        },
+        {
+          label: 'Share on Reddit',
+          icon: 'forum',
+          action: () => {
+            window.open(`https://www.reddit.com/submit?url=${shareUrl}&title=${shareText}`, '_blank', 'width=800,height=600');
+          }
+        },
+        {
+          label: 'Share on LinkedIn',
+          icon: 'work',
+          action: () => {
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`, '_blank', 'width=600,height=700');
+          }
+        }
+      ];
+      showContextMenu(e, items);
+    };
+    
+    el('btn-share').addEventListener('click', showShareMenu);
+    el('btn-share').addEventListener('contextmenu', showShareMenu);
+    
     // Wire up Info button
     el('btn-info').addEventListener('click', () => showInfoDialog());
     
@@ -529,7 +564,15 @@ window.WhatIfDeliveredUI = (function() {
           panel.appendChild(field('Length (days)', item.length || '', ()=>{}, 'number', true));
         }
         
-        panel.appendChild(field('Description', item.description||'', (v)=>{ item.description=v; window.dispatchEvent(new Event('pf-refresh')); }));
+        // Description field with textarea
+        const descWrap = document.createElement('div'); descWrap.className = 'details-field';
+        const descLabel = document.createElement('label'); descLabel.textContent = 'Description'; descWrap.appendChild(descLabel);
+        const descTextarea = document.createElement('textarea'); 
+        descTextarea.value = item.description || '';
+        descTextarea.rows = 4;
+        descTextarea.addEventListener('input', () => { item.description = descTextarea.value; window.dispatchEvent(new Event('pf-refresh')); });
+        descWrap.appendChild(descTextarea);
+        panel.appendChild(descWrap);
         // size dropdown
         const sizeWrap = document.createElement('div'); sizeWrap.className = 'details-field';
         const sizeLabel = document.createElement('label'); sizeLabel.textContent = 'T-Shirt Size';
@@ -663,7 +706,16 @@ window.WhatIfDeliveredUI = (function() {
       if (sel.type === 'scenario'){
         const s = state.scenarios.find(x => x.id === sel.id); if (!s) return;
         panel.appendChild(field('Scenario Name', s.name, (v)=>{ s.name=v; renderHierarchy(); window.dispatchEvent(new Event('pf-refresh')); }));
-        panel.appendChild(field('Description', s.description||'', (v)=>{ s.description=v; window.dispatchEvent(new Event('pf-refresh')); }));
+        
+        // Description field with textarea
+        const descWrap = document.createElement('div'); descWrap.className = 'details-field';
+        const descLabel = document.createElement('label'); descLabel.textContent = 'Description'; descWrap.appendChild(descLabel);
+        const descTextarea = document.createElement('textarea'); 
+        descTextarea.value = s.description || '';
+        descTextarea.rows = 4;
+        descTextarea.addEventListener('input', () => { s.description = descTextarea.value; window.dispatchEvent(new Event('pf-refresh')); });
+        descWrap.appendChild(descTextarea);
+        panel.appendChild(descWrap);
         // Calculate scenario length from its initiatives
         const data = s.data;
         if (data.initiatives.length > 0) {
@@ -730,11 +782,11 @@ window.WhatIfDeliveredUI = (function() {
       const infoContent = el('info-content');
       infoContent.innerHTML = `
         <div style="line-height: 1.8;">
-          <h2>About What If Delivered</h2>
+          <h2>About WHAT IF delivered</h2>
           <p>A free, open-source Project Planner with interactive Gantt chart editing capabilities.</p>
           
           <h3>Your Data Is Yours</h3>
-          <p>Zero tracking. Zero cookies. Zero servers. What If Delivered works completely offline - just save the HTML file and use it without any internet connection. Your data never leaves your device.</p>
+          <p>Zero tracking. Zero cookies. Zero servers. WHAT IF delivered works completely offline - just save the HTML file and use it without any internet connection. Your data never leaves your device.</p>
           
           <h3>Key Features</h3>
           <ul>
@@ -747,25 +799,42 @@ window.WhatIfDeliveredUI = (function() {
             <li><strong>Free & Open Source:</strong> No subscriptions, no hidden costs</li>
           </ul>
           
-          <h3>What Makes What If Delivered Different?</h3>
-          <p><strong>Scenario Planning:</strong> Unlike other Gantt chart tools, What If Delivered makes it easy to create and switch between multiple project scenarios. No need to juggle different files or struggle with version management.</p>
+          <h3>What Makes WHAT IF delivered Different?</h3>
+          <p><strong>Scenario Planning:</strong> Unlike other Gantt chart tools, WHAT IF delivered makes it easy to create and switch between multiple project scenarios. No need to juggle different files or struggle with version management.</p>
           
           <h3>Export Options</h3>
           <p>Export your project data to MermaidJS format for seamless integration into your markdown documentation, or export as JSON for easy import into JIRA and other project management platforms.</p>
           
-          <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-panel); display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
-            <a href="https://github.com/dil-dabalogh/planforge" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
-              <span class="material-symbols-outlined">code</span>
-              GitHub Repository
-            </a>
-            <a href="https://www.linkedin.com/in/cinegemadar/" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
-              <span class="material-symbols-outlined">person</span>
-              LinkedIn Profile
-            </a>
-            <a href="https://buymeacoffee.com/cinegemadar" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
-              <span class="material-symbols-outlined">favorite</span>
-              Buy Me a Coffee
-            </a>
+          <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-panel);">
+            <h4 style="margin-bottom: 1rem; font-size: 14px; color: var(--color-text-muted);">Share WHAT IF delivered</h4>
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.5rem;">
+              <a href="#" id="share-twitter" style="color: #1DA1F2; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; padding: 6px 12px; border: 1px solid var(--color-border); border-radius: 6px; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(29, 161, 242, 0.08)'" onmouseout="this.style.background='transparent'">
+                <span class="material-symbols-outlined">share</span>
+                Share on Twitter
+              </a>
+              <a href="#" id="share-reddit" style="color: #FF4500; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; padding: 6px 12px; border: 1px solid var(--color-border); border-radius: 6px; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(255, 69, 0, 0.08)'" onmouseout="this.style.background='transparent'">
+                <span class="material-symbols-outlined">forum</span>
+                Share on Reddit
+              </a>
+              <a href="#" id="share-linkedin" style="color: #0A66C2; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; padding: 6px 12px; border: 1px solid var(--color-border); border-radius: 6px; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(10, 102, 194, 0.08)'" onmouseout="this.style.background='transparent'">
+                <span class="material-symbols-outlined">work</span>
+                Share on LinkedIn
+              </a>
+            </div>
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--color-panel); display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
+              <a href="https://github.com/dil-dabalogh/planforge" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                <span class="material-symbols-outlined">code</span>
+                GitHub Repository
+              </a>
+              <a href="https://www.linkedin.com/in/cinegemadar/" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                <span class="material-symbols-outlined">person</span>
+                LinkedIn Profile
+              </a>
+              <a href="https://buymeacoffee.com/cinegemadar" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                <span class="material-symbols-outlined">favorite</span>
+                Buy Me a Coffee
+              </a>
+            </div>
           </div>
         </div>
       `;
@@ -782,6 +851,25 @@ window.WhatIfDeliveredUI = (function() {
         if (e.target === dialog) {
           dialog.style.display = 'none';
         }
+      });
+      
+      // Social share handlers
+      const shareUrl = encodeURIComponent('https://planforge.cc/');
+      const shareText = encodeURIComponent('Check out WHAT IF delivered - A free, open-source Gantt chart editor that works completely offline!');
+      
+      el('share-twitter').addEventListener('click', (e) => {
+        e.preventDefault();
+        window.open(`https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`, '_blank', 'width=550,height=420');
+      });
+      
+      el('share-reddit').addEventListener('click', (e) => {
+        e.preventDefault();
+        window.open(`https://www.reddit.com/submit?url=${shareUrl}&title=${shareText}`, '_blank', 'width=800,height=600');
+      });
+      
+      el('share-linkedin').addEventListener('click', (e) => {
+        e.preventDefault();
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`, '_blank', 'width=600,height=700');
       });
     }
 

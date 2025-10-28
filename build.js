@@ -6,7 +6,7 @@ const JavaScriptObfuscator = require('javascript-obfuscator');
 const CleanCSS = require('clean-css');
 
 /**
- * Build script for What If Delivered - Creates optimized single-file distribution
+ * Build script for WHAT IF delivered - Creates optimized single-file distribution
  * 
  * This script:
  * 1. Inlines all CSS and JS files
