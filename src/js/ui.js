@@ -423,6 +423,12 @@ window.WhatIfDeliveredUI = (function() {
         }
         
         const left = document.createElement('div'); left.style.paddingLeft = (depth*12)+'px'; left.className = 'link'; left.style.display = 'flex'; left.style.alignItems = 'center'; left.style.gap = '6px';
+        // Drag handle (six dots)
+        const dragHandle = document.createElement('span');
+        dragHandle.className = 'material-icons drag-handle';
+        dragHandle.title = 'Drag to move/reparent';
+        dragHandle.textContent = 'drag_indicator';
+        left.appendChild(dragHandle);
         
         // Add expand/collapse button if item has children
         const children = data.initiatives.filter(i => i.parentId === item.id);
@@ -538,6 +544,52 @@ window.WhatIfDeliveredUI = (function() {
           const items = createInitiativeMenuItems(e);
           showContextMenu(e, items);
         });
+
+        // Drag & Drop logic within scenario
+        let dragData = null;
+        dragHandle.draggable = true;
+        dragHandle.addEventListener('dragstart', (ev) => {
+          dragData = { id: item.id };
+          ev.dataTransfer.setData('text/plain', item.id);
+          ev.dataTransfer.effectAllowed = 'move';
+        });
+        d.addEventListener('dragover', (ev) => {
+          ev.preventDefault();
+          const rect = d.getBoundingClientRect();
+          const y = ev.clientY - rect.top;
+          const before = y < rect.height / 2; // top half: insert before; bottom half: insert after
+          d.classList.add('drop-target-highlight');
+          d.classList.toggle('drop-indicator-before', !ev.ctrlKey && !ev.shiftKey && !allowAsParent && before);
+          d.classList.toggle('drop-indicator-after', !ev.ctrlKey && !ev.shiftKey && !allowAsParent && !before);
+          ev.dataTransfer.dropEffect = 'move';
+        });
+        d.addEventListener('dragleave', () => { d.classList.remove('drop-target-highlight','drop-indicator-before','drop-indicator-after'); });
+        d.addEventListener('drop', (ev) => {
+          ev.preventDefault(); d.classList.remove('drop-target-highlight');
+          d.classList.remove('drop-indicator-before','drop-indicator-after');
+          const movedId = dragData ? dragData.id : ev.dataTransfer.getData('text/plain');
+          if (!movedId || movedId === item.id) return;
+          const moved = window.WhatIfDeliveredModel.getActiveData(state).initiatives.find(i => i.id === movedId);
+          if (!moved) return;
+          // only allow within same scenario
+          if (moved.scenarioId !== item.scenarioId) return;
+          // Decide target: half-split for precise before/after; full on parent when allowed with Ctrl key or default when over icon area
+          const rect = d.getBoundingClientRect();
+          const y = ev.clientY - rect.top;
+          const leftPad = 28; // drag handle/indent region
+          const isOverIndent = (ev.clientX - rect.left) < leftPad;
+          const insertBefore = y < rect.height / 2;
+          const allowAsParent = item.level !== 'Story' && !item.isMilestone;
+          let success = false;
+          if (allowAsParent && (ev.ctrlKey || ev.metaKey || isOverIndent)) {
+            // make child if modifier pressed or cursor over indent/handle zone
+            success = window.WhatIfDeliveredModel.moveInitiativeWithinScenario(state, movedId, item.id, null);
+          } else {
+            // reorder among siblings
+            success = window.WhatIfDeliveredModel.moveInitiativeWithinScenario(state, movedId, item.parentId, insertBefore ? item.id : null);
+          }
+          if (success) { renderHierarchy(); window.dispatchEvent(new Event('pf-refresh')); }
+        });
         
         d.appendChild(left);
         
@@ -618,10 +670,47 @@ window.WhatIfDeliveredUI = (function() {
           scheduleGrid.appendChild(field('Start', item.start, (v)=>{ window.WhatIfDeliveredModel.moveItem(state, item.id, { start: v, end: item.end }); window.dispatchEvent(new Event('pf-refresh')); }, 'date'));
           scheduleGrid.appendChild(field('End', item.end, (v)=>{ window.WhatIfDeliveredModel.moveItem(state, item.id, { start: item.start, end: v }); window.dispatchEvent(new Event('pf-refresh')); }, 'date'));
         }
-        const lengthPill = document.createElement('div'); lengthPill.className = 'pill'; lengthPill.textContent = (item.isMilestone ? '1 day' : ((item.length || 1) + ' days'));
         const lengthWrap = document.createElement('div'); lengthWrap.className = 'details-field';
         const lengthLabel = document.createElement('label'); lengthLabel.textContent = 'Length';
-        lengthWrap.appendChild(lengthLabel); lengthWrap.appendChild(lengthPill);
+        lengthWrap.appendChild(lengthLabel);
+        if (item.isMilestone) {
+          const pill = document.createElement('div'); pill.className = 'pill'; pill.textContent = '1 day';
+          lengthWrap.appendChild(pill);
+        } else {
+          const lengthInput = document.createElement('input'); lengthInput.type = 'text';
+          lengthInput.placeholder = 'e.g., 10, 3w, 2m';
+          // Display inclusive length (days) so entering N stays N
+          const currentLen = Math.max(1, Math.round((new Date(item.end) - new Date(item.start)) / 86400000) + 1);
+          lengthInput.value = String(currentLen);
+          const note = document.createElement('div'); note.style.fontSize = '11px'; note.style.color = getCSSVar('--color-text-muted');
+          note.textContent = 'Accepts days (10), weeks (3w), months (2m) — converts to days.';
+
+          function parseDays(val) {
+            if (!val) return null;
+            const m = String(val).trim().match(/^(\d+)\s*([wWdDmM]?)$/);
+            if (!m) return null;
+            const num = parseInt(m[1], 10);
+            const unit = (m[2] || 'd').toLowerCase();
+            if (num <= 0) return null;
+            if (unit === 'w') return num * 7;
+            if (unit === 'm') return num * 28; // 4 weeks per month
+            return num; // days
+          }
+
+          function applyLengthChange() {
+            const days = parseDays(lengthInput.value);
+            if (!days) { lengthInput.value = String(item.length || currentLen); return; }
+            const newEnd = window.WhatIfDeliveredModel.addDays(item.start, days - 1);
+            window.WhatIfDeliveredModel.moveItem(state, item.id, { start: item.start, end: newEnd });
+            window.dispatchEvent(new Event('pf-refresh'));
+            renderDetails();
+          }
+
+          lengthInput.addEventListener('change', applyLengthChange);
+          lengthInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyLengthChange(); });
+          lengthWrap.appendChild(lengthInput);
+          lengthWrap.appendChild(note);
+        }
         schedule.appendChild(scheduleGrid);
         schedule.appendChild(lengthWrap);
         panel.appendChild(schedule);

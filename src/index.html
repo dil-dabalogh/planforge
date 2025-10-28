@@ -118,21 +118,23 @@
           <canvas id="timeline-canvas"></canvas>
         </div>
         <div class="timeline-controls-bottom">
-          <div class="timeline-controls">
-            <label>Timeline Start
+            <div class="timeline-controls">
+              <label><span class="label-pill">Timeline Start</span>
               <input id="timeline-start" type="date" class="input" />
             </label>
-            <label>Timeline End
+              <label><span class="label-pill">Timeline End</span>
               <input id="timeline-end" type="date" class="input" />
             </label>
           </div>
           
           <div class="zoom-controls">
-            <div class="zoom-presets">
-              <button id="zoom-year" class="zoom-preset btn" title="Year View">Year</button>
-              <button id="zoom-quarter" class="zoom-preset btn" title="Quarter View">Quarter</button>
-              <button id="zoom-month" class="zoom-preset btn" title="Month View">Month</button>
-              <button id="zoom-day" class="zoom-preset btn" title="Day View">Day</button>
+            <div class="zoom-presets" role="tablist" aria-label="Zoom levels">
+              <button id="zoom-year" class="zoom-preset btn" role="tab" aria-selected="false" title="Year View">Year</button>
+              <button id="zoom-quarter" class="zoom-preset btn" role="tab" aria-selected="false" title="Quarter View">Quarter</button>
+              <button id="zoom-month" class="zoom-preset btn" role="tab" aria-selected="true" title="Month View">Month</button>
+              <button id="zoom-week" class="zoom-preset btn" role="tab" aria-selected="false" title="Week View">Week</button>
+              <button id="zoom-day" class="zoom-preset btn" role="tab" aria-selected="false" title="Day View">Day</button>
+              <button id="zoom-today" class="btn" title="Jump to today">Today</button>
             </div>
             <div class="zoom-slider-container">
               <label for="zoom-slider" class="zoom-label">Zoom:</label>
