@@ -933,28 +933,33 @@ window.WhatIfDeliveredUI = (function() {
             const endDate = new Date(initiative.end);
             const isSameDay = startDate.getTime() === endDate.getTime();
             
-            if (dependencies.length > 0) {
-              // Task has dependencies - use after syntax
-              const dependencyNames = dependencies.map(dep => {
-                const depName = initiativeIdMap.get(dep.fromId);
-                return depName || 'unknown';
-              });
-              
-              if (isSameDay) {
-                // Single day task with dependencies - use milestone syntax
-                mermaid += `        ${displayName} :milestone, ${safeName}, after ${dependencyNames.join(',')}, 0d\n`;
+            if (isSameDay) {
+              // Milestone (single day task)
+              if (dependencies.length > 0) {
+                // Milestones with dependencies can't use :milestone syntax in Mermaid
+                // Convert to a 1-day regular task with after syntax
+                // Use only the first dependency to avoid parsing errors
+                const firstDependencyName = initiativeIdMap.get(dependencies[0].fromId);
+                mermaid += `        ${displayName} :${safeName}, after ${firstDependencyName || 'unknown'}, 1d\n`;
               } else {
-                // Multi-day task with dependencies - use task syntax
-                const duration = Math.max(1, Math.round((endDate - startDate) / 86400000));
-                mermaid += `        ${displayName} :${safeName}, after ${dependencyNames.join(',')}, ${duration}d\n`;
+                // Milestone without dependencies - use milestone syntax
+                mermaid += `        ${displayName} :milestone, ${safeName}, ${initiative.start}, 0d\n`;
               }
             } else {
-              // Task has no dependencies - use original date-based syntax
-              if (isSameDay) {
-                // Single day task - use milestone syntax
-                mermaid += `        ${displayName} :milestone, ${safeName}, ${initiative.start}\n`;
+              // Multi-day task
+              if (dependencies.length > 0) {
+                // Task has dependencies - use after syntax
+                const dependencyNames = dependencies.map(dep => {
+                  const depName = initiativeIdMap.get(dep.fromId);
+                  return depName || 'unknown';
+                });
+                const duration = Math.max(1, Math.round((endDate - startDate) / 86400000));
+                
+                // Use only the first dependency to avoid Mermaid parsing errors
+                // with multiple dependencies
+                mermaid += `        ${displayName} :${safeName}, after ${dependencyNames[0]}, ${duration}d\n`;
               } else {
-                // Multi-day task - use task syntax
+                // Multi-day task without dependencies
                 mermaid += `        ${displayName} :${safeName}, ${initiative.start}, ${initiative.end}\n`;
               }
             }
