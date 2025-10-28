@@ -152,7 +152,7 @@ window.WhatIfDeliveredUI = (function() {
     const showShareMenu = (e) => {
       e.preventDefault();
       const shareUrl = encodeURIComponent('https://planforge.cc/');
-      const shareText = encodeURIComponent('Check out What If Delivered - A free, open-source Gantt chart editor that works completely offline!');
+      const shareText = encodeURIComponent('Check out WHAT IF delivered - A free, open-source Gantt chart editor that works completely offline!');
       
       const items = [
         {
@@ -782,11 +782,11 @@ window.WhatIfDeliveredUI = (function() {
       const infoContent = el('info-content');
       infoContent.innerHTML = `
         <div style="line-height: 1.8;">
-          <h2>About What If Delivered</h2>
+          <h2>About WHAT IF delivered</h2>
           <p>A free, open-source Project Planner with interactive Gantt chart editing capabilities.</p>
           
           <h3>Your Data Is Yours</h3>
-          <p>Zero tracking. Zero cookies. Zero servers. What If Delivered works completely offline - just save the HTML file and use it without any internet connection. Your data never leaves your device.</p>
+          <p>Zero tracking. Zero cookies. Zero servers. WHAT IF delivered works completely offline - just save the HTML file and use it without any internet connection. Your data never leaves your device.</p>
           
           <h3>Key Features</h3>
           <ul>
@@ -799,14 +799,14 @@ window.WhatIfDeliveredUI = (function() {
             <li><strong>Free & Open Source:</strong> No subscriptions, no hidden costs</li>
           </ul>
           
-          <h3>What Makes What If Delivered Different?</h3>
-          <p><strong>Scenario Planning:</strong> Unlike other Gantt chart tools, What If Delivered makes it easy to create and switch between multiple project scenarios. No need to juggle different files or struggle with version management.</p>
+          <h3>What Makes WHAT IF delivered Different?</h3>
+          <p><strong>Scenario Planning:</strong> Unlike other Gantt chart tools, WHAT IF delivered makes it easy to create and switch between multiple project scenarios. No need to juggle different files or struggle with version management.</p>
           
           <h3>Export Options</h3>
           <p>Export your project data to MermaidJS format for seamless integration into your markdown documentation, or export as JSON for easy import into JIRA and other project management platforms.</p>
           
           <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-panel);">
-            <h4 style="margin-bottom: 1rem; font-size: 14px; color: var(--color-text-muted);">Share What If Delivered</h4>
+            <h4 style="margin-bottom: 1rem; font-size: 14px; color: var(--color-text-muted);">Share WHAT IF delivered</h4>
             <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.5rem;">
               <a href="#" id="share-twitter" style="color: #1DA1F2; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; padding: 6px 12px; border: 1px solid var(--color-border); border-radius: 6px; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(29, 161, 242, 0.08)'" onmouseout="this.style.background='transparent'">
                 <span class="material-symbols-outlined">share</span>
@@ -855,7 +855,7 @@ window.WhatIfDeliveredUI = (function() {
       
       // Social share handlers
       const shareUrl = encodeURIComponent('https://planforge.cc/');
-      const shareText = encodeURIComponent('Check out What If Delivered - A free, open-source Gantt chart editor that works completely offline!');
+      const shareText = encodeURIComponent('Check out WHAT IF delivered - A free, open-source Gantt chart editor that works completely offline!');
       
       el('share-twitter').addEventListener('click', (e) => {
         e.preventDefault();

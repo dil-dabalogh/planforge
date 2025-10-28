@@ -13,14 +13,14 @@ window.WhatIfDeliveredStorage = (function() {
     const projectKey = activeScenario.name.replace(/[^A-Z0-9]/g, '').substring(0, 10) || 'SCENARIO';
     const now = new Date().toISOString();
     
-    // Map What If Delivered levels to JIRA issue types
+    // Map WHAT IF delivered levels to JIRA issue types
     const levelToIssueType = {
       'Initiative': 'Epic',
       'Epic': 'Story', 
       'Story': 'Task'
     };
     
-    // Map What If Delivered sizes to JIRA priorities
+    // Map WHAT IF delivered sizes to JIRA priorities
     const sizeToPriority = {
       'XS': 'Lowest',
       'S': 'Low', 
@@ -87,7 +87,7 @@ window.WhatIfDeliveredStorage = (function() {
         }
       ],
       exportDate: now,
-      exportedBy: 'What If Delivered',
+      exportedBy: 'WHAT IF delivered',
       version: '1.0'
     };
     
