@@ -3,7 +3,7 @@
     {
       "id": "scn_demo001",
       "name": "Comprehensive Demo - All Features",
-      "description": "This scenario demonstrates all What If Delivered functionality including hierarchy, dependencies, milestones, and different item sizes",
+      "description": "This scenario demonstrates all WHAT IF delivered functionality including hierarchy, dependencies, milestones, and different item sizes",
       "visible": true,
       "data": {
         "initiatives": [
