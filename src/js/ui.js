@@ -680,7 +680,7 @@ window.WhatIfDeliveredUI = (function() {
         if (disabled) {
           input.disabled = true;
           input.style.backgroundColor = colors.panel;
-          input.style.color = colors.accent;
+          input.style.color = colors.textMuted;
         } else {
           input.addEventListener('input', ()=>onChange(input.value));
         }

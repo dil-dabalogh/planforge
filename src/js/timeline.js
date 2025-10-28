@@ -28,7 +28,7 @@ window.WhatIfDeliveredTimeline = (function() {
   
   function create(state, canvas) {
     const ctx = canvas.getContext('2d');
-    const layout = { rowHeight: 28, rowGap: 6, header: 60, leftPad: 280 };
+    const layout = { rowHeight: 28, rowGap: 6, header: 65, leftPad: 280 };
     const colors = getColors(); // Get cached colors
     
     // Timeline configuration
@@ -146,28 +146,13 @@ window.WhatIfDeliveredTimeline = (function() {
       ctx.fillStyle = colors.bg;
       ctx.fillRect(0,0,width,height);
       
-      // Render timeline units based on granularity
-      const pixelsPerUnit = getPixelsPerUnit();
-      const timelineStart = new Date(timelineConfig.start + 'T00:00:00Z');
-      const timelineEnd = new Date(timelineConfig.end + 'T00:00:00Z');
-      
-      ctx.strokeStyle = colors.grid;
-      ctx.lineWidth = 1;
-      
-      // Draw vertical grid lines across the full canvas width
-      for (let x = layout.leftPad; x < width; x += pixelsPerUnit) {
-        ctx.beginPath(); 
-        ctx.moveTo(x, 0); 
-        ctx.lineTo(x, height); 
-        ctx.stroke();
-      }
-      
       // header background
       ctx.fillStyle = colors.panel;
       ctx.fillRect(0, 0, width, layout.header);
       
       // left panel separator
       ctx.strokeStyle = colors.grid;
+      ctx.lineWidth = 1;
       ctx.beginPath(); 
       ctx.moveTo(layout.leftPad, 0); 
       ctx.lineTo(layout.leftPad, height); 
@@ -177,6 +162,76 @@ window.WhatIfDeliveredTimeline = (function() {
       renderTodayIndicator();
       
       renderHeaderLabels();
+      
+      renderVerticalLines();
+    }
+    
+    function renderVerticalLines() {
+      const { width, height } = canvas;
+      const currentZoom = getCurrentZoomLevel();
+      
+      ctx.lineWidth = 1;
+      
+      if (currentZoom.granularity === 'year') {
+        ctx.strokeStyle = '#7a3e3e';
+        const current = new Date(timelineConfig.start + 'T00:00:00Z');
+        current.setUTCMonth(0, 1);
+        while (current <= new Date(timelineConfig.end + 'T00:00:00Z')) {
+          const x = dateToX(current.toISOString().slice(0,10));
+          if (x >= layout.leftPad && x <= width) {
+            ctx.beginPath();
+            ctx.moveTo(x, layout.header);
+            ctx.lineTo(x, height);
+            ctx.stroke();
+          }
+          current.setUTCFullYear(current.getUTCFullYear() + 1);
+        }
+      } else if (currentZoom.granularity === 'quarter') {
+        ctx.strokeStyle = '#d95959';
+        const current = new Date(timelineConfig.start + 'T00:00:00Z');
+        const quarterStart = Math.floor(current.getUTCMonth() / 3) * 3;
+        current.setUTCMonth(quarterStart, 1);
+        while (current <= new Date(timelineConfig.end + 'T00:00:00Z')) {
+          const x = dateToX(current.toISOString().slice(0,10));
+          if (x >= layout.leftPad && x <= width) {
+            ctx.beginPath();
+            ctx.moveTo(x, layout.header);
+            ctx.lineTo(x, height);
+            ctx.stroke();
+          }
+          current.setUTCMonth(current.getUTCMonth() + 3);
+        }
+      } else if (currentZoom.granularity === 'month') {
+        ctx.strokeStyle = '#b7a3e3';
+        const current = new Date(timelineConfig.start + 'T00:00:00Z');
+        current.setUTCDate(1);
+        while (current <= new Date(timelineConfig.end + 'T00:00:00Z')) {
+          const x = dateToX(current.toISOString().slice(0,10));
+          if (x >= layout.leftPad && x <= width) {
+            ctx.beginPath();
+            ctx.moveTo(x, layout.header);
+            ctx.lineTo(x, height);
+            ctx.stroke();
+          }
+          current.setUTCMonth(current.getUTCMonth() + 1);
+        }
+      } else if (currentZoom.granularity === 'week') {
+        ctx.strokeStyle = '#c2e2fa';
+        const current = new Date(timelineConfig.start + 'T00:00:00Z');
+        const dayOfWeek = current.getUTCDay();
+        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        current.setUTCDate(current.getUTCDate() - daysToMonday);
+        while (current <= new Date(timelineConfig.end + 'T00:00:00Z')) {
+          const x = dateToX(current.toISOString().slice(0,10));
+          if (x >= layout.leftPad && x <= width) {
+            ctx.beginPath();
+            ctx.moveTo(x, layout.header);
+            ctx.lineTo(x, height);
+            ctx.stroke();
+          }
+          current.setUTCDate(current.getUTCDate() + 7);
+        }
+      }
     }
 
     function renderTodayIndicator() {
@@ -199,10 +254,10 @@ window.WhatIfDeliveredTimeline = (function() {
         
         // Add a small "Today" label at the top
         ctx.fillStyle = '#ff8f8f';
-        ctx.font = 'bold 11px system-ui';
+        ctx.font = 'bold 10px system-ui';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('Today', todayX, 8);
+        ctx.fillText('Today', todayX, 10);
       }
     }
 
@@ -242,36 +297,27 @@ window.WhatIfDeliveredTimeline = (function() {
     }
 
     function renderYearLabels(start, end, width) {
-      ctx.fillStyle = colors.text;
-      ctx.font = 'bold 13px system-ui';
+      ctx.fillStyle = '#7a3e3e';
+      ctx.font = 'bold 15px system-ui';
       
       const current = new Date(start);
-      current.setUTCMonth(0, 1); // Start of year
+      current.setUTCMonth(0, 1);
       
       while (current <= end) {
         const x = dateToX(current.toISOString().slice(0,10));
         if (x >= layout.leftPad && x <= width) {
           const year = current.getUTCFullYear();
           ctx.fillText(year.toString(), x, 12);
-          
-          // Draw year separator line
-          ctx.strokeStyle = '#7a3e3e';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(x, 0);
-          ctx.lineTo(x, layout.header);
-          ctx.stroke();
         }
         current.setUTCFullYear(current.getUTCFullYear() + 1);
       }
     }
 
     function renderQuarterLabels(start, end, width) {
-      ctx.fillStyle = colors.textMuted;
-      ctx.font = '12px system-ui';
+      ctx.fillStyle = '#d95959';
+      ctx.font = 'bold 13px system-ui';
       
       const current = new Date(start);
-      // Align to quarter start
       const quarterStart = Math.floor(current.getUTCMonth() / 3) * 3;
       current.setUTCMonth(quarterStart, 1);
       
@@ -279,51 +325,34 @@ window.WhatIfDeliveredTimeline = (function() {
         const x = dateToX(current.toISOString().slice(0,10));
         if (x >= layout.leftPad && x <= width) {
           const quarter = Math.floor(current.getUTCMonth() / 3) + 1;
-          ctx.fillText(`Q${quarter}`, x, 25);
-          
-          // Draw quarter separator line
-          ctx.strokeStyle = colors.primary;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(x, 18);
-          ctx.lineTo(x, layout.header);
-          ctx.stroke();
+          ctx.fillText(`Q${quarter}`, x, 26);
         }
         current.setUTCMonth(current.getUTCMonth() + 3);
       }
     }
 
     function renderMonthLabels(start, end, width) {
-      ctx.fillStyle = colors.textMuted;
-      ctx.font = '11px system-ui';
+      ctx.fillStyle = '#b7a3e3';
+      ctx.font = 'bold 12px system-ui';
       
       const current = new Date(start);
-      current.setUTCDate(1); // Start of month
+      current.setUTCDate(1);
       
       while (current <= end) {
         const x = dateToX(current.toISOString().slice(0,10));
         if (x >= layout.leftPad && x <= width) {
           const monthName = current.toLocaleDateString('en', { month: 'short' });
           ctx.fillText(monthName, x, 38);
-          
-          // Draw month separator line
-          ctx.strokeStyle = colors.primary;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(x, 30);
-          ctx.lineTo(x, layout.header);
-          ctx.stroke();
         }
         current.setUTCMonth(current.getUTCMonth() + 1);
       }
     }
 
     function renderWeekLabels(start, end, width) {
-      ctx.fillStyle = colors.textMuted;
-      ctx.font = '10px system-ui';
+      ctx.fillStyle = '#c2e2fa';
+      ctx.font = 'bold 10px system-ui';
       
       const current = new Date(start);
-      // Align to week start (Monday)
       const dayOfWeek = current.getUTCDay();
       const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
       current.setUTCDate(current.getUTCDate() - daysToMonday);
@@ -332,23 +361,15 @@ window.WhatIfDeliveredTimeline = (function() {
         const x = dateToX(current.toISOString().slice(0,10));
         if (x >= layout.leftPad && x <= width) {
           const weekNum = getWeekNumber(current);
-          ctx.fillText(`W${weekNum}`, x, 51);
-          
-          // Draw week separator line
-          ctx.strokeStyle = colors.accent;
-          ctx.lineWidth = 0.5;
-          ctx.beginPath();
-          ctx.moveTo(x, 43);
-          ctx.lineTo(x, layout.header);
-          ctx.stroke();
+          ctx.fillText(`W${weekNum}`, x, 50);
         }
         current.setUTCDate(current.getUTCDate() + 7);
       }
     }
 
     function renderDayLabels(start, end, width) {
-      ctx.fillStyle = colors.textMuted;
-      ctx.font = '9px system-ui';
+      ctx.fillStyle = '#8ad4e8';
+      ctx.font = 'bold 10px system-ui';
       
       const current = new Date(start);
       
@@ -356,15 +377,7 @@ window.WhatIfDeliveredTimeline = (function() {
         const x = dateToX(current.toISOString().slice(0,10));
         if (x >= layout.leftPad && x <= width) {
           const day = current.getUTCDate();
-          ctx.fillText(day.toString(), x, 58);
-          
-          // Draw day separator line
-          ctx.strokeStyle = colors.grid;
-          ctx.lineWidth = 0.5;
-          ctx.beginPath();
-          ctx.moveTo(x, 50);
-          ctx.lineTo(x, layout.header);
-          ctx.stroke();
+          ctx.fillText(day.toString(), x, 57);
         }
         current.setUTCDate(current.getUTCDate() + 1);
       }
