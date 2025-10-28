@@ -153,7 +153,7 @@ window.WhatIfDeliveredUI = (function() {
     // Wire up Share button with context menu
     const showShareMenu = (e) => {
       e.preventDefault();
-      const shareUrl = encodeURIComponent('https://planforge.cc/');
+      const shareUrl = encodeURIComponent('https://whatifdelivered.com/');
       const shareText = encodeURIComponent('Check out WHAT IF delivered - A free, open-source Gantt chart editor that works completely offline!');
       
       const items = [
@@ -880,7 +880,7 @@ window.WhatIfDeliveredUI = (function() {
                 Share on LinkedIn
               </a>
             </div>
-            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--color-panel); display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
+          <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--color-panel); display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
               <a href="https://github.com/dil-dabalogh/planforge" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
                 <span class="material-symbols-outlined">code</span>
                 GitHub Repository
@@ -893,6 +893,10 @@ window.WhatIfDeliveredUI = (function() {
                 <span class="material-symbols-outlined">favorite</span>
                 Buy Me a Coffee
               </a>
+              <span style="color: var(--color-text-muted); display: flex; align-items: center; gap: 0.5rem;">
+                <span class="material-symbols-outlined">mail</span>
+                <a href="mailto:info@whatifdelivered.com" style="color: var(--color-text); text-decoration: none;">info@whatifdelivered.com</a>
+              </span>
             </div>
           </div>
         </div>
@@ -913,7 +917,7 @@ window.WhatIfDeliveredUI = (function() {
       });
       
       // Social share handlers
-      const shareUrl = encodeURIComponent('https://planforge.cc/');
+      const shareUrl = encodeURIComponent('https://whatifdelivered.com/');
       const shareText = encodeURIComponent('Check out WHAT IF delivered - A free, open-source Gantt chart editor that works completely offline!');
       
       el('share-twitter').addEventListener('click', (e) => {
