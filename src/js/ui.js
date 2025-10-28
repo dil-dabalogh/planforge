@@ -460,9 +460,28 @@ window.WhatIfDeliveredUI = (function() {
         // Milestone indicator removed - cleaner UI without diamond symbol
         
         // Add dependency indicator if this item has dependencies
-        const hasDeps = data.dependencies.some(d => d.fromId === item.id || d.toId === item.id);
-        if (hasDeps) {
-          const depIcon = document.createElement('span'); depIcon.textContent = '↗'; depIcon.title = 'Has dependencies'; depIcon.style.color = colors.highlight; depIcon.style.fontSize = '12px';
+        const hasOutgoing = data.dependencies.some(d => d.fromId === item.id);
+        const hasIncoming = data.dependencies.some(d => d.toId === item.id);
+        
+        if (hasOutgoing || hasIncoming) {
+          const depIcon = document.createElement('span');
+          depIcon.className = 'material-symbols-outlined';
+          depIcon.style.fontSize = '18px';
+          depIcon.style.color = colors.highlight;
+          depIcon.style.opacity = '0.8';
+          depIcon.style.marginRight = '4px';
+          
+          if (hasOutgoing && hasIncoming) {
+            depIcon.textContent = 'share';
+            depIcon.title = 'Has dependencies (both directions)';
+          } else if (hasOutgoing) {
+            depIcon.textContent = 'call_made';
+            depIcon.title = 'Depends on other items';
+          } else {
+            depIcon.textContent = 'call_received';
+            depIcon.title = 'Other items depend on this';
+          }
+          
           left.appendChild(depIcon);
         }
         
@@ -606,7 +625,31 @@ window.WhatIfDeliveredUI = (function() {
           existingDeps.forEach(dep => {
             const depRow = document.createElement('div'); depRow.style.display = 'flex'; depRow.style.alignItems = 'center'; depRow.style.justifyContent = 'space-between'; depRow.style.padding = '4px 0'; depRow.style.borderBottom = `1px solid ${getCSSVar('--color-grid')}`;
             const depItem = data.initiatives.find(i => i.id === (dep.fromId === item.id ? dep.toId : dep.fromId));
-            const depText = document.createElement('span'); depText.textContent = `${dep.fromId === item.id ? '→' : '←'} ${depItem ? depItem.name : 'Unknown'}`; depText.style.color = colors.highlight;
+            
+            // Create dependency text with elegant icon
+            const depText = document.createElement('span'); 
+            depText.style.color = colors.highlight;
+            depText.style.display = 'flex';
+            depText.style.alignItems = 'center';
+            depText.style.gap = '4px';
+            
+            // Add elegant icon
+            const depIcon = document.createElement('span');
+            depIcon.className = 'material-symbols-outlined';
+            depIcon.style.fontSize = '16px';
+            depIcon.style.opacity = '0.8';
+            
+            if (dep.fromId === item.id) {
+              depIcon.textContent = 'call_made';
+              depIcon.title = 'Depends on';
+              depText.appendChild(depIcon);
+              depText.appendChild(document.createTextNode(depItem ? depItem.name : 'Unknown'));
+            } else {
+              depIcon.textContent = 'call_received';
+              depIcon.title = 'Dependency source';
+              depText.appendChild(depIcon);
+              depText.appendChild(document.createTextNode(depItem ? depItem.name : 'Unknown'));
+            }
             const removeBtn = document.createElement('button'); 
             removeBtn.innerHTML = '<span class="material-icons">remove</span>'; 
             removeBtn.title = 'Remove dependency'; 
