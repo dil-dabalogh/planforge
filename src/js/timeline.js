@@ -28,7 +28,7 @@ window.WhatIfDeliveredTimeline = (function() {
   
   function create(state, canvas) {
     const ctx = canvas.getContext('2d');
-    const layout = { rowHeight: 28, rowGap: 6, header: 65, leftPad: 280 };
+    const layout = { rowHeight: 28, rowGap: 6, header: 88, leftPad: 280 };
     const colors = getColors(); // Get cached colors
     
     // Timeline configuration
@@ -163,6 +163,14 @@ window.WhatIfDeliveredTimeline = (function() {
       
       renderHeaderLabels();
       
+      // Draw separator line between header and content
+      ctx.strokeStyle = '#999999';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, layout.header);
+      ctx.lineTo(width, layout.header);
+      ctx.stroke();
+      
       renderVerticalLines();
     }
     
@@ -170,10 +178,10 @@ window.WhatIfDeliveredTimeline = (function() {
       const { width, height } = canvas;
       const currentZoom = getCurrentZoomLevel();
       
-      ctx.lineWidth = 1;
-      
       if (currentZoom.granularity === 'year') {
-        ctx.strokeStyle = '#7a3e3e';
+        // Major lines for years
+        ctx.strokeStyle = '#999999';
+        ctx.lineWidth = 1;
         const current = new Date(timelineConfig.start + 'T00:00:00Z');
         current.setUTCMonth(0, 1);
         while (current <= new Date(timelineConfig.end + 'T00:00:00Z')) {
@@ -187,7 +195,9 @@ window.WhatIfDeliveredTimeline = (function() {
           current.setUTCFullYear(current.getUTCFullYear() + 1);
         }
       } else if (currentZoom.granularity === 'quarter') {
-        ctx.strokeStyle = '#d95959';
+        // Major lines for quarters
+        ctx.strokeStyle = '#999999';
+        ctx.lineWidth = 1;
         const current = new Date(timelineConfig.start + 'T00:00:00Z');
         const quarterStart = Math.floor(current.getUTCMonth() / 3) * 3;
         current.setUTCMonth(quarterStart, 1);
@@ -202,7 +212,9 @@ window.WhatIfDeliveredTimeline = (function() {
           current.setUTCMonth(current.getUTCMonth() + 3);
         }
       } else if (currentZoom.granularity === 'month') {
-        ctx.strokeStyle = '#b7a3e3';
+        // Major lines for months
+        ctx.strokeStyle = '#999999';
+        ctx.lineWidth = 1;
         const current = new Date(timelineConfig.start + 'T00:00:00Z');
         current.setUTCDate(1);
         while (current <= new Date(timelineConfig.end + 'T00:00:00Z')) {
@@ -216,7 +228,9 @@ window.WhatIfDeliveredTimeline = (function() {
           current.setUTCMonth(current.getUTCMonth() + 1);
         }
       } else if (currentZoom.granularity === 'week') {
-        ctx.strokeStyle = '#c2e2fa';
+        // Major lines for weeks
+        ctx.strokeStyle = '#d0d0d0';
+        ctx.lineWidth = 1;
         const current = new Date(timelineConfig.start + 'T00:00:00Z');
         const dayOfWeek = current.getUTCDay();
         const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
@@ -231,6 +245,9 @@ window.WhatIfDeliveredTimeline = (function() {
           }
           current.setUTCDate(current.getUTCDate() + 7);
         }
+      } else if (currentZoom.granularity === 'day') {
+        // Weekend emphasis lines are already drawn in renderDayLabels
+        // This section is intentionally empty to avoid double-drawing
       }
     }
 
@@ -245,7 +262,7 @@ window.WhatIfDeliveredTimeline = (function() {
         const todayX = dateToX(today);
         
         // Draw thin vertical line for today
-        ctx.strokeStyle = colors.danger;
+        ctx.strokeStyle = '#ff5555';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(todayX, 0);
@@ -253,11 +270,22 @@ window.WhatIfDeliveredTimeline = (function() {
         ctx.stroke();
         
         // Add a small "Today" label at the top
-        ctx.fillStyle = '#ff8f8f';
-        ctx.font = 'bold 10px system-ui';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('Today', todayX, 10);
+        
+        // Draw a small background for better visibility
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.fillRect(todayX - 22, 0, 44, 14);
+        
+        // Draw border for the background
+        ctx.strokeStyle = '#ff5555';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(todayX - 22, 0, 44, 14);
+        
+        // Draw text
+        ctx.fillStyle = '#ff5555';
+        ctx.font = 'bold 10px system-ui';
+        ctx.fillText('Today', todayX, 7);
       }
     }
 
@@ -297,90 +325,263 @@ window.WhatIfDeliveredTimeline = (function() {
     }
 
     function renderYearLabels(start, end, width) {
-      ctx.fillStyle = '#7a3e3e';
-      ctx.font = 'bold 15px system-ui';
+      const yearFont = 'bold 16px system-ui';
+      const yearColor = '#4a4a4a';
+      const bgColor = '#f5f5f5';
+      
+      ctx.font = yearFont;
       
       const current = new Date(start);
       current.setUTCMonth(0, 1);
       
+      const intervals = [];
       while (current <= end) {
         const x = dateToX(current.toISOString().slice(0,10));
-        if (x >= layout.leftPad && x <= width) {
-          const year = current.getUTCFullYear();
-          ctx.fillText(year.toString(), x, 12);
-        }
+        intervals.push({ x, year: current.getUTCFullYear() });
         current.setUTCFullYear(current.getUTCFullYear() + 1);
       }
+      
+      // Draw background blocks for each year (ensure full coverage from left edge)
+      for (let i = 0; i < intervals.length; i++) {
+        const startX = intervals[i].x;
+        const endX = i < intervals.length - 1 ? intervals[i+1].x : width;
+        // Start from left edge of canvas for first interval, not from startX
+        const bgStartX = i === 0 ? 0 : startX;
+        if (endX > layout.leftPad && bgStartX < width) {
+          ctx.fillStyle = bgColor;
+          ctx.fillRect(bgStartX, 0, endX - bgStartX, 16);
+          
+          // Draw year text only if within visible area
+          if (startX >= layout.leftPad) {
+            ctx.fillStyle = yearColor;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText(intervals[i].year.toString(), startX + 8, 2);
+          }
+        }
+      }
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
     }
 
     function renderQuarterLabels(start, end, width) {
-      ctx.fillStyle = '#d95959';
-      ctx.font = 'bold 13px system-ui';
-      
       const current = new Date(start);
       const quarterStart = Math.floor(current.getUTCMonth() / 3) * 3;
       current.setUTCMonth(quarterStart, 1);
       
+      const intervals = [];
       while (current <= end) {
         const x = dateToX(current.toISOString().slice(0,10));
         if (x >= layout.leftPad && x <= width) {
           const quarter = Math.floor(current.getUTCMonth() / 3) + 1;
-          ctx.fillText(`Q${quarter}`, x, 26);
+          intervals.push({ x, quarter, year: current.getUTCFullYear() });
         }
         current.setUTCMonth(current.getUTCMonth() + 3);
       }
+      
+      ctx.fillStyle = '#6b6b6b';
+      ctx.font = 'bold 13px system-ui';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      
+      for (let i = 0; i < intervals.length; i++) {
+        const startX = intervals[i].x;
+        const endX = i < intervals.length - 1 ? intervals[i+1].x : width;
+        
+        // Start from left edge for first interval to ensure full coverage
+        const bgStartX = i === 0 ? 0 : startX;
+        
+        // Draw quarter background (consistent with year)
+        ctx.fillStyle = '#f5f5f5';
+        ctx.fillRect(bgStartX, 16, endX - bgStartX, 16);
+        
+        // Draw separator line (only draw if startX is visible)
+        if (startX >= layout.leftPad) {
+          ctx.strokeStyle = '#d0d0d0';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(startX, 16);
+          ctx.lineTo(startX, 32);
+          ctx.stroke();
+        }
+        
+        // Draw text (only if visible)
+        if (startX >= layout.leftPad) {
+          ctx.fillStyle = '#4a4a4a';
+          ctx.fillText(`Q${intervals[i].quarter}`, startX + 8, 19);
+        }
+      }
+      
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
     }
 
     function renderMonthLabels(start, end, width) {
-      ctx.fillStyle = '#b7a3e3';
-      ctx.font = 'bold 12px system-ui';
-      
       const current = new Date(start);
       current.setUTCDate(1);
       
+      const intervals = [];
       while (current <= end) {
         const x = dateToX(current.toISOString().slice(0,10));
         if (x >= layout.leftPad && x <= width) {
           const monthName = current.toLocaleDateString('en', { month: 'short' });
-          ctx.fillText(monthName, x, 38);
+          const monthNum = current.getUTCMonth() + 1;
+          intervals.push({ x, monthName, monthNum });
         }
         current.setUTCMonth(current.getUTCMonth() + 1);
       }
+      
+      ctx.fillStyle = '#5a5a5a';
+      ctx.font = '600 12px system-ui';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      
+      for (let i = 0; i < intervals.length; i++) {
+        const startX = intervals[i].x;
+        const endX = i < intervals.length - 1 ? intervals[i+1].x : width;
+        
+        // Start from left edge for first interval to ensure full coverage
+        const bgStartX = i === 0 ? 0 : startX;
+        
+        // Draw month background (consistent color for all months)
+        ctx.fillStyle = '#f5f5f5';
+        ctx.fillRect(bgStartX, 32, endX - bgStartX, 16);
+        
+        // Draw separator line (only draw if startX is visible)
+        if (startX >= layout.leftPad) {
+          ctx.strokeStyle = '#d8d8d8';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(startX, 32);
+          ctx.lineTo(startX, 48);
+          ctx.stroke();
+        }
+        
+        // Draw text (only if visible)
+        if (startX >= layout.leftPad) {
+          ctx.fillStyle = '#3a3a3a';
+          ctx.fillText(intervals[i].monthName, startX + 6, 35);
+        }
+      }
+      
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
     }
 
     function renderWeekLabels(start, end, width) {
-      ctx.fillStyle = '#c2e2fa';
-      ctx.font = 'bold 10px system-ui';
-      
       const current = new Date(start);
       const dayOfWeek = current.getUTCDay();
       const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
       current.setUTCDate(current.getUTCDate() - daysToMonday);
       
+      const intervals = [];
       while (current <= end) {
         const x = dateToX(current.toISOString().slice(0,10));
         if (x >= layout.leftPad && x <= width) {
           const weekNum = getWeekNumber(current);
-          ctx.fillText(`W${weekNum}`, x, 50);
+          const dayOfWeek = current.getUTCDay();
+          intervals.push({ x, weekNum, dayOfWeek });
         }
         current.setUTCDate(current.getUTCDate() + 7);
       }
+      
+      ctx.fillStyle = '#4a4a4a';
+      ctx.font = '500 10px system-ui';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      
+      for (let i = 0; i < intervals.length; i++) {
+        const startX = intervals[i].x;
+        const endX = i < intervals.length - 1 ? intervals[i+1].x : width;
+        
+        // Start from left edge for first interval to ensure full coverage
+        const bgStartX = i === 0 ? 0 : startX;
+        
+        // Draw week background
+        ctx.fillStyle = '#f5f5f5';
+        ctx.fillRect(bgStartX, 48, endX - bgStartX, 20);
+        
+        // Draw week separator (subtle) - only if visible
+        if (startX >= layout.leftPad) {
+          ctx.strokeStyle = '#d8d8d8';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(startX, 48);
+          ctx.lineTo(startX, layout.header);
+          ctx.stroke();
+          
+          // Draw week number (centered in the week)
+          if (intervals[i].weekNum) {
+            ctx.fillStyle = '#6a6a6a';
+            ctx.font = '600 10px system-ui';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText(`W${intervals[i].weekNum}`, startX + 6, 52);
+          }
+        }
+      }
+      
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
     }
 
     function renderDayLabels(start, end, width) {
-      ctx.fillStyle = '#8ad4e8';
-      ctx.font = 'bold 10px system-ui';
-      
       const current = new Date(start);
       
+      // First pass: draw alternating day backgrounds and separators
+      let dayIndex = 0;
+      const currentBg = new Date(start);
+      const pixelWidth = getPixelsPerUnit() / getDaysPerUnit();
+      
+      while (currentBg <= end) {
+        const x = dateToX(currentBg.toISOString().slice(0,10));
+        if (x >= layout.leftPad && x <= width) {
+          const dayOfWeek = currentBg.getUTCDay();
+          const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+          const dayWidth = pixelWidth;
+          
+          // Draw alternating background
+          ctx.fillStyle = isWeekend ? '#fafafa' : (dayIndex % 2 === 0 ? '#ffffff' : '#f8f8f8');
+          ctx.fillRect(x, 68, dayWidth, 20);
+          
+          // Draw day separator with better visibility (extend through entire canvas)
+          ctx.strokeStyle = isWeekend ? '#c8c8c8' : '#909090';
+          ctx.lineWidth = isWeekend ? 2 : 1.5;
+          ctx.beginPath();
+          ctx.moveTo(x, 68);
+          ctx.lineTo(x, canvas.height);
+          ctx.stroke();
+        }
+        currentBg.setUTCDate(currentBg.getUTCDate() + 1);
+        dayIndex++;
+      }
+      
+      // Second pass: draw day numbers and names
       while (current <= end) {
         const x = dateToX(current.toISOString().slice(0,10));
         if (x >= layout.leftPad && x <= width) {
           const day = current.getUTCDate();
-          ctx.fillText(day.toString(), x, 57);
+          const dayOfWeek = current.getUTCDay();
+          const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+          
+          // Draw day number
+          ctx.fillStyle = isWeekend ? '#999999' : '#4a4a4a';
+          ctx.font = 'bold 12px system-ui';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(day.toString(), x, 78);
+          
+          // Draw day of week label (Mon, Tue, etc.) at the top
+          ctx.fillStyle = '#7a7a7a';
+          ctx.font = '500 9px system-ui';
+          const dayName = current.toLocaleDateString('en', { weekday: 'short' });
+          ctx.fillText(dayName, x, 71);
         }
         current.setUTCDate(current.getUTCDate() + 1);
       }
+      
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
     }
 
 
@@ -445,12 +646,17 @@ window.WhatIfDeliveredTimeline = (function() {
     function renderItems() {
       const rows = getRows();
       const barHeight = 18;
+      
+      // Reset text alignment state at start to ensure proper rendering
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      
       ctx.font = '14px system-ui';
       rows.forEach(({ item, depth, scenarioId, isScenario }, idx) => {
         const y = layout.header + idx * (layout.rowHeight + layout.rowGap);
         
         // Simplified approach: no glass boxes, just clean text with colored indicators
-        const startX = 60; // More left padding from canvas edge to avoid drawer overlap
+        const startX = 20; // Minimal left padding from canvas edge
         
         // Draw colored indent bar based on item type (matching timeline bar colors)
         const levelColors = {
@@ -463,7 +669,7 @@ window.WhatIfDeliveredTimeline = (function() {
         const itemColor = item.isMilestone ? colors.milestone : (levelColors[item.level] || colors.initiative);
         ctx.fillStyle = itemColor + '40'; // More subtle transparency
         const indentWidth = 3;
-        const indentX = startX + 20 + (depth * 20); // 20px padding before first indent
+        const indentX = startX + (depth * 20); // Direct indentation based on depth
         ctx.fillRect(indentX, y - 2, indentWidth, layout.rowHeight);
         
         // row label - show text for all items including milestones
@@ -471,8 +677,8 @@ window.WhatIfDeliveredTimeline = (function() {
         ctx.font = 'bold 14px system-ui';
         ctx.textBaseline = 'middle';
         const textY = y + layout.rowHeight / 2;
-        // Add extra padding for depth 0 to avoid cutoff
-        const textX = indentX + (depth === 0 ? 15 : 10);
+        // Minimal padding after indent bar
+        const textX = indentX + 8;
         
         // Calculate available width for text (use most of the available space)
         const maxTextWidth = layout.leftPad - textX - 20; // Only 20px padding on right
@@ -522,7 +728,10 @@ window.WhatIfDeliveredTimeline = (function() {
         
         // Draw rhombus shape for milestones, rectangle for regular items
         if (item.isMilestone) {
-          drawRhombus(ctx, x1 + w/2, y + 4 + barHeight/2, w/2, barHeight/2);
+          // Make milestones bigger and more prominent
+          const milestoneWidth = Math.max(w * 0.6, 15);
+          const milestoneHeight = barHeight * 0.7;
+          drawRhombus(ctx, x1 + w/2, y + 4 + barHeight/2, milestoneWidth, milestoneHeight);
         } else {
           ctx.fillRect(x1, y + 4, w, barHeight);
         }
@@ -559,14 +768,17 @@ window.WhatIfDeliveredTimeline = (function() {
             ctx.strokeRect(x1 - 1, y + 3, w + 2, barHeight + 2);
           }
         } else if (item.isMilestone) {
-          // For milestones, draw a simple border around the rhombus
+          // For milestones, draw a simple border around the rhombus with bigger size
+          const milestoneWidth = Math.max(w * 0.6, 15);
+          const milestoneHeight = barHeight * 0.7;
+          
           ctx.strokeStyle = colors.milestone;
           ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.moveTo(x1 + w/2, y + 4);
-          ctx.lineTo(x1 + w, y + 4 + barHeight/2);
-          ctx.lineTo(x1 + w/2, y + 4 + barHeight);
-          ctx.lineTo(x1, y + 4 + barHeight/2);
+          ctx.moveTo(x1 + w/2, y + 4 + barHeight/2 - milestoneHeight);
+          ctx.lineTo(x1 + w/2 + milestoneWidth, y + 4 + barHeight/2);
+          ctx.lineTo(x1 + w/2, y + 4 + barHeight/2 + milestoneHeight);
+          ctx.lineTo(x1 + w/2 - milestoneWidth, y + 4 + barHeight/2);
           ctx.closePath();
           ctx.stroke();
           
@@ -575,10 +787,10 @@ window.WhatIfDeliveredTimeline = (function() {
             ctx.strokeStyle = colors.primary;
             ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.moveTo(x1 + w/2, y + 3);
-            ctx.lineTo(x1 + w + 1, y + 3 + barHeight/2);
-            ctx.lineTo(x1 + w/2, y + 3 + barHeight + 2);
-            ctx.lineTo(x1 - 1, y + 3 + barHeight/2);
+            ctx.moveTo(x1 + w/2, y + 4 + barHeight/2 - milestoneHeight - 1);
+            ctx.lineTo(x1 + w/2 + milestoneWidth + 1, y + 4 + barHeight/2);
+            ctx.lineTo(x1 + w/2, y + 4 + barHeight/2 + milestoneHeight + 1);
+            ctx.lineTo(x1 + w/2 - milestoneWidth - 1, y + 4 + barHeight/2);
             ctx.closePath();
             ctx.stroke();
           }
@@ -596,10 +808,14 @@ window.WhatIfDeliveredTimeline = (function() {
         }
         // name on bar - don't show text for milestones
         if (!item.isMilestone) {
-          ctx.fillStyle = 'rgba(255,255,255,0.9)';
-          ctx.font = '11px system-ui';
+          // Save context state
+          ctx.save();
+          
+          // Configure text rendering
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
+          ctx.fillStyle = 'rgba(255,255,255,0.9)';
+          ctx.font = '11px system-ui';
           const name = item.name;
           const textWidth = ctx.measureText(name).width;
           if (textWidth <= w - 8) {
@@ -613,7 +829,9 @@ window.WhatIfDeliveredTimeline = (function() {
             }
             ctx.fillText(truncated + ellipsis, x1 + w/2, y + 4 + barHeight/2);
           }
-          ctx.textAlign = 'left';
+          
+          // Restore context state
+          ctx.restore();
         }
       });
     }
@@ -644,34 +862,70 @@ window.WhatIfDeliveredTimeline = (function() {
           const x1 = dateToX(from.end);
           const x2 = dateToX(to.start);
           
-          // Draw dependency line with enhanced styling
-          ctx.strokeStyle = colors.highlight;
-          ctx.lineWidth = 2;
-          ctx.setLineDash([5, 3]); // Dashed line for better visibility
+          // Calculate angle and distance for elegant dependency
+          const dx = x2 - x1;
+          const dy = y2 - y1;
+          const angle = Math.atan2(dy, dx);
+          const length = Math.sqrt(dx * dx + dy * dy);
+          
+          // Only draw if dependency is visible and meaningful
+          if (length < 10) return;
+          
+          // Draw elegant dependency line with refined styling
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = '#8B78CC'; // Refined purple tone
+          ctx.setLineDash([10, 6]); // Refined dash pattern
           ctx.beginPath();
           ctx.moveTo(x1, y1);
           ctx.bezierCurveTo((x1+x2)/2, y1, (x1+x2)/2, y2, x2, y2);
           ctx.stroke();
-          ctx.setLineDash([]); // Reset line dash
+          ctx.setLineDash([]);
           
-          // Draw arrowhead at the end
-          const arrowSize = 6;
-          const angle = Math.atan2(y2 - y1, x2 - x1);
-          ctx.fillStyle = '#b7a3e3';
+          // Draw elegant arrowhead
+          const arrowSize = 7;
+          const arrowWidth = 3.5;
+          
+          ctx.save();
+          ctx.translate(x2, y2);
+          ctx.rotate(angle);
+          
+          // Main arrow shape
+          ctx.fillStyle = '#7A65B8';
           ctx.beginPath();
-          ctx.moveTo(x2, y2);
-          ctx.lineTo(x2 - arrowSize * Math.cos(angle - Math.PI / 6), y2 - arrowSize * Math.sin(angle - Math.PI / 6));
-          ctx.lineTo(x2 - arrowSize * Math.cos(angle + Math.PI / 6), y2 - arrowSize * Math.sin(angle + Math.PI / 6));
+          ctx.moveTo(0, 0);
+          ctx.lineTo(-arrowSize, -arrowWidth);
+          ctx.lineTo(-arrowSize, arrowWidth);
           ctx.closePath();
           ctx.fill();
           
-          // Draw connection points
-          ctx.fillStyle = '#b7a3e3';
+          // Inner highlight for depth
+          ctx.fillStyle = '#9D88D8';
           ctx.beginPath();
-          ctx.arc(x1, y1, 3, 0, 2 * Math.PI);
+          ctx.moveTo(-0.5, 0);
+          ctx.lineTo(-arrowSize + 1, -arrowWidth + 0.8);
+          ctx.lineTo(-arrowSize + 1, arrowWidth - 0.8);
+          ctx.closePath();
           ctx.fill();
+          
+          ctx.restore();
+          
+          // Draw connection points with elegant rings
+          ctx.strokeStyle = '#B7A3E3';
+          ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.arc(x2, y2, 3, 0, 2 * Math.PI);
+          ctx.arc(x1, y1, 4, 0, 2 * Math.PI);
+          ctx.stroke();
+          ctx.fillStyle = '#F5F0FF';
+          ctx.beginPath();
+          ctx.arc(x1, y1, 3.2, 0, 2 * Math.PI);
+          ctx.fill();
+          
+          ctx.beginPath();
+          ctx.arc(x2, y2, 4, 0, 2 * Math.PI);
+          ctx.stroke();
+          ctx.fillStyle = '#F5F0FF';
+          ctx.beginPath();
+          ctx.arc(x2, y2, 3.2, 0, 2 * Math.PI);
           ctx.fill();
         });
       });
@@ -843,7 +1097,11 @@ window.WhatIfDeliveredTimeline = (function() {
         const x1 = dateToX(item.start);
         const x2 = dateToX(item.end);
         const w = Math.max(10, x2 - x1);
-        if (py >= y+4 && py <= y+4+barHeight && px >= x1-4 && px <= x1+w+4) {
+        // Expanded hit area for milestones to match bigger diamond
+        const hitTestHeight = item.isMilestone ? barHeight + 4 : barHeight;
+        const hitTestPadding = item.isMilestone ? 10 : 4;
+        
+        if (py >= y+4 && py <= y+4+hitTestHeight && px >= x1-hitTestPadding && px <= x1+w+hitTestPadding) {
           // Scenarios and milestones can only be moved (no resize handles)
           if (isScenario || item.isMilestone) {
             return { id: item.id, mode: 'move', y, x1, w };
@@ -1158,5 +1416,6 @@ window.WhatIfDeliveredTimeline = (function() {
 
   return { create };
 })();
+
 
 
