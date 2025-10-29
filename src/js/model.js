@@ -17,6 +17,11 @@ window.WhatIfDeliveredModel = (function() {
         'Initiative': 'Initiative',
         'Epic': 'Epic',
         'Story': 'Story'
+      },
+      projectConfig: {
+        statuses: ['To Do', 'In Progress', 'Done', 'Blocked', 'On Hold'],
+        priorities: ['Lowest', 'Low', 'Medium', 'High', 'Highest'],
+        suggestedLabels: []
       }
     };
   }
@@ -143,7 +148,11 @@ window.WhatIfDeliveredModel = (function() {
     console.log('New active scenario ID:', state.activeScenarioId);
     console.log('Total scenarios:', state.scenarios.length);
   }
-  function addInitiative(state, { name, start, end, parentId = null, level = 'Initiative', size = 'M', description = '', isMilestone = false }) {
+  function addInitiative(state, { 
+    name, start, end, parentId = null, level = 'Initiative', size = 'M', 
+    description = '', isMilestone = false,
+    status = 'To Do', completion = 0, priority = 'Medium', assignee = '', labels = []
+  }) {
     const data = getActiveData(state);
     const id = 'itm_' + Math.random().toString(36).slice(2,8);
     
@@ -169,9 +178,14 @@ window.WhatIfDeliveredModel = (function() {
       }
     }
     const length = Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000));
+    
+    // Ensure completion is valid (0-100)
+    completion = Math.max(0, Math.min(100, completion));
+    
     data.initiatives.push({ 
       id, name, start, end, parentId, level, size, description, isMilestone,
-      scenarioId: state.activeScenarioId, length
+      scenarioId: state.activeScenarioId, length,
+      status, completion, priority, assignee, labels
     });
     return id;
   }
@@ -379,6 +393,17 @@ window.WhatIfDeliveredModel = (function() {
     if (next.levelNames) {
       state.levelNames = next.levelNames;
     }
+    // Load projectConfig if it exists, otherwise keep current or use defaults
+    if (next.projectConfig) {
+      state.projectConfig = next.projectConfig;
+    } else if (!state.projectConfig) {
+      // Initialize with defaults if not present
+      state.projectConfig = {
+        statuses: ['To Do', 'In Progress', 'Done', 'Blocked', 'On Hold'],
+        priorities: ['Lowest', 'Low', 'Medium', 'High', 'Highest'],
+        suggestedLabels: []
+      };
+    }
   }
   
   function getLevelName(state, level) {
@@ -399,6 +424,29 @@ window.WhatIfDeliveredModel = (function() {
     };
   }
   
+  function updateProjectConfig(state, { statuses, priorities, suggestedLabels }) {
+    if (statuses !== undefined) {
+      // Ensure at least one status
+      state.projectConfig.statuses = statuses.length > 0 ? statuses : ['To Do'];
+    }
+    if (priorities !== undefined) {
+      // Ensure at least one priority
+      state.projectConfig.priorities = priorities.length > 0 ? priorities : ['Medium'];
+    }
+    if (suggestedLabels !== undefined) {
+      // Labels can be empty
+      state.projectConfig.suggestedLabels = suggestedLabels;
+    }
+  }
+  
+  function resetProjectConfig(state) {
+    state.projectConfig = {
+      statuses: ['To Do', 'In Progress', 'Done', 'Blocked', 'On Hold'],
+      priorities: ['Lowest', 'Low', 'Medium', 'High', 'Highest'],
+      suggestedLabels: []
+    };
+  }
+  
   function clearAllData(state) {
     // Reset to initial state with empty data
     state.scenarios = [{ id: 'default', name: 'Baseline', description: '', visible: true, data: emptyData() }];
@@ -411,9 +459,18 @@ window.WhatIfDeliveredModel = (function() {
   function seedDemo(state) {
     const now = today();
     const d = getActiveData(state);
-    const i1 = addInitiative(state, { name: 'Initiative A', start: now, end: addDays(now, 10), level: 'Initiative', size: 'L' });
-    const e1 = addInitiative(state, { name: 'Epic A1', start: addDays(now, 1), end: addDays(now, 6), parentId: i1, level: 'Epic', size: 'M' });
-    const s1 = addInitiative(state, { name: 'Story A1-1', start: addDays(now, 2), end: addDays(now, 4), parentId: e1, level: 'Story', size: 'S' });
+    const i1 = addInitiative(state, { 
+      name: 'Initiative A', start: now, end: addDays(now, 10), level: 'Initiative', size: 'L',
+      status: 'In Progress', completion: 25, priority: 'High', assignee: 'Team Lead', labels: ['Q1', 'MVP']
+    });
+    const e1 = addInitiative(state, { 
+      name: 'Epic A1', start: addDays(now, 1), end: addDays(now, 6), parentId: i1, level: 'Epic', size: 'M',
+      status: 'In Progress', completion: 50, priority: 'Medium', assignee: 'Dev Team', labels: ['Backend']
+    });
+    const s1 = addInitiative(state, { 
+      name: 'Story A1-1', start: addDays(now, 2), end: addDays(now, 4), parentId: e1, level: 'Story', size: 'S',
+      status: 'Done', completion: 100, priority: 'Medium', assignee: 'John Doe', labels: ['API', 'Database']
+    });
     linkDependency(state, s1, e1);
   }
 
@@ -425,6 +482,7 @@ window.WhatIfDeliveredModel = (function() {
     loadState, seedDemo, clearAllData,
     toggleExpanded, isExpanded, expandToShowItem,
     getLevelName, updateLevelName, resetLevelNames,
+    updateProjectConfig, resetProjectConfig,
     moveInitiativeWithinScenario
   };
 })();
