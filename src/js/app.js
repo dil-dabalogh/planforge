@@ -61,19 +61,34 @@
     const text = await window.WhatIfDeliveredUI.pickFile(['.json','application/json']);
     if (!text) return;
     
-    // Confirm overwrite if there's existing data
-    const hasData = state.scenarios.some(s => s.data.initiatives.length > 0);
-    if (hasData) {
-      const confirmOverwrite = confirm('This will overwrite your current data. Continue?');
-      if (!confirmOverwrite) return;
-    }
-    
     try {
+      // Parse first to determine format
       const next = window.WhatIfDeliveredStorage.parseJSON(text);
+      const isJiraImport = next.scenarios && next.scenarios.length === 1 && next.scenarios[0].name === 'Baseline';
+      
+      // Confirm overwrite if there's existing data
+      const hasData = state.scenarios.some(s => s.data.initiatives.length > 0);
+      if (hasData) {
+        let confirmMessage = 'This will overwrite your current data.';
+        if (isJiraImport && next.projectConfig) {
+          confirmMessage += '\n\nThis JIRA import will also overwrite your project configuration (Status, Priority, Labels) with values from the JIRA project.';
+        }
+        confirmMessage += '\n\nContinue?';
+        
+        const confirmOverwrite = confirm(confirmMessage);
+        if (!confirmOverwrite) return;
+      }
+      
       window.WhatIfDeliveredModel.loadState(state, next);
       renderAll();
       timeline.zoomToContent(); // Fit to content after importing
       window.dispatchEvent(new Event('pf-refresh'));
+      
+      // Show success message
+      const formatType = isJiraImport ? 'JIRA v3' : 'Workspace';
+      if (window.WhatIfDeliveredUI.showToast) {
+        window.WhatIfDeliveredUI.showToast(`Successfully imported ${formatType} format`);
+      }
     } catch (error) {
       alert('Error importing file: ' + error.message);
     }
@@ -85,9 +100,21 @@
       const activeScenario = state.scenarios.find(s => s.id === state.activeScenarioId);
       const defaultFilename = activeScenario ? `scenario-${activeScenario.name.replace(/[^a-zA-Z0-9]/g, '_')}.json` : 'scenario.json';
       window.WhatIfDeliveredUI.saveFile(scenarioJson, defaultFilename, 'application/json');
-      if (window.WhatIfDeliveredUI.showToast) window.WhatIfDeliveredUI.showToast('Active scenario exported');
+      if (window.WhatIfDeliveredUI.showToast) window.WhatIfDeliveredUI.showToast('Active scenario exported as JIRA JSON');
     } catch (error) {
       alert('Error exporting scenario: ' + error.message);
+    }
+  });
+
+  ui.onExportCSV(() => {
+    try {
+      const csvContent = window.WhatIfDeliveredStorage.serializeActiveScenarioToCSV(state);
+      const activeScenario = state.scenarios.find(s => s.id === state.activeScenarioId);
+      const defaultFilename = activeScenario ? `scenario-${activeScenario.name.replace(/[^a-zA-Z0-9]/g, '_')}.csv` : 'scenario.csv';
+      window.WhatIfDeliveredUI.saveFile(csvContent, defaultFilename, 'text/csv');
+      if (window.WhatIfDeliveredUI.showToast) window.WhatIfDeliveredUI.showToast('Active scenario exported as CSV');
+    } catch (error) {
+      alert('Error exporting scenario to CSV: ' + error.message);
     }
   });
 

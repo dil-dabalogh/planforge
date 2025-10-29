@@ -113,7 +113,7 @@ window.WhatIfDeliveredUI = (function() {
   
   function createUI(state){
     const colors = getColors();
-    const bindings = { scenarioClone: [], exportJSON: [], importJSON: [], exportScenario: [], exportMermaid: [], erase: [] };
+    const bindings = { scenarioClone: [], exportJSON: [], importJSON: [], exportScenario: [], exportMermaid: [], exportCSV: [], erase: [], settings: [] };
     
     // Wire up Erase button
     const btnErase = el('btn-erase');
@@ -129,10 +129,16 @@ window.WhatIfDeliveredUI = (function() {
       e.preventDefault();
       const items = [
         {
-          label: 'Export Active Scenario',
+          label: 'Export Active Scenario (JIRA JSON)',
           icon: 'link',
           action: () => bindings.exportScenario.forEach(cb => cb())
         },
+        {
+          label: 'Export Active Scenario (CSV)',
+          icon: 'table_chart',
+          action: () => bindings.exportCSV.forEach(cb => cb())
+        },
+        'divider',
         {
           label: 'Export All Scenarios',
           icon: 'save',
@@ -189,7 +195,7 @@ window.WhatIfDeliveredUI = (function() {
     el('btn-info').addEventListener('click', () => showInfoDialog());
     
     // Wire up Settings button
-    el('btn-settings').addEventListener('click', () => showSettingsDialog());
+    el('btn-settings').addEventListener('click', () => showSettingsDialog(state));
 
     function renderHierarchy(){
       const container = el('hierarchy-tree'); container.innerHTML = '';
@@ -631,10 +637,31 @@ window.WhatIfDeliveredUI = (function() {
 
         // Basic section
         const basic = group('Basic');
-        const basicGrid = grid();
-        basicGrid.appendChild(field('Name', item.name, (v)=>{ item.name=v; renderHierarchy(); window.dispatchEvent(new Event('pf-refresh')); }));
-        basic.appendChild(basicGrid);
-
+        
+        // Name field (full width)
+        const nameWrap = document.createElement('div'); nameWrap.className = 'details-field';
+        nameWrap.style.gridColumn = '1 / -1'; // Span full width
+        const nameLabel = document.createElement('label'); nameLabel.textContent = 'Name';
+        const nameInput = document.createElement('input'); nameInput.type = 'text'; nameInput.value = item.name;
+        nameInput.addEventListener('input', () => { item.name = nameInput.value; renderHierarchy(); window.dispatchEvent(new Event('pf-refresh')); });
+        nameWrap.appendChild(nameLabel); nameWrap.appendChild(nameInput);
+        basic.appendChild(nameWrap);
+        
+        // Description field (expanded by default)
+        const descriptionWrap = document.createElement('div'); descriptionWrap.className = 'details-field';
+        descriptionWrap.style.gridColumn = '1 / -1'; // Span full width
+        const descriptionLabel = document.createElement('label'); descriptionLabel.textContent = 'Description';
+        const descriptionTextarea = document.createElement('textarea');
+        descriptionTextarea.value = item.description || '';
+        descriptionTextarea.rows = 4;
+        descriptionTextarea.addEventListener('change', () => { 
+          item.description = descriptionTextarea.value;
+          window.dispatchEvent(new Event('pf-refresh'));
+        });
+        descriptionWrap.appendChild(descriptionLabel);
+        descriptionWrap.appendChild(descriptionTextarea);
+        basic.appendChild(descriptionWrap);
+        
         // Type segmented and Size
         const typeSizeGrid = grid();
         const typeWrap = document.createElement('div'); typeWrap.className = 'details-field';
@@ -715,6 +742,293 @@ window.WhatIfDeliveredUI = (function() {
         schedule.appendChild(lengthWrap);
         panel.appendChild(schedule);
 
+        // Project Management section
+        const projectMgmt = group('Project Management');
+        const pmGrid = grid();
+        
+        // Status dropdown
+        const statusWrap = document.createElement('div'); statusWrap.className = 'details-field';
+        const statusLabel = document.createElement('label'); statusLabel.textContent = 'Status';
+        const statusSelect = document.createElement('select');
+        const statusOptions = state.projectConfig?.statuses || ['To Do', 'In Progress', 'Done', 'Blocked', 'On Hold'];
+        const currentStatus = item.status || 'To Do';
+        
+        // Add configured options
+        statusOptions.forEach(opt => {
+          const option = document.createElement('option');
+          option.value = opt;
+          option.textContent = opt;
+          if (opt === currentStatus) option.selected = true;
+          statusSelect.appendChild(option);
+        });
+        
+        // If current value not in list, add it as disabled option
+        if (!statusOptions.includes(currentStatus)) {
+          const option = document.createElement('option');
+          option.value = currentStatus;
+          option.textContent = currentStatus + ' (not in configured list)';
+          option.disabled = true;
+          option.selected = true;
+          statusSelect.insertBefore(option, statusSelect.firstChild);
+        }
+        
+        statusSelect.addEventListener('change', () => {
+          item.status = statusSelect.value;
+          renderHierarchy();
+          window.dispatchEvent(new Event('pf-refresh'));
+        });
+        statusWrap.appendChild(statusLabel);
+        statusWrap.appendChild(statusSelect);
+        pmGrid.appendChild(statusWrap);
+        
+        // Priority dropdown
+        const priorityWrap = document.createElement('div'); priorityWrap.className = 'details-field';
+        const priorityLabel = document.createElement('label'); priorityLabel.textContent = 'Priority';
+        const prioritySelect = document.createElement('select');
+        const priorityOptions = state.projectConfig?.priorities || ['Lowest', 'Low', 'Medium', 'High', 'Highest'];
+        const currentPriority = item.priority || 'Medium';
+        
+        // Add configured options
+        priorityOptions.forEach(opt => {
+          const option = document.createElement('option');
+          option.value = opt;
+          option.textContent = opt;
+          if (opt === currentPriority) option.selected = true;
+          prioritySelect.appendChild(option);
+        });
+        
+        // If current value not in list, add it as disabled option
+        if (!priorityOptions.includes(currentPriority)) {
+          const option = document.createElement('option');
+          option.value = currentPriority;
+          option.textContent = currentPriority + ' (not in configured list)';
+          option.disabled = true;
+          option.selected = true;
+          prioritySelect.insertBefore(option, prioritySelect.firstChild);
+        }
+        
+        prioritySelect.addEventListener('change', () => {
+          item.priority = prioritySelect.value;
+          renderHierarchy();
+          window.dispatchEvent(new Event('pf-refresh'));
+        });
+        priorityWrap.appendChild(priorityLabel);
+        priorityWrap.appendChild(prioritySelect);
+        pmGrid.appendChild(priorityWrap);
+        
+        projectMgmt.appendChild(pmGrid);
+        
+        // Completion slider with percentage
+        const completionWrap = document.createElement('div'); completionWrap.className = 'details-field';
+        const completionLabel = document.createElement('label'); completionLabel.textContent = 'Completion';
+        const completionInputWrap = document.createElement('div'); 
+        completionInputWrap.style.display = 'flex';
+        completionInputWrap.style.gap = '8px';
+        completionInputWrap.style.alignItems = 'center';
+        
+        const completionSlider = document.createElement('input');
+        completionSlider.type = 'range';
+        completionSlider.min = '0';
+        completionSlider.max = '100';
+        completionSlider.value = String(item.completion || 0);
+        completionSlider.style.flex = '1';
+        
+        const completionNumber = document.createElement('input');
+        completionNumber.type = 'number';
+        completionNumber.min = '0';
+        completionNumber.max = '100';
+        completionNumber.value = String(item.completion || 0);
+        completionNumber.style.width = '60px';
+        
+        const completionPercent = document.createElement('span');
+        completionPercent.textContent = '%';
+        completionPercent.style.color = getCSSVar('--color-text-muted');
+        
+        const updateCompletion = (value) => {
+          const val = Math.max(0, Math.min(100, parseInt(value) || 0));
+          item.completion = val;
+          completionSlider.value = String(val);
+          completionNumber.value = String(val);
+          renderHierarchy();
+          window.dispatchEvent(new Event('pf-refresh'));
+        };
+        
+        completionSlider.addEventListener('input', () => updateCompletion(completionSlider.value));
+        completionNumber.addEventListener('change', () => updateCompletion(completionNumber.value));
+        
+        completionInputWrap.appendChild(completionSlider);
+        completionInputWrap.appendChild(completionNumber);
+        completionInputWrap.appendChild(completionPercent);
+        completionWrap.appendChild(completionLabel);
+        completionWrap.appendChild(completionInputWrap);
+        projectMgmt.appendChild(completionWrap);
+        
+        // Assignee text field
+        const assigneeWrap = document.createElement('div'); assigneeWrap.className = 'details-field';
+        const assigneeLabel = document.createElement('label'); assigneeLabel.textContent = 'Assignee';
+        const assigneeInput = document.createElement('input');
+        assigneeInput.type = 'text';
+        assigneeInput.placeholder = 'Enter assignee name...';
+        assigneeInput.value = item.assignee || '';
+        assigneeInput.addEventListener('change', () => {
+          item.assignee = assigneeInput.value;
+          renderHierarchy();
+          window.dispatchEvent(new Event('pf-refresh'));
+        });
+        assigneeWrap.appendChild(assigneeLabel);
+        assigneeWrap.appendChild(assigneeInput);
+        projectMgmt.appendChild(assigneeWrap);
+        
+        // Labels (tags) field - dropdown with chips
+        const labelsWrap = document.createElement('div'); labelsWrap.className = 'details-field';
+        labelsWrap.style.gridColumn = '1 / -1'; // Span full width
+        const labelsLabel = document.createElement('label'); labelsLabel.textContent = 'Labels';
+        labelsWrap.appendChild(labelsLabel);
+        
+        // Initialize labels array if undefined
+        if (!item.labels) item.labels = [];
+        
+        // Display current labels as chips
+        const labelsChipsRow = document.createElement('div'); labelsChipsRow.className = 'chips';
+        labelsChipsRow.style.marginBottom = '0.5rem';
+        
+        const renderLabelChips = () => {
+          labelsChipsRow.innerHTML = '';
+          item.labels.forEach((label, index) => {
+            const chip = document.createElement('span'); chip.className = 'chip';
+            const labelText = document.createElement('span'); labelText.textContent = label;
+            const remove = document.createElement('button'); 
+            remove.className = 'chip-remove'; 
+            remove.type = 'button'; 
+            remove.textContent = '×'; 
+            remove.title = 'Remove';
+            remove.addEventListener('click', () => {
+              item.labels.splice(index, 1);
+              renderLabelChips();
+              renderHierarchy();
+              window.dispatchEvent(new Event('pf-refresh'));
+            });
+            chip.appendChild(labelText);
+            chip.appendChild(remove);
+            labelsChipsRow.appendChild(chip);
+          });
+          
+          if (!item.labels || item.labels.length === 0) {
+            const emptyMsg = document.createElement('span');
+            emptyMsg.textContent = 'No labels';
+            emptyMsg.style.color = 'var(--color-text-muted)';
+            emptyMsg.style.fontSize = '13px';
+            labelsChipsRow.appendChild(emptyMsg);
+          }
+        };
+        
+        renderLabelChips();
+        labelsWrap.appendChild(labelsChipsRow);
+        
+        // Dropdown to add labels
+        const labelsAddRow = document.createElement('div');
+        labelsAddRow.style.display = 'flex';
+        labelsAddRow.style.gap = '0.5rem';
+        labelsAddRow.style.alignItems = 'center';
+        
+        // Get all available labels (configured + existing on items)
+        const allLabels = new Set([...(state.projectConfig?.suggestedLabels || [])]);
+        // Also include labels from other items for suggestions
+        const allInitiatives = window.WhatIfDeliveredModel.getActiveData(state).initiatives;
+        allInitiatives.forEach(i => {
+          if (i.labels) i.labels.forEach(l => allLabels.add(l));
+        });
+        
+        const labelsSelect = document.createElement('select');
+        labelsSelect.style.flex = '1';
+        
+        const placeholderOption = document.createElement('option');
+        placeholderOption.value = '';
+        placeholderOption.textContent = '-- Select or type new label --';
+        placeholderOption.disabled = true;
+        placeholderOption.selected = true;
+        labelsSelect.appendChild(placeholderOption);
+        
+        // Add existing labels as options
+        Array.from(allLabels).sort().forEach(label => {
+          if (!item.labels.includes(label)) {
+            const option = document.createElement('option');
+            option.value = label;
+            option.textContent = label;
+            labelsSelect.appendChild(option);
+          }
+        });
+        
+        // Add "Add new..." option
+        const newOption = document.createElement('option');
+        newOption.value = '__NEW__';
+        newOption.textContent = '+ Add new label...';
+        labelsSelect.appendChild(newOption);
+        
+        const addLabelBtn = document.createElement('button');
+        addLabelBtn.type = 'button';
+        addLabelBtn.innerHTML = '<span class="material-icons">add</span>';
+        addLabelBtn.title = 'Add label';
+        addLabelBtn.style.padding = '6px 12px';
+        addLabelBtn.style.display = 'flex';
+        addLabelBtn.style.alignItems = 'center';
+        
+        labelsSelect.addEventListener('change', () => {
+          const selectedValue = labelsSelect.value;
+          
+          if (selectedValue === '__NEW__') {
+            // Prompt for new label
+            const newLabel = prompt('Enter new label:');
+            if (newLabel && newLabel.trim()) {
+              const trimmedLabel = newLabel.trim();
+              if (!item.labels.includes(trimmedLabel)) {
+                item.labels.push(trimmedLabel);
+                
+                // Add to project config if not already there
+                if (!state.projectConfig.suggestedLabels.includes(trimmedLabel)) {
+                  state.projectConfig.suggestedLabels.push(trimmedLabel);
+                  state.projectConfig.suggestedLabels.sort(); // Keep sorted
+                }
+                
+                renderLabelChips();
+                renderHierarchy();
+                window.dispatchEvent(new Event('pf-refresh'));
+                // Re-render to update dropdown
+                renderDetails();
+              }
+            } else {
+              labelsSelect.value = '';
+            }
+          } else if (selectedValue) {
+            // Add selected label
+            if (!item.labels.includes(selectedValue)) {
+              item.labels.push(selectedValue);
+              renderLabelChips();
+              renderHierarchy();
+              window.dispatchEvent(new Event('pf-refresh'));
+              // Re-render to update dropdown
+              renderDetails();
+            }
+          }
+        });
+        
+        addLabelBtn.addEventListener('click', () => {
+          if (labelsSelect.value && labelsSelect.value !== '__NEW__') {
+            labelsSelect.dispatchEvent(new Event('change'));
+          } else {
+            labelsSelect.value = '__NEW__';
+            labelsSelect.dispatchEvent(new Event('change'));
+          }
+        });
+        
+        labelsAddRow.appendChild(labelsSelect);
+        labelsAddRow.appendChild(addLabelBtn);
+        labelsWrap.appendChild(labelsAddRow);
+        
+        projectMgmt.appendChild(labelsWrap);
+        
+        panel.appendChild(projectMgmt);
+
         // Structure section
         const nextLevel = item.level === 'Initiative' ? 'Epic' : item.level === 'Epic' ? 'Story' : null;
         if (!item.isMilestone && nextLevel) {
@@ -757,13 +1071,6 @@ window.WhatIfDeliveredUI = (function() {
         addBtn.addEventListener('click', () => { if (depSelect.value){ window.WhatIfDeliveredModel.linkDependency(state, item.id, depSelect.value); window.dispatchEvent(new Event('pf-refresh')); renderDetails(); }});
         addDepWrap.appendChild(depSelect); addDepWrap.appendChild(addBtn); deps.appendChild(addDepWrap);
         panel.appendChild(deps);
-
-        // More: Description (collapsed)
-        const more = document.createElement('details'); more.className = 'details-collapse';
-        const sum = document.createElement('summary'); sum.textContent = 'Description'; more.appendChild(sum);
-        const descWrap = document.createElement('div'); descWrap.className = 'details-field';
-        const descTextarea = document.createElement('textarea'); descTextarea.value = item.description || ''; descTextarea.rows = 4; descTextarea.addEventListener('input', () => { item.description = descTextarea.value; window.dispatchEvent(new Event('pf-refresh')); });
-        descWrap.appendChild(descTextarea); more.appendChild(descWrap); panel.appendChild(more);
       }
       if (sel.type === 'scenario'){
         const s = state.scenarios.find(x => x.id === sel.id); if (!s) return;
@@ -939,8 +1246,31 @@ window.WhatIfDeliveredUI = (function() {
     function showSettingsDialog() {
       const dialog = el('settings-dialog');
       const settingsContent = el('settings-content');
+      settingsContent.innerHTML = '';
+      settingsContent.style.padding = '1rem';
+      settingsContent.style.maxHeight = '60vh';
+      settingsContent.style.overflowY = 'auto';
       
-      // Level configuration with order, color, and name
+      // ========== SECTION 1: HIERARCHY LEVEL NAMES ==========
+      const levelSection = document.createElement('div');
+      levelSection.style.marginBottom = '2rem';
+      levelSection.style.paddingBottom = '2rem';
+      levelSection.style.borderBottom = '2px solid var(--color-border)';
+      
+      const levelHeader = document.createElement('h3');
+      levelHeader.textContent = 'Hierarchy Level Names';
+      levelHeader.style.marginBottom = '0.75rem';
+      levelHeader.style.fontSize = '16px';
+      levelHeader.style.fontWeight = '600';
+      levelSection.appendChild(levelHeader);
+      
+      const levelDesc = document.createElement('p');
+      levelDesc.textContent = 'Customize the names used for each hierarchy level. Changes will be reflected throughout the application.';
+      levelDesc.style.marginBottom = '1rem';
+      levelDesc.style.color = 'var(--color-text-muted)';
+      levelDesc.style.fontSize = '13px';
+      levelSection.appendChild(levelDesc);
+      
       const levels = [
         { depth: 1, color: '#b8b8d4', name: 'Scenario', canEdit: false },
         { depth: 2, color: '#ff8f8f', name: window.WhatIfDeliveredModel.getLevelName(state, 'Initiative'), canEdit: true, key: 'Initiative' },
@@ -948,67 +1278,314 @@ window.WhatIfDeliveredUI = (function() {
         { depth: 4, color: '#8ad4e8', name: window.WhatIfDeliveredModel.getLevelName(state, 'Story'), canEdit: true, key: 'Story' }
       ];
       
-      let html = '<div style="max-width: 600px;">';
-      html += '<p style="margin-bottom: 1.5rem; color: var(--color-text-muted);">Customize the names used for each hierarchy level. Changes will be reflected throughout the application.</p>';
-      html += '<div style="display: grid; gap: 0.75rem;">';
+      const levelGrid = document.createElement('div');
+      levelGrid.style.display = 'grid';
+      levelGrid.style.gap = '0.75rem';
       
       levels.forEach(level => {
-        html += `<div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-panel);">`;
-        html += `<div style="flex: 0 0 60px; text-align: center; font-weight: 600; color: var(--color-text-muted);">${level.depth}</div>`;
-        html += `<div style="flex: 0 0 40px; height: 20px; background: ${level.color}; border-radius: 4px; border: 1px solid var(--color-border);"></div>`;
-        html += `<input type="text" data-level-key="${level.key || ''}" value="${level.name}" style="flex: 1; padding: 6px 10px; background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px; ${level.canEdit ? '' : 'opacity: 0.5; cursor: not-allowed;'}" ${level.canEdit ? '' : 'disabled'}>`;
-        html += `</div>`;
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.gap = '1rem';
+        row.style.padding = '0.75rem';
+        row.style.border = '1px solid var(--color-border)';
+        row.style.borderRadius = '6px';
+        row.style.background = 'var(--color-panel)';
+        
+        const depth = document.createElement('div');
+        depth.textContent = level.depth;
+        depth.style.flex = '0 0 60px';
+        depth.style.textAlign = 'center';
+        depth.style.fontWeight = '600';
+        depth.style.color = 'var(--color-text-muted)';
+        
+        const colorBox = document.createElement('div');
+        colorBox.style.flex = '0 0 40px';
+        colorBox.style.height = '20px';
+        colorBox.style.background = level.color;
+        colorBox.style.borderRadius = '4px';
+        colorBox.style.border = '1px solid var(--color-border)';
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = level.name;
+        input.dataset.levelKey = level.key || '';
+        input.style.flex = '1';
+        input.style.padding = '6px 10px';
+        input.style.background = 'var(--color-surface)';
+        input.style.color = 'var(--color-text)';
+        input.style.border = '1px solid var(--color-border)';
+        input.style.borderRadius = '4px';
+        if (!level.canEdit) {
+          input.disabled = true;
+          input.style.opacity = '0.5';
+          input.style.cursor = 'not-allowed';
+        } else {
+          input.addEventListener('change', (e) => {
+            if (e.target.value.trim()) {
+              window.WhatIfDeliveredModel.updateLevelName(state, level.key, e.target.value);
+              renderHierarchy();
+              renderDetails();
+              window.dispatchEvent(new Event('pf-refresh'));
+            }
+          });
+        }
+        
+        row.appendChild(depth);
+        row.appendChild(colorBox);
+        row.appendChild(input);
+        levelGrid.appendChild(row);
       });
       
-      html += '</div>';
-      html += '<div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--color-border); display: flex; gap: 0.5rem; justify-content: flex-end;">';
-      html += '<button id="btn-reset-names" style="padding: 8px 16px; background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 6px; cursor: pointer;">Reset to Defaults</button>';
-      html += '</div>';
-      html += '</div>';
+      levelSection.appendChild(levelGrid);
       
-      settingsContent.innerHTML = html;
-      
-      // Wire up save functionality
-      const inputs = settingsContent.querySelectorAll('input[data-level-key]');
-      inputs.forEach(input => {
-        const levelKey = input.dataset.levelKey;
-        input.addEventListener('change', (e) => {
-          if (e.target.value.trim()) {
-            window.WhatIfDeliveredModel.updateLevelName(state, levelKey, e.target.value);
-            // Refresh the UI
-            renderHierarchy();
-            renderDetails();
-            window.dispatchEvent(new Event('pf-refresh'));
-          }
-        });
+      const resetNamesBtn = document.createElement('button');
+      resetNamesBtn.textContent = 'Reset Level Names to Defaults';
+      resetNamesBtn.style.marginTop = '1rem';
+      resetNamesBtn.style.padding = '8px 16px';
+      resetNamesBtn.style.background = 'var(--color-surface)';
+      resetNamesBtn.style.color = 'var(--color-text)';
+      resetNamesBtn.style.border = '1px solid var(--color-border)';
+      resetNamesBtn.style.borderRadius = '6px';
+      resetNamesBtn.style.cursor = 'pointer';
+      resetNamesBtn.addEventListener('click', () => {
+        if (confirm('Reset all level names to default values?')) {
+          window.WhatIfDeliveredModel.resetLevelNames(state);
+          renderHierarchy();
+          renderDetails();
+          window.dispatchEvent(new Event('pf-refresh'));
+          showSettingsDialog();
+        }
       });
+      levelSection.appendChild(resetNamesBtn);
       
-      // Reset button
-      const resetBtn = settingsContent.querySelector('#btn-reset-names');
-      if (resetBtn) {
-        resetBtn.addEventListener('click', () => {
-          if (confirm('Reset all level names to default values?')) {
-            window.WhatIfDeliveredModel.resetLevelNames(state);
-            renderHierarchy();
-            renderDetails();
-            window.dispatchEvent(new Event('pf-refresh'));
-            // Close and reopen to show updated names
-            showSettingsDialog();
+      settingsContent.appendChild(levelSection);
+      
+      // ========== SECTION 2: PROJECT CONFIGURATION ==========
+      const projectSection = document.createElement('div');
+      projectSection.style.marginBottom = '1rem';
+      
+      const projectHeader = document.createElement('h3');
+      projectHeader.textContent = 'Project Configuration';
+      projectHeader.style.marginBottom = '0.75rem';
+      projectHeader.style.fontSize = '16px';
+      projectHeader.style.fontWeight = '600';
+      projectSection.appendChild(projectHeader);
+      
+      const projectDesc = document.createElement('p');
+      projectDesc.textContent = 'Configure available values for Status, Priority, and Labels. These values will be used in dropdowns when editing initiatives.';
+      projectDesc.style.marginBottom = '1.5rem';
+      projectDesc.style.color = 'var(--color-text-muted)';
+      projectDesc.style.fontSize = '13px';
+      projectSection.appendChild(projectDesc);
+      
+      // Helper to create a config section
+      function createConfigSection(title, items, onAdd, onRemove, placeholder = 'Add new...') {
+        const section = document.createElement('div');
+        section.style.marginBottom = '1.5rem';
+        
+        const header = document.createElement('h4');
+        header.textContent = title;
+        header.style.marginBottom = '0.5rem';
+        header.style.fontSize = '14px';
+        header.style.fontWeight = '600';
+        section.appendChild(header);
+        
+        const list = document.createElement('div');
+        list.style.display = 'flex';
+        list.style.flexDirection = 'column';
+        list.style.gap = '0.5rem';
+        list.style.marginBottom = '0.5rem';
+        
+        const renderItems = () => {
+          list.innerHTML = '';
+          if (items.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.textContent = 'No items configured';
+            emptyMsg.style.fontSize = '13px';
+            emptyMsg.style.color = 'var(--color-text-muted)';
+            emptyMsg.style.padding = '0.5rem';
+            list.appendChild(emptyMsg);
+          } else {
+            items.forEach((item, index) => {
+              const itemRow = document.createElement('div');
+              itemRow.style.display = 'flex';
+              itemRow.style.alignItems = 'center';
+              itemRow.style.gap = '0.5rem';
+              itemRow.style.padding = '0.5rem';
+              itemRow.style.backgroundColor = 'var(--color-panel)';
+              itemRow.style.borderRadius = '4px';
+              itemRow.style.border = '1px solid var(--color-border)';
+              
+              const itemText = document.createElement('span');
+              itemText.textContent = item;
+              itemText.style.flex = '1';
+              itemText.style.fontSize = '13px';
+              
+              const removeBtn = document.createElement('button');
+              removeBtn.innerHTML = '<span class="material-icons" style="font-size: 18px;">close</span>';
+              removeBtn.style.padding = '4px';
+              removeBtn.style.border = 'none';
+              removeBtn.style.background = 'transparent';
+              removeBtn.style.cursor = 'pointer';
+              removeBtn.style.color = 'var(--color-text-muted)';
+              removeBtn.style.display = 'flex';
+              removeBtn.style.alignItems = 'center';
+              removeBtn.title = 'Remove';
+              removeBtn.addEventListener('click', () => {
+                onRemove(index);
+                renderItems();
+              });
+              
+              itemRow.appendChild(itemText);
+              itemRow.appendChild(removeBtn);
+              list.appendChild(itemRow);
+            });
           }
+        };
+        
+        renderItems();
+        section.appendChild(list);
+        
+        const addRow = document.createElement('div');
+        addRow.style.display = 'flex';
+        addRow.style.gap = '0.5rem';
+        
+        const addInput = document.createElement('input');
+        addInput.type = 'text';
+        addInput.placeholder = placeholder;
+        addInput.style.flex = '1';
+        addInput.style.padding = '0.5rem';
+        addInput.style.border = '1px solid var(--color-border)';
+        addInput.style.borderRadius = '4px';
+        addInput.style.fontSize = '13px';
+        
+        const addBtn = document.createElement('button');
+        addBtn.innerHTML = '<span class="material-icons">add</span>';
+        addBtn.style.padding = '0.5rem 1rem';
+        addBtn.style.border = '1px solid var(--color-border)';
+        addBtn.style.borderRadius = '4px';
+        addBtn.style.backgroundColor = 'var(--color-primary)';
+        addBtn.style.color = 'white';
+        addBtn.style.cursor = 'pointer';
+        addBtn.style.display = 'flex';
+        addBtn.style.alignItems = 'center';
+        addBtn.title = 'Add';
+        
+        const handleAdd = () => {
+          const value = addInput.value.trim();
+          if (value) {
+            onAdd(value);
+            addInput.value = '';
+            renderItems();
+          }
+        };
+        
+        addBtn.addEventListener('click', handleAdd);
+        addInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') handleAdd();
         });
+        
+        addRow.appendChild(addInput);
+        addRow.appendChild(addBtn);
+        section.appendChild(addRow);
+        
+        return section;
       }
       
+      // Status configuration
+      const statusSection = createConfigSection(
+        'Status Values',
+        state.projectConfig.statuses,
+        (value) => {
+          if (!state.projectConfig.statuses.includes(value)) {
+            state.projectConfig.statuses.push(value);
+          }
+        },
+        (index) => {
+          if (state.projectConfig.statuses.length > 1) {
+            state.projectConfig.statuses.splice(index, 1);
+          } else {
+            alert('At least one status value is required.');
+          }
+        },
+        'e.g., In Review'
+      );
+      projectSection.appendChild(statusSection);
+      
+      // Priority configuration
+      const prioritySection = createConfigSection(
+        'Priority Values',
+        state.projectConfig.priorities,
+        (value) => {
+          if (!state.projectConfig.priorities.includes(value)) {
+            state.projectConfig.priorities.push(value);
+          }
+        },
+        (index) => {
+          if (state.projectConfig.priorities.length > 1) {
+            state.projectConfig.priorities.splice(index, 1);
+          } else {
+            alert('At least one priority value is required.');
+          }
+        },
+        'e.g., Critical'
+      );
+      projectSection.appendChild(prioritySection);
+      
+      // Labels configuration
+      const labelsSection = createConfigSection(
+        'Suggested Labels',
+        state.projectConfig.suggestedLabels,
+        (value) => {
+          if (!state.projectConfig.suggestedLabels.includes(value)) {
+            state.projectConfig.suggestedLabels.push(value);
+          }
+        },
+        (index) => {
+          state.projectConfig.suggestedLabels.splice(index, 1);
+        },
+        'e.g., frontend, backend'
+      );
+      projectSection.appendChild(labelsSection);
+      
+      // Reset project config button
+      const resetConfigBtn = document.createElement('button');
+      resetConfigBtn.textContent = 'Reset Project Config to Defaults';
+      resetConfigBtn.style.marginTop = '1rem';
+      resetConfigBtn.style.padding = '8px 16px';
+      resetConfigBtn.style.background = 'var(--color-surface)';
+      resetConfigBtn.style.color = 'var(--color-text)';
+      resetConfigBtn.style.border = '1px solid var(--color-border)';
+      resetConfigBtn.style.borderRadius = '6px';
+      resetConfigBtn.style.cursor = 'pointer';
+      resetConfigBtn.addEventListener('click', () => {
+        if (confirm('Reset all project configuration to default values?')) {
+          window.WhatIfDeliveredModel.resetProjectConfig(state);
+          showSettingsDialog();
+        }
+      });
+      projectSection.appendChild(resetConfigBtn);
+      
+      settingsContent.appendChild(projectSection);
+      
+      // Show dialog
       dialog.style.display = 'flex';
       
       // Close dialog handlers
-      el('close-settings-dialog').addEventListener('click', () => {
+      const closeBtn = el('close-settings-dialog');
+      const closeHandler = () => {
         dialog.style.display = 'none';
-      });
+        window.dispatchEvent(new Event('pf-refresh'));
+      };
+      
+      closeBtn.replaceWith(closeBtn.cloneNode(true)); // Remove old listeners
+      el('close-settings-dialog').addEventListener('click', closeHandler);
       
       // Close on overlay click
       dialog.addEventListener('click', (e) => {
         if (e.target === dialog) {
-          dialog.style.display = 'none';
+          closeHandler();
         }
       });
     }
@@ -1131,6 +1708,7 @@ window.WhatIfDeliveredUI = (function() {
       onExportJSON: (cb)=>bindings.exportJSON.push(cb),
       onImportJSON: (cb)=>bindings.importJSON.push(cb),
       onExportScenario: (cb)=>bindings.exportScenario.push(cb),
+      onExportCSV: (cb)=>bindings.exportCSV.push(cb),
       onExportMermaid: (cb)=>bindings.exportMermaid.push(cb),
       onErase: (cb)=>bindings.erase.push(cb)
     };
