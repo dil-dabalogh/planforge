@@ -119,10 +119,10 @@ button {
 
 .icon-only-button {
   padding: 6px;
-  min-width: 32px;
-  width: 32px;
-  height: 32px;
-  min-height: 32px;
+  min-width: 48px;
+  width: 48px;
+  height: 48px;
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -246,8 +246,8 @@ button {
   background: var(--color-panel);
   border: 1px solid var(--color-border);
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -442,8 +442,8 @@ button {
 
 .zoom-to-content-btn {
   padding: 6px;
-  min-width: 32px;
-  height: 32px;
+  min-width: 48px;
+  height: 48px;
   background: var(--color-surface);
   color: var(--color-text-muted);
   border: 1px solid var(--color-border);
@@ -676,7 +676,7 @@ button {
 .btn:hover { border-color: var(--color-primary); }
 .btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .btn--primary { background: var(--color-primary); color: var(--color-border-light); border-color: var(--color-primary); }
-.btn--icon { padding: 6px; min-width: 32px; height: 32px; justify-content: center; }
+.btn--icon { padding: 6px; min-width: 48px; height: 48px; justify-content: center; }
 
 .input, .select, .textarea { 
   width: 100%; 
@@ -1136,4 +1136,151 @@ button {
 
 #info-content li {
   margin: 4px 0;
+}
+
+/* Mobile-friendly responsive design */
+@media (max-width: 768px) {
+  /* Increase base font size for better readability on mobile */
+  body {
+    font-size: 16px;
+  }
+  
+  /* Stack header elements on small screens */
+  .app-header {
+    height: auto;
+    min-height: 52px;
+    flex-wrap: wrap;
+    padding: 8px;
+  }
+  
+  .toolbar {
+    flex-wrap: wrap;
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  /* Collapse sidebars by default on mobile */
+  .app-main {
+    grid-template-columns: 40px 1fr 40px;
+  }
+  
+  #left-sidebar,
+  #right-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    z-index: 900;
+    width: 280px;
+    max-width: 85vw;
+  }
+  
+  #left-sidebar {
+    left: 0;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  #right-sidebar {
+    right: 0;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+  }
+  
+  #left-sidebar:not(.collapsed),
+  #right-sidebar:not(.collapsed) {
+    transform: translateX(0);
+  }
+  
+  /* Larger touch targets for zoom controls */
+  .zoom-preset {
+    padding: 12px 16px;
+    font-size: 14px;
+    min-height: 48px;
+  }
+  
+  /* Stack timeline controls on mobile */
+  .timeline-controls-bottom {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .timeline-controls {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .timeline-controls label {
+    width: 100%;
+  }
+  
+  .zoom-controls {
+    width: 100%;
+  }
+  
+  .zoom-slider-container {
+    width: 100%;
+  }
+  
+  /* Make dialogs full-width on mobile */
+  .dialog-content {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  /* Ensure tree items are touch-friendly */
+  .tree-item {
+    min-height: 48px;
+    padding: 12px 48px 12px 12px;
+  }
+  
+  /* Larger font sizes for readability */
+  .link {
+    font-size: 16px;
+  }
+  
+  .details-field label {
+    font-size: 14px;
+  }
+  
+  .details-field input,
+  .details-field select,
+  .details-field textarea {
+    font-size: 16px;
+    padding: 10px;
+    min-height: 48px;
+  }
+  
+  /* Improve button spacing on mobile */
+  button, .btn {
+    font-size: 14px;
+    padding: 10px 14px;
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra small screens - optimize for phone */
+  .brand {
+    font-size: 14px;
+  }
+  
+  .logo-word {
+    flex-direction: column;
+    gap: 0;
+    line-height: 1.2;
+  }
+  
+  /* Hide some toolbar items on very small screens if needed */
+  .toolbar {
+    gap: 4px;
+  }
+  
+  .icon-only-button {
+    min-width: 44px;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
 }
