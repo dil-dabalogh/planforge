@@ -474,10 +474,10 @@ window.WhatIfDeliveredUI = (function() {
         // Milestone indicator removed - cleaner UI without diamond symbol
         
         // Add dependency indicator if this item has dependencies
-        const hasOutgoing = data.dependencies.some(d => d.fromId === item.id);
-        const hasIncoming = data.dependencies.some(d => d.toId === item.id);
+        const blocksOthers = data.dependencies.some(d => d.fromId === item.id); // This item blocks others
+        const dependsOnOthers = data.dependencies.some(d => d.toId === item.id); // This item depends on others
         
-        if (hasOutgoing || hasIncoming) {
+        if (blocksOthers || dependsOnOthers) {
           const depIcon = document.createElement('span');
           depIcon.className = 'material-symbols-outlined';
           depIcon.style.fontSize = '18px';
@@ -485,15 +485,15 @@ window.WhatIfDeliveredUI = (function() {
           depIcon.style.opacity = '0.8';
           depIcon.style.marginRight = '4px';
           
-          if (hasOutgoing && hasIncoming) {
+          if (blocksOthers && dependsOnOthers) {
             depIcon.textContent = 'share';
-            depIcon.title = 'Has dependencies (both directions)';
-          } else if (hasOutgoing) {
-            depIcon.textContent = 'call_made';
-            depIcon.title = 'Depends on other items';
+            depIcon.title = 'Blocks & depends on other items';
+          } else if (blocksOthers) {
+            depIcon.textContent = 'arrow_forward';
+            depIcon.title = 'Blocks other items';
           } else {
-            depIcon.textContent = 'call_received';
-            depIcon.title = 'Other items depend on this';
+            depIcon.textContent = 'arrow_back';
+            depIcon.title = 'Depends on other items';
           }
           
           left.appendChild(depIcon);
@@ -1045,31 +1045,182 @@ window.WhatIfDeliveredUI = (function() {
 
         // Dependencies section
         const deps = group('Dependencies');
+        
+        // Display existing dependencies with clear direction labels
         const existingDeps = data.dependencies.filter(d => d.fromId === item.id || d.toId === item.id);
         const chipsRow = document.createElement('div'); chipsRow.className = 'chips';
+        
         existingDeps.forEach(dep => {
-          const otherId = dep.fromId === item.id ? dep.toId : dep.fromId;
+          const isBlocking = dep.fromId === item.id; // Current item blocks another
+          const isDependingOn = dep.toId === item.id; // Current item depends on another
+          const otherId = isBlocking ? dep.toId : dep.fromId;
           const depItem = data.initiatives.find(i => i.id === otherId);
+          
           const chip = document.createElement('span'); chip.className = 'chip';
-          const icon = document.createElement('span'); icon.className = 'material-symbols-outlined'; icon.textContent = dep.fromId === item.id ? 'call_made' : 'call_received';
-          const label = document.createElement('span'); label.textContent = depItem ? depItem.name : 'Unknown';
-          const remove = document.createElement('button'); remove.className = 'chip-remove'; remove.type = 'button'; remove.textContent = '×'; remove.title = 'Remove';
-          remove.addEventListener('click', () => { window.WhatIfDeliveredModel.unlinkDependency(state, dep.fromId, dep.toId); window.dispatchEvent(new Event('pf-refresh')); renderDetails(); });
-          chip.appendChild(icon); chip.appendChild(label); chip.appendChild(remove); chipsRow.appendChild(chip);
+          
+          // Icon to show direction
+          const icon = document.createElement('span'); 
+          icon.className = 'material-symbols-outlined';
+          icon.style.fontSize = '16px';
+          icon.style.marginRight = '4px';
+          
+          // Direction label
+          const direction = document.createElement('span');
+          direction.style.fontSize = '11px';
+          direction.style.color = 'var(--color-text-muted)';
+          direction.style.marginRight = '4px';
+          direction.style.fontWeight = '500';
+          
+          if (isBlocking) {
+            // This item blocks another
+            icon.textContent = 'arrow_forward';
+            icon.title = 'Blocks';
+            direction.textContent = 'Blocks:';
+          } else {
+            // This item depends on another
+            icon.textContent = 'arrow_back';
+            icon.title = 'Depends on';
+            direction.textContent = 'Depends on:';
+          }
+          
+          const label = document.createElement('span'); 
+          label.textContent = depItem ? depItem.name : 'Unknown';
+          label.style.fontWeight = '400';
+          
+          const remove = document.createElement('button'); 
+          remove.className = 'chip-remove'; 
+          remove.type = 'button'; 
+          remove.textContent = '×'; 
+          remove.title = 'Remove dependency';
+          remove.addEventListener('click', () => { 
+            window.WhatIfDeliveredModel.unlinkDependency(state, dep.fromId, dep.toId); 
+            window.dispatchEvent(new Event('pf-refresh')); 
+            renderDetails(); 
+          });
+          
+          chip.appendChild(icon);
+          chip.appendChild(direction);
+          chip.appendChild(label);
+          chip.appendChild(remove);
+          chipsRow.appendChild(chip);
         });
+        
+        if (existingDeps.length === 0) {
+          const emptyMsg = document.createElement('div');
+          emptyMsg.textContent = 'No dependencies';
+          emptyMsg.style.color = 'var(--color-text-muted)';
+          emptyMsg.style.fontSize = '13px';
+          emptyMsg.style.padding = '0.5rem 0';
+          chipsRow.appendChild(emptyMsg);
+        }
+        
         deps.appendChild(chipsRow);
-        const addDepWrap = document.createElement('div'); addDepWrap.className = 'dep-add';
-        const depSelect = document.createElement('select'); depSelect.className = 'dep-select';
-        const opt0 = document.createElement('option'); opt0.value = ''; opt0.textContent = 'Depends on…'; depSelect.appendChild(opt0);
+        
+        // Add dependency controls with both directions
+        const addDepWrap = document.createElement('div'); 
+        addDepWrap.className = 'dep-add';
+        addDepWrap.style.display = 'flex';
+        addDepWrap.style.flexDirection = 'column';
+        addDepWrap.style.gap = '0.5rem';
+        
+        // Get all available items
         const allItems = data.initiatives.filter(i => i.id !== item.id && i.scenarioId === state.activeScenarioId);
         const children = data.initiatives.filter(i => i.parentId === item.id);
         const availableItems = allItems.filter(i => !children.some(c => c.id === i.id));
-        availableItems.forEach(otherItem => { const option = document.createElement('option'); option.value = otherItem.id; option.textContent = otherItem.name; depSelect.appendChild(option); });
-        const addBtn = document.createElement('button'); addBtn.type = 'button'; addBtn.className = 'icon'; addBtn.innerHTML = '<span class="material-icons">add</span>';
-        addBtn.disabled = true;
-        depSelect.addEventListener('change', () => { addBtn.disabled = !depSelect.value; });
-        addBtn.addEventListener('click', () => { if (depSelect.value){ window.WhatIfDeliveredModel.linkDependency(state, item.id, depSelect.value); window.dispatchEvent(new Event('pf-refresh')); renderDetails(); }});
-        addDepWrap.appendChild(depSelect); addDepWrap.appendChild(addBtn); deps.appendChild(addDepWrap);
+        
+        // "Depends on" control
+        const dependsOnRow = document.createElement('div');
+        dependsOnRow.style.display = 'flex';
+        dependsOnRow.style.gap = '0.5rem';
+        dependsOnRow.style.alignItems = 'center';
+        
+        const dependsOnSelect = document.createElement('select'); 
+        dependsOnSelect.className = 'dep-select';
+        dependsOnSelect.style.flex = '1';
+        const dependsOpt0 = document.createElement('option'); 
+        dependsOpt0.value = ''; 
+        dependsOpt0.textContent = 'This depends on…'; 
+        dependsOnSelect.appendChild(dependsOpt0);
+        
+        availableItems.forEach(otherItem => { 
+          const option = document.createElement('option'); 
+          option.value = otherItem.id; 
+          option.textContent = otherItem.name; 
+          dependsOnSelect.appendChild(option); 
+        });
+        
+        const dependsOnBtn = document.createElement('button'); 
+        dependsOnBtn.type = 'button'; 
+        dependsOnBtn.className = 'icon'; 
+        dependsOnBtn.innerHTML = '<span class="material-icons">add</span>';
+        dependsOnBtn.title = 'Add dependency';
+        dependsOnBtn.disabled = true;
+        
+        dependsOnSelect.addEventListener('change', () => { 
+          dependsOnBtn.disabled = !dependsOnSelect.value; 
+        });
+        
+        dependsOnBtn.addEventListener('click', () => { 
+          if (dependsOnSelect.value) {
+            // "This item depends on selected item" means:
+            // This item (toId) starts after selected item (fromId) ends
+            window.WhatIfDeliveredModel.linkDependency(state, dependsOnSelect.value, item.id);
+            window.dispatchEvent(new Event('pf-refresh')); 
+            renderDetails();
+          }
+        });
+        
+        dependsOnRow.appendChild(dependsOnSelect);
+        dependsOnRow.appendChild(dependsOnBtn);
+        addDepWrap.appendChild(dependsOnRow);
+        
+        // "Blocks" control
+        const blocksRow = document.createElement('div');
+        blocksRow.style.display = 'flex';
+        blocksRow.style.gap = '0.5rem';
+        blocksRow.style.alignItems = 'center';
+        
+        const blocksSelect = document.createElement('select'); 
+        blocksSelect.className = 'dep-select';
+        blocksSelect.style.flex = '1';
+        const blocksOpt0 = document.createElement('option'); 
+        blocksOpt0.value = ''; 
+        blocksOpt0.textContent = 'This blocks…'; 
+        blocksSelect.appendChild(blocksOpt0);
+        
+        availableItems.forEach(otherItem => { 
+          const option = document.createElement('option'); 
+          option.value = otherItem.id; 
+          option.textContent = otherItem.name; 
+          blocksSelect.appendChild(option); 
+        });
+        
+        const blocksBtn = document.createElement('button'); 
+        blocksBtn.type = 'button'; 
+        blocksBtn.className = 'icon'; 
+        blocksBtn.innerHTML = '<span class="material-icons">add</span>';
+        blocksBtn.title = 'Add blocking dependency';
+        blocksBtn.disabled = true;
+        
+        blocksSelect.addEventListener('change', () => { 
+          blocksBtn.disabled = !blocksSelect.value; 
+        });
+        
+        blocksBtn.addEventListener('click', () => { 
+          if (blocksSelect.value) {
+            // "This item blocks selected item" means:
+            // Selected item (toId) starts after this item (fromId) ends
+            window.WhatIfDeliveredModel.linkDependency(state, item.id, blocksSelect.value);
+            window.dispatchEvent(new Event('pf-refresh')); 
+            renderDetails();
+          }
+        });
+        
+        blocksRow.appendChild(blocksSelect);
+        blocksRow.appendChild(blocksBtn);
+        addDepWrap.appendChild(blocksRow);
+        
+        deps.appendChild(addDepWrap);
         panel.appendChild(deps);
       }
       if (sel.type === 'scenario'){
@@ -1147,65 +1298,73 @@ window.WhatIfDeliveredUI = (function() {
       // Populate the dialog content
       const infoContent = el('info-content');
       infoContent.innerHTML = `
-        <div style="line-height: 1.8;">
-          <h2>About WHAT IF delivered</h2>
-          <p>A free, open-source Project Planner with interactive Gantt chart editing capabilities.</p>
-          
+        <h2>About WHAT IF delivered</h2>
+        <p>A free, open-source Project Planner with interactive Gantt chart editing capabilities.</p>
+        
+        <div class="info-card info-card-highlight">
           <h3>Your Data Is Yours</h3>
           <p>Zero tracking. Zero cookies. Zero servers. WHAT IF delivered works completely offline - just save the HTML file and use it without any internet connection. Your data never leaves your device.</p>
-          
-          <h3>Key Features</h3>
-          <ul>
-            <li><strong>Easy to Use:</strong> Intuitive Gantt chart editor for project planning</li>
-            <li><strong>Completely Offline:</strong> No installation required, works from a single HTML file</li>
-            <li><strong>Your Data is Safe:</strong> No cookies, no 3rd or 2nd party data access, not even planforge.cc accesses your data</li>
-            <li><strong>Export to MermaidJS:</strong> Perfect for integrating Gantt charts into your markdown documentation</li>
-            <li><strong>Export to JSON:</strong> Easy integration with JIRA and other project management tools</li>
-            <li><strong>Scenario Planning:</strong> Create multiple planning scenarios without struggling with different files</li>
-            <li><strong>Free & Open Source:</strong> No subscriptions, no hidden costs</li>
-          </ul>
-          
-          <h3>What Makes WHAT IF delivered Different?</h3>
+        </div>
+        
+        <h3>Key Features</h3>
+        <ul>
+          <li><strong>Easy to Use:</strong> Intuitive Gantt chart editor for project planning</li>
+          <li><strong>Completely Offline:</strong> No installation required, works from a single HTML file</li>
+          <li><strong>Your Data is Safe:</strong> No cookies, no 3rd or 2nd party data access, not even planforge.cc accesses your data</li>
+          <li><strong>Export to MermaidJS:</strong> Perfect for integrating Gantt charts into your markdown documentation</li>
+          <li><strong>Export to JSON:</strong> Easy integration with JIRA and other project management tools</li>
+          <li><strong>Scenario Planning:</strong> Create multiple planning scenarios without struggling with different files</li>
+          <li><strong>Free & Open Source:</strong> No subscriptions, no hidden costs</li>
+        </ul>
+        
+        <div class="info-card">
+          <h3>What Makes It Different?</h3>
           <p><strong>Scenario Planning:</strong> Unlike other Gantt chart tools, WHAT IF delivered makes it easy to create and switch between multiple project scenarios. No need to juggle different files or struggle with version management.</p>
-          
+        </div>
+        
+        <div class="info-card">
           <h3>Export Options</h3>
           <p>Export your project data to MermaidJS format for seamless integration into your markdown documentation, or export as JSON for easy import into JIRA and other project management platforms.</p>
-          
-          <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-panel);">
-            <h4 style="margin-bottom: 1rem; font-size: 14px; color: var(--color-text-muted);">Share WHAT IF delivered</h4>
-            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.5rem;">
-              <a href="#" id="share-twitter" style="color: #1DA1F2; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; padding: 6px 12px; border: 1px solid var(--color-border); border-radius: 6px; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(29, 161, 242, 0.08)'" onmouseout="this.style.background='transparent'">
-                <span class="material-symbols-outlined">share</span>
-                Share on Twitter
-              </a>
-              <a href="#" id="share-reddit" style="color: #FF4500; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; padding: 6px 12px; border: 1px solid var(--color-border); border-radius: 6px; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(255, 69, 0, 0.08)'" onmouseout="this.style.background='transparent'">
-                <span class="material-symbols-outlined">forum</span>
-                Share on Reddit
-              </a>
-              <a href="#" id="share-linkedin" style="color: #0A66C2; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; padding: 6px 12px; border: 1px solid var(--color-border); border-radius: 6px; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(10, 102, 194, 0.08)'" onmouseout="this.style.background='transparent'">
-                <span class="material-symbols-outlined">work</span>
-                Share on LinkedIn
-              </a>
-            </div>
-          <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--color-panel); display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
-              <a href="https://github.com/dil-dabalogh/planforge" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
-                <span class="material-symbols-outlined">code</span>
-                GitHub Repository
-              </a>
-              <a href="https://www.linkedin.com/in/cinegemadar/" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
-                <span class="material-symbols-outlined">person</span>
-                LinkedIn Profile
-              </a>
-              <a href="https://buymeacoffee.com/cinegemadar" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
-                <span class="material-symbols-outlined">favorite</span>
-                Buy Me a Coffee
-              </a>
-              <span style="color: var(--color-text-muted); display: flex; align-items: center; gap: 0.5rem;">
-                <span class="material-symbols-outlined">mail</span>
-                <a href="mailto:info@whatifdelivered.com" style="color: var(--color-text); text-decoration: none;">info@whatifdelivered.com</a>
-              </span>
-            </div>
-          </div>
+        </div>
+        
+        <div class="info-divider"></div>
+        
+        <h3>Share WHAT IF delivered</h3>
+        <div class="info-links">
+          <a href="#" id="share-twitter" class="info-link" style="color: #1DA1F2;">
+            <span class="material-symbols-outlined">share</span>
+            Twitter
+          </a>
+          <a href="#" id="share-reddit" class="info-link" style="color: #FF4500;">
+            <span class="material-symbols-outlined">forum</span>
+            Reddit
+          </a>
+          <a href="#" id="share-linkedin" class="info-link" style="color: #0A66C2;">
+            <span class="material-symbols-outlined">work</span>
+            LinkedIn
+          </a>
+        </div>
+        
+        <div class="info-divider"></div>
+        
+        <h3>Connect & Support</h3>
+        <div class="info-links">
+          <a href="https://github.com/dil-dabalogh/planforge" target="_blank" rel="noopener noreferrer" class="info-link">
+            <span class="material-symbols-outlined">code</span>
+            GitHub
+          </a>
+          <a href="https://www.linkedin.com/in/cinegemadar/" target="_blank" rel="noopener noreferrer" class="info-link">
+            <span class="material-symbols-outlined">person</span>
+            LinkedIn
+          </a>
+          <a href="https://buymeacoffee.com/cinegemadar" target="_blank" rel="noopener noreferrer" class="info-link">
+            <span class="material-symbols-outlined">favorite</span>
+            Buy Me a Coffee
+          </a>
+          <a href="mailto:info@whatifdelivered.com" class="info-link">
+            <span class="material-symbols-outlined">mail</span>
+            Email
+          </a>
         </div>
       `;
       
@@ -1247,28 +1406,46 @@ window.WhatIfDeliveredUI = (function() {
       const dialog = el('settings-dialog');
       const settingsContent = el('settings-content');
       settingsContent.innerHTML = '';
-      settingsContent.style.padding = '1rem';
-      settingsContent.style.maxHeight = '60vh';
-      settingsContent.style.overflowY = 'auto';
       
-      // ========== SECTION 1: HIERARCHY LEVEL NAMES ==========
+      // Create tabs container
+      const tabsContainer = document.createElement('div');
+      tabsContainer.className = 'dialog-tabs';
+      
+      // Create tab buttons
+      const hierarchyTab = document.createElement('button');
+      hierarchyTab.className = 'dialog-tab active';
+      hierarchyTab.textContent = 'Hierarchy Levels';
+      hierarchyTab.dataset.tab = 'hierarchy';
+      
+      const projectTab = document.createElement('button');
+      projectTab.className = 'dialog-tab';
+      projectTab.textContent = 'Project Fields';
+      projectTab.dataset.tab = 'project';
+      
+      tabsContainer.appendChild(hierarchyTab);
+      tabsContainer.appendChild(projectTab);
+      
+      settingsContent.appendChild(tabsContainer);
+      
+      // ========== TAB 1: HIERARCHY LEVEL NAMES ==========
       const levelSection = document.createElement('div');
-      levelSection.style.marginBottom = '2rem';
-      levelSection.style.paddingBottom = '2rem';
-      levelSection.style.borderBottom = '2px solid var(--color-border)';
+      levelSection.className = 'dialog-tab-content active';
+      levelSection.dataset.tab = 'hierarchy';
       
       const levelHeader = document.createElement('h3');
       levelHeader.textContent = 'Hierarchy Level Names';
       levelHeader.style.marginBottom = '0.75rem';
-      levelHeader.style.fontSize = '16px';
-      levelHeader.style.fontWeight = '600';
+      levelHeader.style.fontSize = '18px';
+      levelHeader.style.fontWeight = '700';
+      levelHeader.style.color = 'var(--color-text)';
       levelSection.appendChild(levelHeader);
       
       const levelDesc = document.createElement('p');
       levelDesc.textContent = 'Customize the names used for each hierarchy level. Changes will be reflected throughout the application.';
-      levelDesc.style.marginBottom = '1rem';
+      levelDesc.style.marginBottom = '1.5rem';
       levelDesc.style.color = 'var(--color-text-muted)';
-      levelDesc.style.fontSize = '13px';
+      levelDesc.style.fontSize = '14px';
+      levelDesc.style.lineHeight = '1.6';
       levelSection.appendChild(levelDesc);
       
       const levels = [
@@ -1361,22 +1538,25 @@ window.WhatIfDeliveredUI = (function() {
       
       settingsContent.appendChild(levelSection);
       
-      // ========== SECTION 2: PROJECT CONFIGURATION ==========
+      // ========== TAB 2: PROJECT CONFIGURATION ==========
       const projectSection = document.createElement('div');
-      projectSection.style.marginBottom = '1rem';
+      projectSection.className = 'dialog-tab-content';
+      projectSection.dataset.tab = 'project';
       
       const projectHeader = document.createElement('h3');
-      projectHeader.textContent = 'Project Configuration';
+      projectHeader.textContent = 'Project Fields Configuration';
       projectHeader.style.marginBottom = '0.75rem';
-      projectHeader.style.fontSize = '16px';
-      projectHeader.style.fontWeight = '600';
+      projectHeader.style.fontSize = '18px';
+      projectHeader.style.fontWeight = '700';
+      projectHeader.style.color = 'var(--color-text)';
       projectSection.appendChild(projectHeader);
       
       const projectDesc = document.createElement('p');
       projectDesc.textContent = 'Configure available values for Status, Priority, and Labels. These values will be used in dropdowns when editing initiatives.';
       projectDesc.style.marginBottom = '1.5rem';
       projectDesc.style.color = 'var(--color-text-muted)';
-      projectDesc.style.fontSize = '13px';
+      projectDesc.style.fontSize = '14px';
+      projectDesc.style.lineHeight = '1.6';
       projectSection.appendChild(projectDesc);
       
       // Helper to create a config section
@@ -1568,6 +1748,28 @@ window.WhatIfDeliveredUI = (function() {
       projectSection.appendChild(resetConfigBtn);
       
       settingsContent.appendChild(projectSection);
+      
+      // Tab switching functionality
+      const tabs = settingsContent.querySelectorAll('.dialog-tab');
+      const tabContents = settingsContent.querySelectorAll('.dialog-tab-content');
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          // Remove active class from all tabs and contents
+          tabs.forEach(t => t.classList.remove('active'));
+          tabContents.forEach(tc => tc.classList.remove('active'));
+          
+          // Add active class to clicked tab
+          tab.classList.add('active');
+          
+          // Show corresponding content
+          const targetTab = tab.dataset.tab;
+          const targetContent = settingsContent.querySelector(`.dialog-tab-content[data-tab="${targetTab}"]`);
+          if (targetContent) {
+            targetContent.classList.add('active');
+          }
+        });
+      });
       
       // Show dialog
       dialog.style.display = 'flex';

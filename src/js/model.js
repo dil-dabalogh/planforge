@@ -471,7 +471,8 @@ window.WhatIfDeliveredModel = (function() {
       name: 'Story A1-1', start: addDays(now, 2), end: addDays(now, 4), parentId: e1, level: 'Story', size: 'S',
       status: 'Done', completion: 100, priority: 'Medium', assignee: 'John Doe', labels: ['API', 'Database']
     });
-    linkDependency(state, s1, e1);
+    // Removed nonsensical dependency between child story and parent epic
+    // Use parent-child relationships instead of dependencies for hierarchical structure
   }
 
   return {
