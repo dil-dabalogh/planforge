@@ -1,13 +1,72 @@
 /* Entry point: wires UI, storage, model, and timeline */
 (function() {
+  const perf = window.WhatIfDeliveredPerformance;
   const state = window.WhatIfDeliveredModel.createInitialState();
   const ui = window.WhatIfDeliveredUI.createUI(state);
   const timeline = window.WhatIfDeliveredTimeline.create(state, document.getElementById('timeline-canvas'));
 
+  // Track if data is loaded
+  let isDataLoaded = false;
+
+  // Optional: Auto-save to localStorage using requestIdleCallback
+  // Uncomment to enable auto-save functionality
+  /*
+  const autoSaver = perf.createAutoSaver((data) => {
+    try {
+      const json = window.WhatIfDeliveredStorage.serializeJSON(data);
+      localStorage.setItem('whatifdelivered-autosave', json);
+      console.log('Auto-saved to localStorage');
+    } catch (error) {
+      console.warn('Auto-save failed:', error);
+    }
+  }, { debounceMs: 2000, idleTimeout: 5000 });
+  */
+
   function renderAll() {
+    // Guard against rendering before data is loaded
+    if (!isDataLoaded && (!state.scenarios || state.scenarios.length === 0 || 
+        state.scenarios.every(s => !s.data || s.data.initiatives.length === 0))) {
+      return;
+    }
+    
     ui.renderHierarchy();
     ui.renderDetails();
     timeline.render();
+    
+    // Optional: Trigger auto-save after renders (uncomment if auto-save enabled)
+    // autoSaver.scheduleSave(state);
+  }
+  
+  // Show skeleton loading state initially
+  function showSkeletonState() {
+    perf.showSkeletonInElement(document.getElementById('hierarchy-tree'), 'tree');
+    perf.showSkeletonInElement(document.getElementById('details'), 'details');
+    
+    const timelineContainer = document.getElementById('timeline-container');
+    const canvasElement = document.getElementById('timeline-canvas');
+    if (canvasElement) {
+      canvasElement.style.display = 'none';
+    }
+    
+    // Add skeleton canvas without replacing the real canvas
+    const skeletonDiv = document.createElement('div');
+    skeletonDiv.className = 'skeleton-canvas';
+    skeletonDiv.id = 'skeleton-canvas-temp';
+    skeletonDiv.innerHTML = '<div>Loading timeline...</div>';
+    timelineContainer.insertBefore(skeletonDiv, canvasElement);
+  }
+  
+  // Hide skeleton and show real content
+  function hideSkeletonState() {
+    const canvasElement = document.getElementById('timeline-canvas');
+    if (canvasElement) {
+      canvasElement.style.display = 'block';
+    }
+    
+    const skeletonCanvas = document.getElementById('skeleton-canvas-temp');
+    if (skeletonCanvas) {
+      skeletonCanvas.remove();
+    }
   }
 
   // UI event bindings
@@ -188,59 +247,111 @@
     }, 100);
   });
 
-  // Initial render
-  renderAll();
+  // Show skeleton state immediately for better perceived performance
+  showSkeletonState();
   
-  // Auto-load demo.json if available
-  (async function loadDemoIfAvailable() {
-    try {
-      console.log('Attempting to load demo...');
-      
-      // First, try to load from embedded demo data
-      const embeddedDemo = document.getElementById('embedded-demo-data');
-      if (embeddedDemo) {
-        console.log('Found embedded demo data');
-        const text = embeddedDemo.textContent;
-        const next = window.WhatIfDeliveredStorage.parseJSON(text);
-        window.WhatIfDeliveredModel.loadState(state, next);
-        console.log('Demo data loaded successfully from embedded content');
-        renderAll();
-        timeline.zoomToContent(); // Fit to content after loading
-        window.dispatchEvent(new Event('pf-refresh'));
-        return;
-      }
-      
-      // If no embedded data, try to fetch from files
-      let response = null;
-      const paths = ['./demo.json', './data/demo-full-features.json', '../data/demo-full-features.json'];
-      
-      for (const path of paths) {
-        try {
-          console.log('Trying path:', path);
-          response = await fetch(path);
-          if (response.ok) {
-            console.log('Successfully found demo at:', path);
-            break;
-          }
-        } catch (e) {
-          console.log('Failed to load from:', path);
+  // Lazy-load demo data with a small delay for better INP
+  // Use setTimeout as a fallback to requestIdleCallback for reliability
+  (function initializeDemoLoad() {
+    perf.markPerformance('demo-load-start');
+    
+    // Function to actually load the demo
+    async function loadDemoIfAvailable() {
+      try {
+        console.log('Loading demo data (lazy)...');
+        
+        // First, try to load from embedded demo data
+        const embeddedDemo = document.getElementById('embedded-demo-data');
+        if (embeddedDemo) {
+          console.log('Found embedded demo data');
+          const text = embeddedDemo.textContent;
+          const next = window.WhatIfDeliveredStorage.parseJSON(text);
+          window.WhatIfDeliveredModel.loadState(state, next);
+          isDataLoaded = true;
+          console.log('Demo data loaded successfully from embedded content');
+          
+          // Hide skeleton and render real content
+          hideSkeletonState();
+          renderAll();
+          
+          // Defer zoom to content to avoid blocking
+          setTimeout(() => {
+            timeline.zoomToContent();
+          }, 50);
+          
+          window.dispatchEvent(new Event('pf-refresh'));
+          
+          perf.markPerformance('demo-load-end');
+          const loadTime = perf.measurePerformance('demo-load-time', 'demo-load-start', 'demo-load-end');
+          console.log(`Demo loaded in ${loadTime ? loadTime.toFixed(2) : '?'}ms`);
+          return;
         }
+        
+        // If no embedded data, try to fetch from files
+        console.log('No embedded demo data found, trying to fetch from files...');
+        let response = null;
+        const paths = ['./demo.json', './data/demo-full-features.json', '../data/demo-full-features.json'];
+        
+        for (const path of paths) {
+          try {
+            console.log('Trying path:', path);
+            response = await fetch(path);
+            if (response.ok) {
+              console.log('Successfully found demo at:', path);
+              break;
+            }
+          } catch (e) {
+            console.log('Failed to load from:', path, e.message);
+          }
+        }
+        
+        if (response && response.ok) {
+          const text = await response.text();
+          const next = window.WhatIfDeliveredStorage.parseJSON(text);
+          window.WhatIfDeliveredModel.loadState(state, next);
+          isDataLoaded = true;
+          console.log('Demo data loaded successfully');
+          
+          // Hide skeleton and render real content
+          hideSkeletonState();
+          renderAll();
+          
+          // Defer zoom to content to avoid blocking
+          setTimeout(() => {
+            timeline.zoomToContent();
+          }, 50);
+          
+          window.dispatchEvent(new Event('pf-refresh'));
+          
+          perf.markPerformance('demo-load-end');
+          const loadTime = perf.measurePerformance('demo-load-time', 'demo-load-start', 'demo-load-end');
+          console.log(`Demo loaded in ${loadTime ? loadTime.toFixed(2) : '?'}ms`);
+        } else {
+          console.log('No demo file found in any location - rendering empty state');
+          hideSkeletonState();
+          isDataLoaded = true;
+          renderAll(); // Render empty state
+        }
+      } catch (error) {
+        // Demo file not found or other error
+        console.error('Error loading demo:', error);
+        hideSkeletonState();
+        isDataLoaded = true;
+        renderAll(); // Render empty state
       }
-      
-      if (response && response.ok) {
-        const text = await response.text();
-        const next = window.WhatIfDeliveredStorage.parseJSON(text);
-        window.WhatIfDeliveredModel.loadState(state, next);
-        console.log('Demo data loaded successfully');
-        renderAll();
-        timeline.zoomToContent(); // Fit to content after loading
-        window.dispatchEvent(new Event('pf-refresh'));
-      } else {
-        console.log('No demo file found in any location');
-      }
-    } catch (error) {
-      // Demo file not found or other error - silent failure is OK
-      console.log('Demo file not available:', error.message);
+    }
+    
+    // Try requestIdleCallback first (better for INP), fall back to setTimeout
+    if (window.requestIdleCallback) {
+      // Use a longer timeout to ensure it fires
+      perf.requestIdleCallback(() => {
+        loadDemoIfAvailable();
+      }, { timeout: 500 });
+    } else {
+      // Fallback: use setTimeout with small delay
+      setTimeout(() => {
+        loadDemoIfAvailable();
+      }, 50);
     }
   })();
 })();
