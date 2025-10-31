@@ -1,30 +1,39 @@
 window.WhatIfDeliveredTimeline = (function() {
+  const perf = window.WhatIfDeliveredPerformance;
+  
   // Helper function to get CSS custom properties
   function getCSSVar(name) {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   }
   
-  // Cache commonly used color variables
-  function getColors() {
-    return {
-      bg: getCSSVar('--color-bg'),
-      panel: getCSSVar('--color-panel'),
-      text: getCSSVar('--color-text'),
-      textMuted: getCSSVar('--color-text-muted'),
-      primary: getCSSVar('--color-primary'),
-      accent: getCSSVar('--color-accent'),
-      highlight: getCSSVar('--color-highlight'),
-      danger: getCSSVar('--color-danger'),
-      border: getCSSVar('--color-border'),
-      grid: getCSSVar('--color-grid'),
-      scenario: getCSSVar('--color-content-scenario'),
-      initiative: getCSSVar('--color-content-initiative'),
-      milestone: getCSSVar('--color-content-milestone'),
-      epic: getCSSVar('--color-content-epic'),
-      story: getCSSVar('--color-content-story'),
-      selectionBg: getCSSVar('--color-selection-bg')
-    };
+  // Cache commonly used color variables (computed once)
+  let colorCache = null;
+  function getColors(forceRefresh = false) {
+    if (!colorCache || forceRefresh) {
+      colorCache = {
+        bg: getCSSVar('--color-bg'),
+        panel: getCSSVar('--color-panel'),
+        text: getCSSVar('--color-text'),
+        textMuted: getCSSVar('--color-text-muted'),
+        primary: getCSSVar('--color-primary'),
+        accent: getCSSVar('--color-accent'),
+        highlight: getCSSVar('--color-highlight'),
+        danger: getCSSVar('--color-danger'),
+        border: getCSSVar('--color-border'),
+        grid: getCSSVar('--color-grid'),
+        scenario: getCSSVar('--color-content-scenario'),
+        initiative: getCSSVar('--color-content-initiative'),
+        milestone: getCSSVar('--color-content-milestone'),
+        epic: getCSSVar('--color-content-epic'),
+        story: getCSSVar('--color-content-story'),
+        selectionBg: getCSSVar('--color-selection-bg')
+      };
+    }
+    return colorCache;
   }
+  
+  // Text measurement cache for performance
+  const textMeasurementCache = perf.createCache(200);
   
   function create(state, canvas) {
     const ctx = canvas.getContext('2d');
@@ -984,7 +993,24 @@ window.WhatIfDeliveredTimeline = (function() {
       return colors.primary;
     }
 
-    function render() {
+    // Helper: Cached text measurement for performance
+    function measureTextCached(text, font) {
+      const cacheKey = `${text}|${font}`;
+      
+      if (textMeasurementCache.has(cacheKey)) {
+        return textMeasurementCache.get(cacheKey);
+      }
+      
+      ctx.font = font;
+      const width = ctx.measureText(text).width;
+      textMeasurementCache.set(cacheKey, width);
+      return width;
+    }
+    
+    // Core render function - all the heavy drawing work
+    function renderCore() {
+      perf.markPerformance('timeline-render-start');
+      
       resizeCanvas();
       renderGrid();
       renderScenarioBar();
@@ -994,6 +1020,24 @@ window.WhatIfDeliveredTimeline = (function() {
       updateZoomToContentButton();
       // Draw header labels last to ensure they are always on top of chart
       renderHeaderLabels();
+      
+      perf.markPerformance('timeline-render-end');
+      const renderTime = perf.measurePerformance('timeline-render', 'timeline-render-start', 'timeline-render-end');
+      if (renderTime && renderTime > 50) {
+        console.warn(`Timeline render took ${renderTime.toFixed(2)}ms (slow)`);
+      }
+    }
+    
+    // Throttled render to prevent excessive redraws
+    let renderScheduled = false;
+    function render() {
+      if (renderScheduled) return;
+      
+      renderScheduled = true;
+      requestAnimationFrame(() => {
+        renderCore();
+        renderScheduled = false;
+      });
     }
     
     function renderDragConstraints() {

@@ -1284,3 +1284,114 @@ button {
     min-height: 44px;
   }
 }
+
+/* Skeleton loading states for better perceived performance */
+@keyframes skeleton-pulse {
+  0%, 100% { 
+    opacity: 1; 
+  }
+  50% { 
+    opacity: 0.5; 
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% { 
+    background-position: -200px 0; 
+  }
+  100% { 
+    background-position: calc(200px + 100%) 0; 
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-10);
+  pointer-events: none;
+}
+
+.skeleton-tree-item {
+  height: 40px;
+  margin-bottom: 10px;
+  background: linear-gradient(90deg, 
+    var(--color-surface) 25%, 
+    var(--color-panel) 50%, 
+    var(--color-surface) 75%);
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-10);
+}
+
+.skeleton-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  background: linear-gradient(90deg, 
+    var(--color-bg) 25%, 
+    var(--color-panel) 50%, 
+    var(--color-bg) 75%);
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.skeleton-details {
+  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-10);
+  margin-bottom: 12px;
+}
+
+.skeleton-details-line {
+  height: 16px;
+  background: linear-gradient(90deg, 
+    var(--color-panel) 25%, 
+    var(--color-border) 50%, 
+    var(--color-panel) 75%);
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.skeleton-details-line:last-child {
+  margin-bottom: 0;
+  width: 60%;
+}
+
+/* Loading state overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 241, 203, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spinner-rotate 0.8s linear infinite;
+}
+
+@keyframes spinner-rotate {
+  to { transform: rotate(360deg); }
+}
